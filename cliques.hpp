@@ -1,0 +1,84 @@
+#ifndef _CLIQUES_HPP_
+#define _CLIQUES_HPP_
+
+#include <list>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <sys/stat.h>
+#include <cerrno>
+#include <stdexcept>
+
+#include "Range.hpp"
+#include "aaron_utils.hpp"
+
+using namespace std;
+
+typedef int V;
+typedef int VertexIDType;
+struct SimpleIntGraph {
+	virtual const char * NodeAsString(int v) const;
+	virtual int numNodes() const;
+	int degree(int v) const;
+	pair<const VertexIDType *, const VertexIDType *> neighbours(int v) const;
+	bool are_connected(const pair<int,int>&) const;
+};
+
+namespace cliques {
+
+struct CliqueFunctionAdaptor {
+	virtual void operator() (const std::vector<V> &clique) = 0;
+	virtual ~CliqueFunctionAdaptor() {}
+};
+
+template <class T> void findCliques(const SimpleIntGraph &, T &cliquesOut, unsigned int minimumSize);
+void cliquesForOneNode(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOut, int minimumSize, V v);
+void create_directory(const string& directory) throw();
+void cliquesToDirectory          (const SimpleIntGraph &, const string &outputDirectory, unsigned int minimumSize); // You're not allowed to ask for the 2-cliques
+
+
+template <class T> void findCliques(const SimpleIntGraph &g, T & cliquesOut, unsigned int minimumSize) {
+	unless(minimumSize >= 3) throw std::invalid_argument("the minimumSize for findCliques() must be at least 3");
+
+	struct CliqueFunctionAdaptor_ : CliqueFunctionAdaptor {
+		T & callThis;
+		const SimpleIntGraph &g;
+		CliqueFunctionAdaptor_(T &c, const SimpleIntGraph &g_) : callThis(c), g(g_) {}
+		void operator() (const vector<V> &clique) {
+			vector<V> copy = clique;
+			sort(copy.begin(), copy.end());
+			callThis(copy);
+		}
+	};
+	CliqueFunctionAdaptor_ cfa(cliquesOut, g);
+	
+	for(V v = 0; v < (V) g.numNodes(); v++) {
+		if(v % 1000 ==0)
+			PP(v);
+		cliquesForOneNode(g, cfa, minimumSize, v);
+	}
+}
+
+
+struct CliqueSink { // Dump the cliques to a file in the CFinder format
+	const SimpleIntGraph &g;
+	int n;
+	ofstream out;
+	CliqueSink(const SimpleIntGraph &_g, const string& fileName) : g(_g), n(0), out(fileName.c_str()) { }
+	void operator () (const vector<V> & Compsub) {
+		if(Compsub.size() >= 3) {
+			out << n << ": ";
+			ForeachContainer(V v, Compsub) {
+				out << g.NodeAsString(v) << ' ';
+			}
+			out << endl;
+			n++;
+		}
+	}
+};
+
+} // namespace cliques
+
+
+#endif
