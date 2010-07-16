@@ -45,7 +45,7 @@ struct invalideGraphFileFormatException {};
 
 namespace bmi = boost::multi_index;
 
-typedef bip::managed_mapped_file  ::allocator<char>::type              char_allocator;
+typedef MMapType  ::allocator<char>::type              char_allocator;
 typedef bip::basic_string<char, std::char_traits<char>, char_allocator> shm_string; // not to be confused with std::basic_string
 
 struct idT{}; // dummy tag type for use in boost::interprocess index names
@@ -82,12 +82,12 @@ public:
 	 	bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(StringWithId,int,id)>,
 	 	bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(StringWithId,shm_string,s)>
 		>,
-  	bip::managed_mapped_file  ::allocator<StringWithId>::type
+  	MMapType  ::allocator<StringWithId>::type
 	> StringWithId_Mic;
 private:
 	const StringWithId_Mic * const d;
 public:
-	explicit StringWithId_Mic_WrapRO(managed_mapped_file &segment_strings)
+	explicit StringWithId_Mic_WrapRO(MMapType &segment_strings)
 			: d( segment_strings.find<StringWithId_Mic> ("StringWithId_Mic") . first)
 		{
 		}
@@ -110,7 +110,7 @@ class StringWithId_Mic_Wrap : public StringArray {
 	StringWithId_Mic * const d;
 public:
 	// ~StringWithId_Mic_Wrap() { Pn("130"); delete d; Pn("160"); } // seems like you can't/shouldn't delete objects like this
-	explicit StringWithId_Mic_Wrap(managed_mapped_file &segment_strings)
+	explicit StringWithId_Mic_Wrap(MMapType &segment_strings)
 			: ca(char_allocator (segment_strings.get_allocator<char>()))
 			, d( segment_strings.find_or_construct<StringWithId_Mic> ("StringWithId_Mic") ( StringWithId_Mic::ctor_args_list()                         , segment_strings.get_allocator<StringWithId>()))
 		{
@@ -163,7 +163,7 @@ typedef bmi::multi_index_container<
 	 bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
 	 bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
 	>,
-  bip::managed_mapped_file  ::allocator<nodeWithName>::type
+  MMapType  ::allocator<nodeWithName>::type
 > nodeWithName_set;
 
 
@@ -183,12 +183,12 @@ typedef bmi::multi_index_container<
 	 bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
 	 bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
 	>,
-  bip::managed_mapped_file  ::allocator<relationship>::type
+  MMapType  ::allocator<relationship>::type
 > relationship_set;
 
 typedef mmap_uset_of_ints neighbouring_relationship_set;
 typedef std::pair<const int, neighbouring_relationship_set> valtype;
-typedef bip::allocator< valtype, bip::managed_mapped_file::segment_manager> ShmemAllocator;
+typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
 typedef boost::unordered_map
     < int               , neighbouring_relationship_set
     , boost::hash<int>  ,std::equal_to<int>
@@ -244,9 +244,9 @@ public:
 	}
 };
 class DumbGraphReadONLY : public DumbGraphReadable {
-	managed_mapped_file   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	managed_mapped_file   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	managed_mapped_file   segment_neigh;
+	MMapType   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
+	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
+	MMapType   segment_neigh;
 	const neighbouring_relationship_set empty_set_for_neighbours;
 
 public:
@@ -268,9 +268,9 @@ public:
 	}
 };
 class DumbGraphRaw : public DumbGraphReadable {
-	managed_mapped_file   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	managed_mapped_file   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	managed_mapped_file   segment_neigh;
+	MMapType   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
+	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
+	MMapType   segment_neigh;
 
 	const neighbouring_relationship_set empty_set_for_neighbours;
 

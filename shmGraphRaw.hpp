@@ -4,8 +4,13 @@
 #include <set> 
 #include <map> 
 
+
 #include <boost/interprocess/managed_mapped_file.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
+
+typedef boost::interprocess::managed_mapped_file MMapType;
+// typedef boost::interprocess::managed_shared_memory MMapType;
 
 #include <boost/unordered_set.hpp>
 
@@ -13,7 +18,7 @@
 
 namespace shmGraphRaw {
 
-typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, boost::interprocess::managed_mapped_file::segment_manager> > mmap_uset_of_ints;
+typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
 
 class StrH { // string handle. It just wraps an int that refers to the memory mapped file
 	int i;
