@@ -4,6 +4,7 @@ using namespace std;
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
 #include "cliques.hpp"
+#include "clique_percolation.hpp"
 
 int main(int argc, char **argv) {
 	// for (int i=0; i<argc; i++) {
@@ -54,5 +55,6 @@ int main(int argc, char **argv) {
 	auto_ptr<shmGraphRaw::ReadableShmGraph> g (shmGraphRaw::loadMmapFile("./binaryBlob", edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
-	cliques::cliquesToDirectory(g.get(), "acp_results", 3);
+	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
+	cliquePercolation(g.get(), "acp_results_", 3); // You're not allowed to ask for the 2-cliques
 }
