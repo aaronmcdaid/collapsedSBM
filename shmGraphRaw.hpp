@@ -1,10 +1,15 @@
 #ifndef SHMGRAPHRAW_H
 #define SHMGRAPHRAW_H
 
+#include <set> 
+#include <map> 
+
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 
 #include <boost/unordered_set.hpp>
+
+#include "Range.hpp"
 
 namespace shmGraphRaw {
 
@@ -40,6 +45,17 @@ public:
 	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
 	virtual std::string WhichNode(int v) const; // impure function
 	virtual int degree(int v) const { return this->myRels(v).size(); }
+	mutable std::map<int, std::set<int> > neighbours_cache;
+	virtual const std::set<int> & neighbours(int v) const { // sorted list of neighbours. Sorted by internal int id, not by the original string name
+		std::set<int> &  neighs = neighbours_cache[v]; // Will create an empty one, if it hasn't been requested before
+		if(neighs.size() == 0 && this->degree(v) != 0) {
+			forEach(int rel, amd::mk_range(this->myRels(v))) {
+				int otherEnd = this->oppositeEndPoint(rel, v);
+				neighs.insert(otherEnd);
+			}
+		}
+		return neighs;
+	}
 };
 
 
