@@ -45,16 +45,18 @@ int main(int argc, char **argv) {
     }
 	}
 
-	if (argc - optind != 1) {
-		cout << "Usage: edge_list" << endl;
+	if (argc - optind != 2) {
+		cout << "Usage: edge_list directory_for_output" << endl;
 		exit(1);
 	}
 	const char * edgeListFileName = argv[optind];
+	const char * directoryForOutput = argv[optind+1];
 	PP(edgeListFileName);
+	PP(directoryForOutput);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraph> g (shmGraphRaw::loadMmapFile("./binaryBlob", edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
 	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
-	cliquePercolation(g.get(), "acp_results_", 3); // You're not allowed to ask for the 2-cliques
+	cliquePercolation(g.get(), directoryForOutput, 3); // You're not allowed to ask for the 2-cliques
 }
