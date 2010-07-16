@@ -32,4 +32,4 @@ LDFLAGS+= -lstdc++ -lrt
 CXXFLAGS= ${BITS} -O3     -g ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
-acp: shmGraphRaw.o Range.o
+acp: shmGraphRaw.o Range.o cliques.o

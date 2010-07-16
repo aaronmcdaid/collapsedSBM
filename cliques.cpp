@@ -4,22 +4,36 @@ namespace cliques {
 
 void cliquesWorker(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOut, unsigned int minimumSize, vector<V> & Compsub, list<V> Not, list<V> Candidates);
 
-
 void cliquesForOneNode(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOut, int minimumSize, V v) {
-	if(g.degree(v) + 1 < minimumSize)
+	if(g->degree(v) + 1 < minimumSize)
 		return; // Obviously no chance of a clique if the degree is too small.
-	pair<const VertexIDType *, const VertexIDType *> neighbours_of_v = g.neighbours(v);
-	const VertexIDType * split = lower_bound(neighbours_of_v.first, neighbours_of_v.second, v);
-	if(split != neighbours_of_v.second && *split == v) {
-		// TODO: throw an exception instead
-		Die("You're not allowed self loops '%s'", g.NodeAsString(v) );
-	}
-		
+
+
 	vector<V> Compsub;
 	list<V> Not, Candidates;
 	Compsub.push_back(v);
-	copy(neighbours_of_v.first, split, back_inserter(Not));
-	copy(split, neighbours_of_v.second, back_inserter(Candidates));
+
+
+	// copy those below the split into Not
+	// copy those above the split into Candidates
+	// there shouldn't ever be a neighbour equal to the split, this'd mean a self-loop
+	vector<int> neighbours;
+	forEach(int rel, amd::mk_range(g->myRels(v))) { // It's high time I had a myNeighsNoLoop(int v) method
+		int otherEnd = g->oppositeEndPoint(rel, v);
+		assert(otherEnd != v); // This'd be a self loop
+		neighbours.push_back(otherEnd);
+	}
+	sort(neighbours.begin(), neighbours.end());
+	forEach(int otherEnd, amd::mk_range(neighbours)) {
+		if(otherEnd < v)
+			Not.push_back(otherEnd);
+		if(otherEnd > v)
+			Candidates.push_back(otherEnd);
+	}
+
+
+	//copy(neighbours_of_v.first, split, back_inserter(Not));
+	//copy(split, neighbours_of_v.second, back_inserter(Candidates));
 	cliquesWorker(g, cliquesOut, minimumSize, Compsub, Not, Candidates);
 }
 
@@ -28,13 +42,20 @@ static inline void tryCandidate (const SimpleIntGraph & g, CliqueFunctionAdaptor
 
 	list<V> NotNew;
 	list<V> CandidatesNew;
-	const pair<const VertexIDType *, const VertexIDType *> neighbours_of_selected = g.neighbours(selected);
+
+	vector<int> neighbours_of_selected;
+	forEach(int rel, amd::mk_range(g->myRels(selected))) { // It's high time I had a myNeighsNoLoop(int v) method
+		int otherEnd = g->oppositeEndPoint(rel, selected);
+		neighbours_of_selected.push_back(otherEnd);
+	}
+	sort(neighbours_of_selected.begin(), neighbours_of_selected.end());
 	set_intersection(Candidates.begin()            , Candidates.end()
-	                ,neighbours_of_selected.first, neighbours_of_selected.second
+	                ,neighbours_of_selected.begin(), neighbours_of_selected.end()
 			,back_inserter(CandidatesNew));
 	set_intersection(Not.begin()                 , Not.end()
-	                ,neighbours_of_selected.first, neighbours_of_selected.second
+	                ,neighbours_of_selected.begin(), neighbours_of_selected.end()
 			,back_inserter(NotNew));
+
 	cliquesWorker(g, cliquesOut, minimumSize, Compsub, NotNew, CandidatesNew);
 
 	Compsub.pop_back(); // we must restore Compsub, it was passed by reference
@@ -43,6 +64,7 @@ void cliquesWorker(const SimpleIntGraph & g, CliqueFunctionAdaptor &cliquesOut, 
 	// p2p         511462                   (10)
 	// authors000                  (250)    (<4)
 	// authors010  212489     5.3s (4.013)
+
 
 	unless(Candidates.size() + Compsub.size() >= minimumSize) return;
 
@@ -67,7 +89,7 @@ void cliquesWorker(const SimpleIntGraph & g, CliqueFunctionAdaptor &cliquesOut, 
 			// dout << v << ": ";
 			ContainerRange<list<V> > testThese(Candidates);
 			Foreach(V v2, testThese) {
-				if(!g.are_connected(make_pair(v, v2))) {
+				if(!g->are_connected(v, v2)) {
 					// dout << "disconnected: (" << v << ',' << v2 << ") ";
 					++currentDiscs;
 				}
@@ -87,9 +109,11 @@ void cliquesWorker(const SimpleIntGraph & g, CliqueFunctionAdaptor &cliquesOut, 
 			ContainerRange<list<V> > useTheDisconnected(CandidatesCopy);
 			Foreach(V v, useTheDisconnected) {
 				unless(Candidates.size() + Compsub.size() >= minimumSize) return;
-				if(fewestDisc >0 && v!=fewestDiscVertex && !g.are_connected(make_pair(v, fewestDiscVertex))) {
+				if(fewestDisc >0 && v!=fewestDiscVertex && !g->are_connected(v, fewestDiscVertex)) {
 					// dout << "Into Not " << v << '\n';
 					unless(Candidates.size() + Compsub.size() >= minimumSize) return;
+					// forEach(int cand, amd::mk_range(Candidates)) { PP(cand); }
+					// PP(v);
 					Candidates.erase(lower_bound(Candidates.begin(),Candidates.end(),v));
 					tryCandidate(g, cliquesOut, minimumSize, Compsub, Not, Candidates, v);
 					Not.insert(lower_bound(Not.begin(), Not.end(), v) ,v); // we MUST keep the list Not in order
@@ -127,7 +151,7 @@ void create_directory(const string& directory) throw() {
 }
 
 
-void cliquesToDirectory(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize /* = 3*/ ) {
+void cliquesToDirectory(SimpleIntGraph g_, const string &outputDirectory, unsigned int minimumSize /* = 3*/ ) {
 	create_directory(outputDirectory);
 	string cliquesFileName(outputDirectory + "/cliques");
 

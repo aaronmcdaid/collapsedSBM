@@ -36,8 +36,10 @@ public:
 	virtual const char * NodeAsString(int v) const = 0;
 	virtual int StringToNodeId(const char *s) const = 0;
 	virtual const std::pair<int, int> & EndPoints(int relId) const = 0;
+	virtual bool are_connected(int v1, int v2) const = 0;
 	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
 	virtual std::string WhichNode(int v) const; // impure function
+	virtual int degree(int v) const { return this->myRels(v).size(); }
 };
 
 

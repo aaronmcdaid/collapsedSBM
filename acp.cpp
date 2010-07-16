@@ -3,11 +3,12 @@ using namespace std;
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
+#include "cliques.hpp"
 
 int main(int argc, char **argv) {
-	for (int i=0; i<argc; i++) {
-		PP(argv[i]);
-	}
+	// for (int i=0; i<argc; i++) {
+		// PP(argv[i]);
+	// }
 	{ int c, option_index; while (1)
 		{
       static const struct option long_options[] = {
@@ -53,4 +54,5 @@ int main(int argc, char **argv) {
 	auto_ptr<shmGraphRaw::ReadableShmGraph> g (shmGraphRaw::loadMmapFile("./binaryBlob", edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
+	cliques::cliquesToDirectory(g.get(), "acp_results", 3);
 }

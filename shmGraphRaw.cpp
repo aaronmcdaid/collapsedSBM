@@ -236,6 +236,12 @@ public:
 		assert(relId >=0 && relId <= this->numRels() );
 		return relationshipsRO->get<idT>().find(relId)->nodeIds;
 	}
+	virtual bool are_connected(int v1, int v2) const {
+		if(v1 > v2)
+			swap(v1,v2);
+		assert (v1 <= v2);
+		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(make_pair(v1,v2)) );
+	}
 };
 class DumbGraphReadONLY : public DumbGraphReadable {
 	managed_mapped_file   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );

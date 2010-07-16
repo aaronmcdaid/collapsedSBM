@@ -12,18 +12,13 @@
 
 #include "Range.hpp"
 #include "aaron_utils.hpp"
+#include "shmGraphRaw.hpp"
 
 using namespace std;
 
 typedef int V;
 typedef int VertexIDType;
-struct SimpleIntGraph {
-	virtual const char * NodeAsString(int v) const;
-	virtual int numNodes() const;
-	int degree(int v) const;
-	pair<const VertexIDType *, const VertexIDType *> neighbours(int v) const;
-	bool are_connected(const pair<int,int>&) const;
-};
+typedef const shmGraphRaw::ReadableShmGraph* SimpleIntGraph;
 
 namespace cliques {
 
@@ -35,7 +30,7 @@ struct CliqueFunctionAdaptor {
 template <class T> void findCliques(const SimpleIntGraph &, T &cliquesOut, unsigned int minimumSize);
 void cliquesForOneNode(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOut, int minimumSize, V v);
 void create_directory(const string& directory) throw();
-void cliquesToDirectory          (const SimpleIntGraph &, const string &outputDirectory, unsigned int minimumSize); // You're not allowed to ask for the 2-cliques
+void cliquesToDirectory          (SimpleIntGraph, const string &outputDirectory, unsigned int minimumSize); // You're not allowed to ask for the 2-cliques
 
 
 template <class T> void findCliques(const SimpleIntGraph &g, T & cliquesOut, unsigned int minimumSize) {
@@ -48,12 +43,16 @@ template <class T> void findCliques(const SimpleIntGraph &g, T & cliquesOut, uns
 		void operator() (const vector<V> &clique) {
 			vector<V> copy = clique;
 			sort(copy.begin(), copy.end());
+			vector<const char *> cliqueNames;
+			forEach(int v, amd::mk_range(clique)) {
+				cliqueNames.push_back(g->NodeAsString(v));
+			}
 			callThis(copy);
 		}
 	};
 	CliqueFunctionAdaptor_ cfa(cliquesOut, g);
 	
-	for(V v = 0; v < (V) g.numNodes(); v++) {
+	for(V v = 0; v < (V) g->numNodes(); v++) {
 		if(v % 1000 ==0)
 			PP(v);
 		cliquesForOneNode(g, cfa, minimumSize, v);
@@ -70,7 +69,7 @@ struct CliqueSink { // Dump the cliques to a file in the CFinder format
 		if(Compsub.size() >= 3) {
 			out << n << ": ";
 			ForeachContainer(V v, Compsub) {
-				out << g.NodeAsString(v) << ' ';
+				out << g->NodeAsString(v) << ' ';
 			}
 			out << endl;
 			n++;
