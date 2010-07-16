@@ -365,11 +365,11 @@ ReadableShmGraph * loadMmapFile(const char *directory, const char *graphTextFile
 		}
 		DumbGraphRaw *nodes_and_rels_wrap = new DumbGraphRaw(dir);
 
-		PP(nodes_and_rels_wrap->strings_wrap->size());
+		// PP(nodes_and_rels_wrap->strings_wrap->size());
 
-		PP(nodes_and_rels_wrap->numNodes());
-		PP(nodes_and_rels_wrap->numNodesWithAtLeastOneRel());
-		PP(nodes_and_rels_wrap->numRels());
+		// PP(nodes_and_rels_wrap->numNodes());
+		// PP(nodes_and_rels_wrap->numNodesWithAtLeastOneRel());
+		// PP(nodes_and_rels_wrap->numRels());
 
 		ifstream graphTextStream(graphTextFileName); 
 		if(!graphTextStream.is_open())
