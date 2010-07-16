@@ -17,14 +17,7 @@ void cliquesForOneNode(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOu
 	// copy those below the split into Not
 	// copy those above the split into Candidates
 	// there shouldn't ever be a neighbour equal to the split, this'd mean a self-loop
-	vector<int> neighbours;
-	forEach(int rel, amd::mk_range(g->myRels(v))) { // It's high time I had a myNeighsNoLoop(int v) method
-		int otherEnd = g->oppositeEndPoint(rel, v);
-		assert(otherEnd != v); // This'd be a self loop
-		neighbours.push_back(otherEnd);
-	}
-	sort(neighbours.begin(), neighbours.end());
-	forEach(int otherEnd, amd::mk_range(neighbours)) {
+	forEach(int otherEnd, amd::mk_range(g->neighbours(v))) {
 		if(otherEnd < v)
 			Not.push_back(otherEnd);
 		if(otherEnd > v)
@@ -43,12 +36,7 @@ static inline void tryCandidate (const SimpleIntGraph & g, CliqueFunctionAdaptor
 	list<V> NotNew;
 	list<V> CandidatesNew;
 
-	vector<int> neighbours_of_selected;
-	forEach(int rel, amd::mk_range(g->myRels(selected))) { // It's high time I had a myNeighsNoLoop(int v) method
-		int otherEnd = g->oppositeEndPoint(rel, selected);
-		neighbours_of_selected.push_back(otherEnd);
-	}
-	sort(neighbours_of_selected.begin(), neighbours_of_selected.end());
+	const std::set<int> &neighbours_of_selected = g->neighbours(selected);
 	set_intersection(Candidates.begin()            , Candidates.end()
 	                ,neighbours_of_selected.begin(), neighbours_of_selected.end()
 			,back_inserter(CandidatesNew));

@@ -43,10 +43,6 @@ template <class T> void findCliques(const SimpleIntGraph &g, T & cliquesOut, uns
 		void operator() (const vector<V> &clique) {
 			vector<V> copy = clique;
 			sort(copy.begin(), copy.end());
-			vector<const char *> cliqueNames;
-			forEach(int v, amd::mk_range(clique)) {
-				cliqueNames.push_back(g->NodeAsString(v));
-			}
 			callThis(copy);
 		}
 	};
