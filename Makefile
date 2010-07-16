@@ -3,7 +3,7 @@ BITS=
 #BITS=-m32
 #BITS=-m64
 
-all: acp
+all: boost_1_41_0 acp
 
 clean:
 	-rm tags acp *.o
@@ -26,6 +26,7 @@ boost_1_41_0:
 	@echo "   " This needs Boost. It has been tested with boost 1.41 .
 	@echo "   " Extract this to a folder called boost_1_41_0 . 
 	@echo "   " http://sourceforge.net/projects/boost/files/boost/1.41.0/
+	false
 
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lstdc++ -lrt
