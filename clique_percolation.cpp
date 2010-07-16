@@ -1,3 +1,8 @@
+/*
+ * Copyright Aaron McDaid (2010). aaronmcdaid@gmail.com
+ * Available under GNU Affero General Public License, version 3
+ * (I should put a proper disclaimer and notice on this)
+ */
 #include <iostream>
 #include <fstream>
 #include <iterator>
