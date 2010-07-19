@@ -16,7 +16,7 @@ typedef long long int64;
 typedef unsigned long long uint64;
 typedef unsigned int uint;
 
-enum {FALSE=0, TRUE=1};
+// enum {FALSE=0, TRUE=1};
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define P(...) printf(__VA_ARGS__)
