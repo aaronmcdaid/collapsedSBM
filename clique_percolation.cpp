@@ -18,6 +18,7 @@
 
 using namespace std;
 using namespace cliques;
+using namespace amd;
 
 /* TODO
  * Foreach for Containers
@@ -549,3 +550,229 @@ using 128 bits of hashing...
 
 */
 
+struct CliquesVector /*: public CliqueSink*/ {
+	vector<Clique > all_cliques;
+	CliquesVector() /*: CliqueSink(_g, fileName)*/ {}
+	void operator () (Clique Compsub) { // We MUST sort this, the clique percolation relies on sorted cliques to help with checking of overlaps.
+		sort(Compsub.begin(), Compsub.end());
+		if(Compsub.size() >= 3) {
+			all_cliques.push_back(Compsub);
+		}
+	}
+};
+
+struct ConnectedComponents {
+	const int C; // the number of cliques
+	vector<int> component;
+	vector<int> next;
+	vector<int> prev;
+	ConnectedComponents(int _C) : C(_C), component(C), next(C), prev(C) {
+		for(int i=0; i<C; i++) {
+			component.at(i) = i;
+			next     .at(i) = i;
+			prev     .at(i) = i;
+		}
+	}
+	void joinNodesIntoSameComponent(int cl1, int cl2) {
+		const int comp1 = this->component.at(cl1);
+		const int comp2 = this->component.at(cl2);
+		assert(comp1 != comp2); // TODO: 
+#ifdef checkCompSizes
+		int sizeA = 0;
+		int sizeB = 0;
+		{
+			int cl = comp1;
+			do {
+				assert(this->component.at(cl) == comp1);
+				sizeA++;
+				// cout << "clique " << cl << " is in component " << this->component.at(cl) << endl;
+				assert(cl == this->prev.at(this->next.at(cl)));
+
+
+				cl = this->next.at(cl);
+			} while (cl != comp1);
+		}
+		{
+			int cl = comp2;
+			do {
+				assert(this->component.at(cl) == comp2);
+				sizeB++;
+				// cout << "clique " << cl << " is in component " << this->component.at(cl) << endl;
+				assert(cl == this->prev.at(this->next.at(cl)));
+
+
+				cl = this->next.at(cl);
+			} while (cl != comp2);
+		}
+			// PP(sizeA);
+			// PP(sizeB);
+#endif
+		assert(comp1 == this->component.at(comp1));
+		assert(comp2 == this->component.at(comp2));
+		// abolish comp2, renaming all of its to comp1
+		for(int cl = comp2; this->component.at(cl)==comp2; cl = this->next.at(cl) ) {
+			this->component.at(cl) = comp1;
+		}
+		assert(comp1 == this->component.at(comp2));
+		const int comp1SndLast = this->prev.at(comp1);
+		const int comp2SndLast = this->prev.at(comp2);
+		this->next.at(this->prev.at(comp1)) = comp2;
+		this->next.at(this->prev.at(comp2)) = comp1;
+		// we modified the nexts in terms of the prevs
+		// hence the nexts are correct, but the prevs aren't
+		this->prev.at(comp1) = comp2SndLast;
+		this->prev.at(comp2) = comp1SndLast;
+
+		{
+			int cl = comp1;
+			int size = 0;
+			do {
+				assert(this->component.at(cl) == comp1);
+				size++;
+				// cout << "clique " << cl << " is in component " << this->component.at(cl) << endl;
+				assert(cl == this->prev.at(this->next.at(cl)));
+
+
+				cl = this->next.at(cl);
+			} while (cl != comp1);
+#ifdef checkCompSizes
+			assert(size == sizeA + sizeB);
+#endif
+		}
+	}
+};
+
+void percolateThis(const int cliqueID, ConnectedComponents &cpm4, const int threshold, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
+/*
+	cout << "                                                                  "; PP(cliqueID);
+	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.prev.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.component.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.component.at(142));
+*/
+	const Clique &clique = all_cliques.at(cliqueID);
+	vector<int> cliquesIShareANodeWith;
+	forEach(const int v, mk_range(clique)) {
+		const size_t split = cliquesIShareANodeWith.size();
+		forEach(const int adjClique, mk_range(nodeToCliquesMap.at(v))) {
+			if(adjClique != cliqueID) {
+				if(cpm4.component.at(cliqueID) != cpm4.component.at(adjClique) ) {
+					// PP(adjClique);
+					cliquesIShareANodeWith.push_back(adjClique);
+				}
+			}
+		}
+		// The cliques before the split, will be sorted, as will those after. But we need to merge them.
+		if(split > 0 && split < cliquesIShareANodeWith.size()) {
+			vector<int>::iterator splitIter = cliquesIShareANodeWith.begin() + split;
+			// printf("%p\n", &*cliquesIShareANodeWith.begin());
+			// printf("%p\n", &*splitIter);
+			// printf("%p\n", &*cliquesIShareANodeWith.end());
+			inplace_merge(cliquesIShareANodeWith.begin(), splitIter, cliquesIShareANodeWith.end());
+		}
+	}
+
+/*
+	DYINGWORDS(cliquesIShareANodeWith.size()>0) {
+		forEach(int v, mk_range(all_cliques.at(cliqueID))) {
+			PP(v);
+			PP(g->NodeAsString(v));
+		}
+	}
+*/
+	if(cliquesIShareANodeWith.size()==0)
+		return;
+
+	int currentClique = -1;
+	vector<int>::iterator next = cliquesIShareANodeWith.begin();
+	assert( next != cliquesIShareANodeWith.end());
+	while(currentClique < (int)all_cliques.size()) {
+		int consecutiveLikeThis = 0;
+		while(next != cliquesIShareANodeWith.end() && currentClique == *next) {
+			++consecutiveLikeThis;
+			++next;
+		}
+		if(currentClique > -1) {
+			// cout << consecutiveLikeThis << " instances of clique #" << currentClique << endl;
+			if(consecutiveLikeThis >= threshold) {
+				// PP(consecutiveLikeThis);
+				if(cpm4.component.at(cliqueID) != cpm4.component.at(currentClique)) {
+					// PP(currentClique);
+					// PP(cpm4.component.at(currentClique));
+					cpm4.joinNodesIntoSameComponent(cliqueID, currentClique);
+					// PP(cpm4.component.at(currentClique));
+				}
+			}
+		}
+		if(next == cliquesIShareANodeWith.end()) {
+			// all done.
+			currentClique = all_cliques.size();
+		} else {
+			assert(currentClique < *next);
+			currentClique = *next;
+			assert(currentClique < (int) all_cliques.size());
+		}
+	}
+}
+
+void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
+	create_directory(outputDirectory);
+
+	CliquesVector cliques;
+
+	findCliques<CliquesVector>(g_, cliques, minimumSize);
+	const int numCliques = cliques.all_cliques.size();
+	PP(numCliques);
+
+	vector< vector<int> > nodeToCliquesMap(g_->numNodes());
+
+	{ Timer timer("building nodeToCliquesMap");
+		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
+			const Clique &clique = cliques.all_cliques.at(cliqueID);
+			forEach(const int v, mk_range(clique)) {
+				assert(v < g_->numNodes());
+				nodeToCliquesMap.at(v).push_back(cliqueID);
+			}
+		}
+	}
+	ConnectedComponents cpm4(numCliques);
+	{ Timer timer("do the clique percolation");
+		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
+			percolateThis(cliqueID, cpm4, 3, nodeToCliquesMap, cliques.all_cliques, g_);
+		}
+	}
+	{	Timer timer("print the results");
+		ofstream cpm4Results((outputDirectory + "/comm4").c_str());
+		int numComps = 0;
+		for(int comp=0; comp<numCliques; comp++) {
+			if(comp == cpm4.component.at(comp)) {
+				PP(comp);
+				numComps++;
+				set<int> nodesInThisCPMComm;
+				{
+					int cliquesInThisCPMComm = 0;
+					int cl = comp;
+					do {
+						assert(cpm4.component.at(cl) == comp);
+						cliquesInThisCPMComm++;
+						// cout << "clique " << cl << " is in component " << cpm4.component.at(cl) << endl;
+						assert(cl == cpm4.prev.at(cpm4.next.at(cl)));
+						forEach(const int v, mk_range(cliques.all_cliques.at(cl))) {
+							nodesInThisCPMComm.insert(v);
+						}
+						cl = cpm4.next.at(cl);
+					} while (cl != comp);
+					PP(cliquesInThisCPMComm);
+					PP(nodesInThisCPMComm.size());
+				}
+				{ // output to the file
+					forEach(const int v, mk_range(nodesInThisCPMComm)) {
+						cpm4Results << ' ' << atoi(g_->NodeAsString(v));
+					}
+					cpm4Results << endl;
+				}
+			}
+		}
+		PP(numComps);
+	}
+}

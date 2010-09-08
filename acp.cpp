@@ -75,6 +75,11 @@ int main(int argc, char **argv) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
+#ifdef ACP1
 	cliquePercolation(g.get(), directoryForOutput, 3); // You're not allowed to ask for the 2-cliques
+#else
+	cliquePercolation2(g.get(), directoryForOutput, 4); // You're not allowed to ask for the 2-cliques
+#endif
+
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
 }
