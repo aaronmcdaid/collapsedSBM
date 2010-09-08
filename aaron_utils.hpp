@@ -16,7 +16,7 @@ typedef long long int64;
 typedef unsigned long long uint64;
 typedef unsigned int uint;
 
-// enum {FALSE=0, TRUE=1};
+enum {FALSE=0, TRUE=1};
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define P(...) printf(__VA_ARGS__)
@@ -26,6 +26,7 @@ typedef unsigned int uint;
 #define Perrorn(...) do { Perror(__VA_ARGS__); fputc('\n', stderr); } while (0)
 //#define PP(x) Pn("%s:%s", #x, show(x).c_str())
 #define PP(x) cout << #x << ":" << x << endl
+#define PPt(x) cout << #x << ":" << x << '\t'
 #define PPnn(x) cout << #x << ":" << x
 #define PP2(x,y) cout << #x << ',' << #y << ":\t" << x << ',' << y << endl
 #define PPLg(x) Pn("%s:%20.11Lg", #x, x)
@@ -227,5 +228,9 @@ typename C::value_type constAt(const C &c, int i) {
 }
 
 } // namespace amd
+
+#define VERYCLOSE(a,b) (1e-10 > fabs((a)-(b)))
+
+#define printfstring(...) ({ char str[1000]; sprintf(str, __VA_ARGS__) ; (std::string (str)); })
 
 #endif
