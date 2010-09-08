@@ -562,12 +562,20 @@ struct CliquesVector /*: public CliqueSink*/ {
 };
 
 struct ConnectedComponents {
-	const int C; // the number of cliques
+	int C; // the number of cliques
 	vector<int> component;
 	vector<int> next;
 	vector<int> prev;
 	vector<int> sizes;
-	ConnectedComponents(int _C) : C(_C), component(C), next(C), prev(C), sizes(C,1) {
+	ConnectedComponents() : C(-1) {}
+	void setNumCliques(int _C) {
+		assert(this->C==-1);
+		this->C = _C;
+		this->component.resize(C);
+		this->next.resize(C);
+		this->prev.resize(C);
+		this->sizes.resize(C,1);
+		assert(this->C>0);
 		for(int i=0; i<C; i++) {
 			component.at(i) = i;
 			next     .at(i) = i;
@@ -575,6 +583,7 @@ struct ConnectedComponents {
 		}
 	}
 	void joinNodesIntoSameComponent(int cl1, int cl2) {
+		assert(this->C>0);
 		const int comp1 = this->component.at(cl1);
 		const int comp2 = this->component.at(cl2);
 		{ // this'd be faster if comp2 is smaller
@@ -654,7 +663,7 @@ struct ConnectedComponents {
 	}
 };
 
-void percolateThis(const int cliqueID, ConnectedComponents &cpm4, const int threshold, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
+void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
 /*
 	cout << "                                                                  "; PP(cliqueID);
 	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
@@ -667,11 +676,11 @@ void percolateThis(const int cliqueID, ConnectedComponents &cpm4, const int thre
 	forEach(const int v, mk_range(clique)) {
 		const size_t split = cliquesIShareANodeWith.size();
 		forEach(const int adjClique, mk_range(nodeToCliquesMap.at(v))) {
-			if(adjClique != cliqueID) {
-				if(cpm4.component.at(cliqueID) != cpm4.component.at(adjClique) ) {
+			if(adjClique < cliqueID) { // clique[cliqueID] should only be compared against larger cliques
+				// if(cpm4.component.at(cliqueID) != cpm4.component.at(adjClique) ) {
 					// PP(adjClique);
 					cliquesIShareANodeWith.push_back(adjClique);
-				}
+				// }
 			}
 		}
 		// The cliques before the split, will be sorted, as will those after. But we need to merge them.
@@ -705,14 +714,23 @@ void percolateThis(const int cliqueID, ConnectedComponents &cpm4, const int thre
 			++next;
 		}
 		if(currentClique > -1) {
+			assert(consecutiveLikeThis < (int)all_cliques.at(cliqueID).size());
+			assert(consecutiveLikeThis < (int)all_cliques.at(currentClique).size());
 			// cout << consecutiveLikeThis << " instances of clique #" << currentClique << endl;
-			if(consecutiveLikeThis >= threshold) {
+			if(consecutiveLikeThis >= 2) {
 				// PP(consecutiveLikeThis);
-				if(cpm4.component.at(cliqueID) != cpm4.component.at(currentClique)) {
-					// PP(currentClique);
-					// PP(cpm4.component.at(currentClique));
-					cpm4.joinNodesIntoSameComponent(cliqueID, currentClique);
-					// PP(cpm4.component.at(currentClique));
+				for(int k = 3; k <= consecutiveLikeThis+1; k++) {
+					ConnectedComponents &cpmk = cpms.at(k);
+					if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique) && (int)all_cliques.at(cliqueID).size() >= k) {
+						// PP(currentClique);
+						// PP(cpmk.component.at(currentClique));
+						assert((int)all_cliques.at(cliqueID).size() >= k);
+						assert((int)all_cliques.at(currentClique).size() >= k);
+						assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
+						assert(consecutiveLikeThis >= k-1);
+						cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
+						// PP(cpmk.component.at(currentClique));
+					}
 				}
 			}
 		}
@@ -728,13 +746,24 @@ void percolateThis(const int cliqueID, ConnectedComponents &cpm4, const int thre
 }
 
 void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
+	assert(minimumSize >= 3);
 	create_directory(outputDirectory);
 
 	CliquesVector cliques;
 
-	findCliques<CliquesVector>(g_, cliques, minimumSize);
+	{ Timer timer (printfstring("find cliques of at least size %d", minimumSize));
+		findCliques<CliquesVector>(g_, cliques, minimumSize);
+	}
 	const int numCliques = cliques.all_cliques.size();
 	PP(numCliques);
+	if(numCliques == 0) {
+		Die("No cliques of the required size!");
+	}
+	{ Timer timer (printfstring("put the biggest cliques to the front of the list"));
+		sort(cliques.all_cliques.begin(), cliques.all_cliques.end(), moreBySize );
+	}
+	const int maxCliqueSize = cliques.all_cliques.at(0).size();
+	PP(maxCliqueSize);
 
 	vector< vector<int> > nodeToCliquesMap(g_->numNodes());
 
@@ -747,18 +776,25 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 			}
 		}
 	}
-	ConnectedComponents cpm4(numCliques);
+	vector<ConnectedComponents> cpms(1+maxCliqueSize);
+	for(int i=3; i<=maxCliqueSize; i++)
+		cpms.at(i).setNumCliques(numCliques);
 	{ Timer timer("do the clique percolation");
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
-			percolateThis(cliqueID, cpm4, 3, nodeToCliquesMap, cliques.all_cliques, g_);
+			percolateThis(cliqueID, cpms, nodeToCliquesMap, cliques.all_cliques, g_);
 		}
 	}
 	{	Timer timer("print the results");
-		ofstream cpm4Results((outputDirectory + "/comm4").c_str());
+	for(int k=3; k<=maxCliqueSize; k++) {
+		ofstream cpm4Results((outputDirectory + printfstring("/comm%d", k)).c_str());
+		ConnectedComponents &cpm4 = cpms.at(k);
 		int numComps = 0;
 		for(int comp=0; comp<numCliques; comp++) {
+			if(comp == cpm4.component.at(comp) && cpm4.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
+				continue; // This clique is too small to be relevant at this level of k. It will not have been merged into any communities.
+			}
 			if(comp == cpm4.component.at(comp)) {
-				PP(comp);
+				//PP(comp);
 				numComps++;
 				set<int> nodesInThisCPMComm;
 				{
@@ -766,6 +802,7 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 					int cl = comp;
 					do {
 						assert(cpm4.component.at(cl) == comp);
+						assert((int)cliques.all_cliques.at(cl).size() >= k);
 						cliquesInThisCPMComm++;
 						// cout << "clique " << cl << " is in component " << cpm4.component.at(cl) << endl;
 						assert(cl == cpm4.prev.at(cpm4.next.at(cl)));
@@ -774,9 +811,7 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 						}
 						cl = cpm4.next.at(cl);
 					} while (cl != comp);
-					PP(cliquesInThisCPMComm);
-					assert(cliquesInThisCPMComm == cpm4.sizes.at(comp));
-					PP(nodesInThisCPMComm.size());
+					assert(cliquesInThisCPMComm == cpm4.sizes.at(comp)); // TODO: Shouldn't allow that clique into the community anyway.
 				}
 				{ // output to the file
 					forEach(const int v, mk_range(nodesInThisCPMComm)) {
@@ -787,6 +822,10 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 			} else
 				assert(0 == cpm4.sizes.at(comp));
 		}
-		PP(numComps);
+		cpm4Results.close();
+		cout << "k=" << k
+			<< "\t#communities " << numComps
+			<< endl;
+	}
 	}
 }
