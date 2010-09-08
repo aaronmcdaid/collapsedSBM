@@ -675,7 +675,12 @@ void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const 
 	vector<int> cliquesIShareANodeWith;
 	forEach(const int v, mk_range(clique)) {
 		const size_t split = cliquesIShareANodeWith.size();
-		forEach(const int adjClique, mk_range(nodeToCliquesMap.at(v))) {
+		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
+		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
+		i_end = lower_bound(i, i_end, cliqueID);
+		for(;i!=i_end;i++){
+			const int adjClique = *i;
+			assert(adjClique < cliqueID);
 			if(adjClique < cliqueID) { // clique[cliqueID] should only be compared against larger cliques
 				// if(cpm4.component.at(cliqueID) != cpm4.component.at(adjClique) ) {
 					// PP(adjClique);
