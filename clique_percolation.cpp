@@ -566,7 +566,8 @@ struct ConnectedComponents {
 	vector<int> component;
 	vector<int> next;
 	vector<int> prev;
-	ConnectedComponents(int _C) : C(_C), component(C), next(C), prev(C) {
+	vector<int> sizes;
+	ConnectedComponents(int _C) : C(_C), component(C), next(C), prev(C), sizes(C,1) {
 		for(int i=0; i<C; i++) {
 			component.at(i) = i;
 			next     .at(i) = i;
@@ -576,6 +577,12 @@ struct ConnectedComponents {
 	void joinNodesIntoSameComponent(int cl1, int cl2) {
 		const int comp1 = this->component.at(cl1);
 		const int comp2 = this->component.at(cl2);
+		{ // this'd be faster if comp2 is smaller
+			if(this->sizes.at(comp1) < this->sizes.at(comp2)) {
+				this->joinNodesIntoSameComponent(cl2,cl1);
+				return;
+			}
+		}
 		assert(comp1 != comp2); // TODO: 
 #ifdef checkCompSizes
 		int sizeA = 0;
@@ -610,9 +617,14 @@ struct ConnectedComponents {
 		assert(comp1 == this->component.at(comp1));
 		assert(comp2 == this->component.at(comp2));
 		// abolish comp2, renaming all of its to comp1
+		int size2 = 0;
 		for(int cl = comp2; this->component.at(cl)==comp2; cl = this->next.at(cl) ) {
 			this->component.at(cl) = comp1;
+			size2++;
 		}
+		assert(size2 == this->sizes.at(comp2));
+		this->sizes.at(comp1) += size2;
+		this->sizes.at(comp2) = 0;
 		assert(comp1 == this->component.at(comp2));
 		const int comp1SndLast = this->prev.at(comp1);
 		const int comp2SndLast = this->prev.at(comp2);
@@ -623,6 +635,7 @@ struct ConnectedComponents {
 		this->prev.at(comp1) = comp2SndLast;
 		this->prev.at(comp2) = comp1SndLast;
 
+#ifdef checkCompSizes
 		{
 			int cl = comp1;
 			int size = 0;
@@ -635,10 +648,9 @@ struct ConnectedComponents {
 
 				cl = this->next.at(cl);
 			} while (cl != comp1);
-#ifdef checkCompSizes
 			assert(size == sizeA + sizeB);
-#endif
 		}
+#endif
 	}
 };
 
@@ -763,6 +775,7 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 						cl = cpm4.next.at(cl);
 					} while (cl != comp);
 					PP(cliquesInThisCPMComm);
+					assert(cliquesInThisCPMComm == cpm4.sizes.at(comp));
 					PP(nodesInThisCPMComm.size());
 				}
 				{ // output to the file
@@ -771,7 +784,8 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 					}
 					cpm4Results << endl;
 				}
-			}
+			} else
+				assert(0 == cpm4.sizes.at(comp));
 		}
 		PP(numComps);
 	}
