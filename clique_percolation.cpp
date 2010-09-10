@@ -34,6 +34,7 @@ typedef	vector<V> Clique;
 typedef	unsigned int uint;
 struct Community;
 typedef map<unsigned int, set<Community*> > MapType;
+vector< pair<double,bool> > option_thresholds; // this'll be set by an external module, like acp.cpp
 
 struct CliqueStore : public CliqueSink {
 	vector<Clique > all_cliques;
@@ -690,7 +691,7 @@ void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, 
 		}
 	}
 }
-void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
+void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, vector<ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
 /*
 	cout << "                                                                  "; PP(cliqueID);
 	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
@@ -724,16 +725,40 @@ void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const 
 			if(consecutiveLikeThis >= 2) {
 				// PP(consecutiveLikeThis);
 				for(int k = 3; k <= consecutiveLikeThis+1; k++) {
-					ConnectedComponents &cpmk = cpms.at(k);
-					if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique) && (int)all_cliques.at(cliqueID).size() >= k) {
-						// PP(currentClique);
-						// PP(cpmk.component.at(currentClique));
-						assert((int)all_cliques.at(cliqueID).size() >= k);
-						assert((int)all_cliques.at(currentClique).size() >= k);
-						assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
-						assert(consecutiveLikeThis >= k-1);
-						cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
-						// PP(cpmk.component.at(currentClique));
+					if((int)all_cliques.at(cliqueID).size() >= k) {
+						ConnectedComponents &cpmk = cpms.at(k);
+						if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique)) {
+							// PP(currentClique);
+							// PP(cpmk.component.at(currentClique));
+							assert((int)all_cliques.at(cliqueID).size() >= k);
+							assert((int)all_cliques.at(currentClique).size() >= k);
+							assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
+							assert(consecutiveLikeThis >= k-1);
+							cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
+							// PP(cpmk.component.at(currentClique));
+						}
+					}
+				}
+			}
+			{ // no restriction on consecutiveLikeThis. Even a single node in the overlap is enough.
+				for(int k = 0; k < (int)option_thresholds.size(); k++) {
+					const int s_small = (int)all_cliques.at(cliqueID)     .size();
+					const int s_big   = (int)all_cliques.at(currentClique).size();
+					if(
+							   ( option_thresholds.at(k).second && s_small >= s_big * 0.01*option_thresholds.at(k).first)
+							|| (!option_thresholds.at(k).second && s_small >  s_big * 0.01*option_thresholds.at(k).first)
+						) { // always comparing smaller to bigger, so we can just apply the relative threshold to the size of clique #cliqueID
+						ConnectedComponents &cpmk = byRelative.at(k);
+						if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique)) {
+							// PP(currentClique);
+							// PP(cpmk.component.at(currentClique));
+							// assert((int)all_cliques.at(cliqueID).size() >= k);
+							// assert((int)all_cliques.at(currentClique).size() >= k);
+							assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
+							// assert(consecutiveLikeThis >= k-1);
+							cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
+							// PP(cpmk.component.at(currentClique));
+						}
 					}
 				}
 			}
@@ -747,6 +772,45 @@ void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const 
 			assert(currentClique < (int) all_cliques.size());
 		}
 	}
+}
+
+int printCommsToFile(ofstream &cpm4Results, const ConnectedComponents &one_set_of_comms, const int numCliques, const CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
+		int numComps = 0;
+		for(int comp=0; comp<numCliques; comp++) {
+			if(comp == one_set_of_comms.component.at(comp) && one_set_of_comms.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
+				continue; // This clique is too small to be relevant at this level of k. It will not have been merged into any communities.
+			}
+			if(comp == one_set_of_comms.component.at(comp)) {
+				//PP(comp);
+				numComps++;
+				set<int> nodesInThisCPMComm;
+				{
+					int cliquesInThisCPMComm = 0;
+					int cl = comp;
+					do {
+						assert(one_set_of_comms.component.at(cl) == comp);
+						assert((int)cliques.all_cliques.at(cl).size() >= k);
+						cliquesInThisCPMComm++;
+						// cout << "clique " << cl << " is in component " << one_set_of_comms.component.at(cl) << endl;
+						assert(cl == one_set_of_comms.prev.at(one_set_of_comms.next.at(cl)));
+						forEach(const int v, mk_range(cliques.all_cliques.at(cl))) {
+							nodesInThisCPMComm.insert(v);
+						}
+						cl = one_set_of_comms.next.at(cl);
+					} while (cl != comp);
+					assert(cliquesInThisCPMComm == one_set_of_comms.sizes.at(comp)); // TODO: Shouldn't allow that clique into the community anyway.
+				}
+				{ // output to the file
+					forEach(const int v, mk_range(nodesInThisCPMComm)) {
+						cpm4Results << ' ' << atoi(g_->NodeAsString(v));
+					}
+					cpm4Results << endl;
+				}
+			} else
+				assert(0 == one_set_of_comms.sizes.at(comp));
+		}
+		cpm4Results.close();
+		return numComps;
 }
 
 void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
@@ -781,55 +845,34 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 		}
 	}
 	vector<ConnectedComponents> cpms(1+maxCliqueSize);
+	vector<ConnectedComponents> byRelative(option_thresholds.size());
 	for(int i=3; i<=maxCliqueSize; i++)
 		cpms.at(i).setNumCliques(numCliques);
+	for(int i=0; i<(int)option_thresholds.size(); i++)
+		byRelative.at(i).setNumCliques(numCliques);
 	{ Timer timer("do the clique percolation");
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
-			percolateThis(cliqueID, cpms, nodeToCliquesMap, cliques.all_cliques, g_);
+			percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_);
 		}
 	}
 	{	Timer timer("print the results");
-	for(int k=3; k<=maxCliqueSize; k++) {
-		ofstream cpm4Results((outputDirectory + printfstring("/comm%d", k)).c_str());
-		ConnectedComponents &cpm4 = cpms.at(k);
-		int numComps = 0;
-		for(int comp=0; comp<numCliques; comp++) {
-			if(comp == cpm4.component.at(comp) && cpm4.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
-				continue; // This clique is too small to be relevant at this level of k. It will not have been merged into any communities.
-			}
-			if(comp == cpm4.component.at(comp)) {
-				//PP(comp);
-				numComps++;
-				set<int> nodesInThisCPMComm;
-				{
-					int cliquesInThisCPMComm = 0;
-					int cl = comp;
-					do {
-						assert(cpm4.component.at(cl) == comp);
-						assert((int)cliques.all_cliques.at(cl).size() >= k);
-						cliquesInThisCPMComm++;
-						// cout << "clique " << cl << " is in component " << cpm4.component.at(cl) << endl;
-						assert(cl == cpm4.prev.at(cpm4.next.at(cl)));
-						forEach(const int v, mk_range(cliques.all_cliques.at(cl))) {
-							nodesInThisCPMComm.insert(v);
-						}
-						cl = cpm4.next.at(cl);
-					} while (cl != comp);
-					assert(cliquesInThisCPMComm == cpm4.sizes.at(comp)); // TODO: Shouldn't allow that clique into the community anyway.
-				}
-				{ // output to the file
-					forEach(const int v, mk_range(nodesInThisCPMComm)) {
-						cpm4Results << ' ' << atoi(g_->NodeAsString(v));
-					}
-					cpm4Results << endl;
-				}
-			} else
-				assert(0 == cpm4.sizes.at(comp));
+		for(int k=3; k<=maxCliqueSize; k++) {
+			ofstream cpm4Results((outputDirectory + printfstring("/comm%d", k)).c_str());
+			ConnectedComponents &one_set_of_comms = cpms.at(k);
+			const int numComps = printCommsToFile(cpm4Results, one_set_of_comms, numCliques, cliques, k, g_);
+			cout << "k=" << k
+				<< "\t#communities " << numComps
+				<< endl;
 		}
-		cpm4Results.close();
-		cout << "k=" << k
-			<< "\t#communities " << numComps
-			<< endl;
-	}
+		for(int t=0; t< (int)option_thresholds.size(); t++) {
+			assert(t < (int)option_thresholds.size());
+			assert(t < (int)byRelative       .size());
+			const char * suffix = option_thresholds.at(t).second ? "inc" : "" ;
+			ofstream fileForOutput((outputDirectory + printfstring("/thresh_%g%s", option_thresholds.at(t).first, suffix)).c_str());
+			const int numComps = printCommsToFile(fileForOutput, byRelative.at(t), numCliques, cliques, 3, g_);
+			cout << "threshold=" << option_thresholds.at(t).first << '%' << suffix
+				<< "\t#communities " << numComps
+				<< endl;
+		}
 	}
 }

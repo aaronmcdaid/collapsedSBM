@@ -30,7 +30,8 @@ boost_1_41_0:
 
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lstdc++ -lrt
-CXXFLAGS= ${BITS} -O3     -g ${CFLAGS} # -DNDEBUG
+CXXFLAGS= ${BITS} -O3 -pg -g ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
+#acp: CXXFLAGS += -DNDEBUG
 acp: shmGraphRaw.o Range.o cliques.o clique_percolation.o aaron_utils.o

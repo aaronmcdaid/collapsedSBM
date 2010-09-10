@@ -18,9 +18,10 @@ int main(int argc, char **argv) {
         {0, 0, 0, 0}
       };
       /* getopt_long stores the option index here. */
-      c = getopt_long (argc, argv, "", long_options, &option_index);
+      c = getopt_long (argc, argv, "t:T:", long_options, &option_index);
       if (c == -1) break; /* Detect the end of the options. */
      
+			bool option_inclusiveThreshold = false; // this is not a global fixed option. Remember that multiple -t and -T may be specified by the user
       switch (c) {
         case '?': /* getopt_long already printed an error message. */ break;
         default: abort (); break;
@@ -32,6 +33,23 @@ int main(int argc, char **argv) {
           if (optarg) printf (" with arg %s", optarg);
           printf ("\n");
           break;
+        case 'T':
+					option_inclusiveThreshold = true;
+        case 't':
+					char * endptr;
+					double threshold = strtod(optarg, &endptr);
+					unless(threshold >= 0.0 && threshold <= 100.0)
+						Die("Percentage relative percolation threshold should be between 0 and 100: %g. Exiting", threshold);
+					unless(*endptr == '\0')
+						Die("Badly formed -t or -T relative threshold. Must be a real number between 0 and 100: '%s'", optarg);
+					if(option_inclusiveThreshold)
+						unless(threshold > 0.0)
+							Die("No point having a relative threshold of zero if it is inclusive. Exiting");
+
+					option_thresholds.push_back(make_pair(threshold, option_inclusiveThreshold));
+					PP(optarg);
+					PP(endptr);
+					break;
 
 /*
         case 21: // --saveMOSESscores= {"saveMOSESscores", required_argument,         0, 21},
