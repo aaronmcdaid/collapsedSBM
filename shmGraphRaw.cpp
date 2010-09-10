@@ -285,9 +285,9 @@ public:
 		// delete nodes; delete relationships; delete neighbouring_relationships; // seems like you can't/shouldn't delete objects like this
 	}
 	explicit DumbGraphRaw(const std::string &dir)
-		: segment_strings     (open_or_create, (dir + "/" + STRINGS_MMAP       ).c_str() , 10000000)
-		, segment_nodesAndRels(open_or_create, (dir + "/" + NODES_AND_RELS_MMAP).c_str() , 10000000)
-		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 10000000)
+		: segment_strings     (open_or_create, (dir + "/" + STRINGS_MMAP       ).c_str() , 100000000)
+		, segment_nodesAndRels(open_or_create, (dir + "/" + NODES_AND_RELS_MMAP).c_str() , 100000000)
+		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 100000000)
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 	{
 		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
