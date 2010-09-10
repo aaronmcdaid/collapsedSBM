@@ -663,16 +663,8 @@ struct ConnectedComponents {
 	}
 };
 
-void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
-/*
-	cout << "                                                                  "; PP(cliqueID);
-	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
-	cout << "                                                                  "; PP(cpm4.prev.at(cliqueID));
-	cout << "                                                                  "; PP(cpm4.component.at(cliqueID));
-	cout << "                                                                  "; PP(cpm4.component.at(142));
-*/
+void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, /*vector<ConnectedComponents> &cpms, */const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
 	const Clique &clique = all_cliques.at(cliqueID);
-	vector<int> cliquesIShareANodeWith;
 	forEach(const int v, mk_range(clique)) {
 		const size_t split = cliquesIShareANodeWith.size();
 		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
@@ -697,15 +689,22 @@ void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const 
 			inplace_merge(cliquesIShareANodeWith.begin(), splitIter, cliquesIShareANodeWith.end());
 		}
 	}
-
+}
+void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, const vector< vector<int> > &nodeToCliquesMap, const vector<Clique> &all_cliques, const SimpleIntGraph &g) {
 /*
-	DYINGWORDS(cliquesIShareANodeWith.size()>0) {
-		forEach(int v, mk_range(all_cliques.at(cliqueID))) {
-			PP(v);
-			PP(g->NodeAsString(v));
-		}
-	}
+	cout << "                                                                  "; PP(cliqueID);
+	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.prev.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.component.at(cliqueID));
+	cout << "                                                                  "; PP(cpm4.component.at(142));
 */
+	vector<int> cliquesIShareANodeWith;
+	// cliquesIShareANodeWith.reserve(1000000);
+	// cliquesIShareANodeWith.clear();
+	// assert(cliquesIShareANodeWith.size()==0);
+
+	myAdjacentCliques(cliquesIShareANodeWith, cliqueID, /*cpms, */nodeToCliquesMap, all_cliques, g);
+
 	if(cliquesIShareANodeWith.size()==0)
 		return;
 
