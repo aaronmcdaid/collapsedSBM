@@ -7,6 +7,8 @@ using namespace std;
 #include "cliques.hpp"
 #include "clique_percolation.hpp"
 
+int option_minCliqueSize = 3;
+
 int main(int argc, char **argv) {
 	// for (int i=0; i<argc; i++) {
 		// PP(argv[i]);
@@ -18,7 +20,7 @@ int main(int argc, char **argv) {
         {0, 0, 0, 0}
       };
       /* getopt_long stores the option index here. */
-      c = getopt_long (argc, argv, "t:T:", long_options, &option_index);
+      c = getopt_long (argc, argv, "t:T:k:", long_options, &option_index);
       if (c == -1) break; /* Detect the end of the options. */
      
 			bool option_inclusiveThreshold = false; // this is not a global fixed option. Remember that multiple -t and -T may be specified by the user
@@ -36,6 +38,7 @@ int main(int argc, char **argv) {
         case 'T':
 					option_inclusiveThreshold = true;
         case 't':
+					{
 					char * endptr;
 					double threshold = strtod(optarg, &endptr);
 					unless(threshold >= 0.0 && threshold <= 100.0)
@@ -47,8 +50,12 @@ int main(int argc, char **argv) {
 							Die("No point having a relative threshold of zero if it is inclusive. Exiting");
 
 					option_thresholds.push_back(make_pair(threshold, option_inclusiveThreshold));
-					PP(optarg);
-					PP(endptr);
+					}
+					break;
+        case 'k':
+					option_minCliqueSize = atoi(optarg);
+					unless(option_minCliqueSize >= 3)
+						Die("-k option must be at least three: %d. Exiting", option_minCliqueSize);
 					break;
 
 /*
@@ -94,9 +101,9 @@ int main(int argc, char **argv) {
 	PP(g->numRels());
 	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
 #ifdef ACP1
-	cliquePercolation(g.get(), directoryForOutput, 3); // You're not allowed to ask for the 2-cliques
+	cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 #else
-	cliquePercolation2(g.get(), directoryForOutput, 3); // You're not allowed to ask for the 2-cliques
+	cliquePercolation2(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 #endif
 
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
