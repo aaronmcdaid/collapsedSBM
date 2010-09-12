@@ -824,8 +824,15 @@ int printCommsAndCliquesToFile(ofstream &cpm4Results, const ConnectedComponents 
 				numComps++;
 				{
 					int cliquesInThisCPMComm = 0;
-					int cl = comp;
-					do {
+					set<int> cliqueIDsInThisComm;
+					{
+						int cl = comp;
+						do {
+							cliqueIDsInThisComm.insert(cl);
+							cl = one_set_of_comms.next.at(cl);
+						} while (cl != comp);
+					}
+					forEach(const int cl, mk_range(cliqueIDsInThisComm)) {
 						assert(one_set_of_comms.component.at(cl) == comp);
 						assert((int)cliques.all_cliques.at(cl).size() >= k);
 						cliquesInThisCPMComm++;
@@ -839,10 +846,10 @@ int printCommsAndCliquesToFile(ofstream &cpm4Results, const ConnectedComponents 
 						forEach(const string &s, mk_range(nodeNamesInThisClique)) {
 							cpm4Results << ' ' << s;
 						}
-						cl = one_set_of_comms.next.at(cl);
-					} while (cl != comp);
+					}
 					cpm4Results << endl;
-					assert(cliquesInThisCPMComm == one_set_of_comms.sizes.at(comp)); // TODO: Shouldn't allow that clique into the community anyway.
+					assert(cliquesInThisCPMComm == one_set_of_comms.sizes.at(comp));
+					assert(cliquesInThisCPMComm == (int)cliqueIDsInThisComm.size());
 				}
 			} else
 				assert(0 == one_set_of_comms.sizes.at(comp));
