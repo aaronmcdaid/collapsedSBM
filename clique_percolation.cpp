@@ -813,6 +813,44 @@ int printCommsToFile(ofstream &cpm4Results, const ConnectedComponents &one_set_o
 		return numComps;
 }
 
+int printCommsAndCliquesToFile(ofstream &cpm4Results, const ConnectedComponents &one_set_of_comms, const int numCliques, const CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
+		int numComps = 0;
+		for(int comp=0; comp<numCliques; comp++) {
+			if(comp == one_set_of_comms.component.at(comp) && one_set_of_comms.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
+				continue; // This clique is too small to be relevant at this level of k. It will not have been merged into any communities.
+			}
+			if(comp == one_set_of_comms.component.at(comp)) {
+				//PP(comp);
+				numComps++;
+				{
+					int cliquesInThisCPMComm = 0;
+					int cl = comp;
+					do {
+						assert(one_set_of_comms.component.at(cl) == comp);
+						assert((int)cliques.all_cliques.at(cl).size() >= k);
+						cliquesInThisCPMComm++;
+						// cout << "clique " << cl << " is in component " << one_set_of_comms.component.at(cl) << endl;
+						assert(cl == one_set_of_comms.prev.at(one_set_of_comms.next.at(cl)));
+						cpm4Results << " {" << cl << "}";
+						set<string> nodeNamesInThisClique;
+						forEach(const int v, mk_range(cliques.all_cliques.at(cl))) {
+							nodeNamesInThisClique.insert(g_->NodeAsString(v));
+						}
+						forEach(const string &s, mk_range(nodeNamesInThisClique)) {
+							cpm4Results << ' ' << s;
+						}
+						cl = one_set_of_comms.next.at(cl);
+					} while (cl != comp);
+					cpm4Results << endl;
+					assert(cliquesInThisCPMComm == one_set_of_comms.sizes.at(comp)); // TODO: Shouldn't allow that clique into the community anyway.
+				}
+			} else
+				assert(0 == one_set_of_comms.sizes.at(comp));
+		}
+		cpm4Results.close();
+		return numComps;
+}
+
 void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
 	assert(minimumSize >= 3);
 	create_directory(outputDirectory);
@@ -868,7 +906,9 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 			assert(t < (int)option_thresholds.size());
 			assert(t < (int)byRelative       .size());
 			const char * suffix = option_thresholds.at(t).second ? "inc" : "" ;
+			ofstream fileForOutput_((outputDirectory + printfstring("/thresh_%g%s_cliques", option_thresholds.at(t).first, suffix)).c_str());
 			ofstream fileForOutput((outputDirectory + printfstring("/thresh_%g%s", option_thresholds.at(t).first, suffix)).c_str());
+			           printCommsAndCliquesToFile(fileForOutput_,byRelative.at(t), numCliques, cliques, 3, g_);
 			const int numComps = printCommsToFile(fileForOutput, byRelative.at(t), numCliques, cliques, 3, g_);
 			cout << "threshold=" << option_thresholds.at(t).first << '%' << suffix
 				<< "\t#communities " << numComps
