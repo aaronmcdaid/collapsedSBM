@@ -744,9 +744,13 @@ void percolateThis(const int cliqueID, vector<ConnectedComponents> &cpms, vector
 				for(int k = 0; k < (int)option_thresholds.size(); k++) {
 					const int s_small = (int)all_cliques.at(cliqueID)     .size();
 					const int s_big   = (int)all_cliques.at(currentClique).size();
+					assert(consecutiveLikeThis > 0);
+					assert(consecutiveLikeThis < s_small);
+					assert(consecutiveLikeThis < s_big);
+					assert(s_small <= s_big);
 					if(
-							   ( option_thresholds.at(k).second && s_small >= s_big * 0.01*option_thresholds.at(k).first)
-							|| (!option_thresholds.at(k).second && s_small >  s_big * 0.01*option_thresholds.at(k).first)
+							   ( option_thresholds.at(k).second && consecutiveLikeThis >= s_small * 0.01*option_thresholds.at(k).first)
+							|| (!option_thresholds.at(k).second && consecutiveLikeThis >  s_small * 0.01*option_thresholds.at(k).first)
 						) { // always comparing smaller to bigger, so we can just apply the relative threshold to the size of clique #cliqueID
 						ConnectedComponents &cpmk = byRelative.at(k);
 						if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique)) {
@@ -877,6 +881,16 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 	}
 	const int maxCliqueSize = cliques.all_cliques.at(0).size();
 	PP(maxCliqueSize);
+	{
+		map<int,int> cliqueSizeFrequencies;
+		forEach(const Clique &cl, mk_range(cliques.all_cliques)) {
+			cliqueSizeFrequencies[cl.size()]++;
+		}
+		cout << "clique-size frequencies" << endl;
+		forEach(const typeof(pair<int,int>) &freq, mk_range(cliqueSizeFrequencies)) {
+			cout << "#" << freq.first << "\t" << freq.second << endl;
+		}
+	}
 
 	vector< vector<int> > nodeToCliquesMap(g_->numNodes());
 
