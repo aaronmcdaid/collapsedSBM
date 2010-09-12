@@ -902,8 +902,10 @@ void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory,
 	}
 	{	Timer timer("print the results");
 		for(int k=3; k<=maxCliqueSize; k++) {
+			ofstream cpm4Results_((outputDirectory + printfstring("/comm%d_cliques", k)).c_str());
 			ofstream cpm4Results((outputDirectory + printfstring("/comm%d", k)).c_str());
 			ConnectedComponents &one_set_of_comms = cpms.at(k);
+                printCommsAndCliquesToFile(cpm4Results_, one_set_of_comms, numCliques, cliques, k, g_);
 			const int numComps = printCommsToFile(cpm4Results, one_set_of_comms, numCliques, cliques, k, g_);
 			cout << "k=" << k
 				<< "\t#communities " << numComps
