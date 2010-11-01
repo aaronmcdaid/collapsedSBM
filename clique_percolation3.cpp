@@ -1,6 +1,6 @@
 #include "clique_percolation3.hpp"
 #include "graph_utils.hpp"
-void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, /*vector<amd::ConnectedComponents> &cpms, */const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g) {
+static void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, /*vector<amd::ConnectedComponents> &cpms, */const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g) {
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
 	forEach(const int v, amd::mk_range(clique)) {
 		const size_t split = cliquesIShareANodeWith.size();
@@ -27,7 +27,7 @@ void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, 
 		}
 	}
 }
-void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g) {
+static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g, const vector<pair<double,bool> > &option_thresholds) {
 /*
 	cout << "                                                                  "; PP(cliqueID);
 	cout << "                                                                  "; PP(cpm4.next.at(cliqueID));
@@ -114,7 +114,7 @@ void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, v
 	}
 }
 
-int printCommsToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
+static int printCommsToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
 		int numComps = 0;
 		for(int comp=0; comp<numCliques; comp++) {
 			if(comp == one_set_of_comms.component.at(comp) && one_set_of_comms.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
@@ -153,7 +153,7 @@ int printCommsToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_
 		return numComps;
 }
 
-int printCommsAndCliquesToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
+static int printCommsAndCliquesToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
 		int numComps = 0;
 		for(int comp=0; comp<numCliques; comp++) {
 			if(comp == one_set_of_comms.component.at(comp) && one_set_of_comms.sizes.at(comp)==1 && (int)cliques.all_cliques.at(comp).size() < k) {
@@ -198,7 +198,7 @@ int printCommsAndCliquesToFile(ofstream &cpm4Results, const amd::ConnectedCompon
 		return numComps;
 }
 
-void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
+void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize, const vector< pair<double,bool> > &option_thresholds) {
 	assert(minimumSize >= 3);
 	amd::create_directory(outputDirectory);
 
@@ -247,7 +247,7 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 		byRelative.at(i).setNumCliques(numCliques);
 	{ Timer timer("do the clique percolation");
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
-			percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_);
+			percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
 		}
 	}
 	{	Timer timer("print the results");

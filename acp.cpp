@@ -10,6 +10,8 @@ using namespace std;
 
 int option_minCliqueSize = 3;
 
+vector< pair<double,bool> > option_thresholds;
+
 int main(int argc, char **argv) {
 	// for (int i=0; i<argc; i++) {
 		// PP(argv[i]);
@@ -104,7 +106,7 @@ int main(int argc, char **argv) {
 	if(0)
 		cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 	else
-		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
 
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
 }

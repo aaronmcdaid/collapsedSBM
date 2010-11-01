@@ -35,7 +35,6 @@ using namespace amd;
 typedef	unsigned int uint;
 struct Community;
 typedef map<unsigned int, set<Community*> > MapType;
-vector< pair<double,bool> > option_thresholds; // this'll be set by an external module, like acp.cpp
 
 struct CliqueStore : public CliqueSink {
 	vector<Clique > all_cliques;
