@@ -2,8 +2,9 @@
 #include "graph_utils.hpp"
 static void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, /*vector<amd::ConnectedComponents> &cpms, */const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g) {
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
+	list<size_t> splits; // the end-offset of each
+	splits.push_back(0);
 	forEach(const int v, amd::mk_range(clique)) {
-		const size_t split = cliquesIShareANodeWith.size();
 		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
 		i_end = lower_bound(i, i_end, cliqueID);
@@ -17,14 +18,37 @@ static void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cli
 				// }
 			}
 		}
-		// The cliques before the split, will be sorted, as will those after. But we need to merge them.
-		if(split > 0 && split < cliquesIShareANodeWith.size()) {
-			vector<int>::iterator splitIter = cliquesIShareANodeWith.begin() + split;
-			// printf("%p\n", &*cliquesIShareANodeWith.begin());
-			// printf("%p\n", &*splitIter);
-			// printf("%p\n", &*cliquesIShareANodeWith.end());
-			inplace_merge(cliquesIShareANodeWith.begin(), splitIter, cliquesIShareANodeWith.end());
+		const size_t split = cliquesIShareANodeWith.size();
+		if(splits.back() != split)
+			splits.push_back(split);
+	}
+	if(splits.size() <= 1) {
+		assert(cliquesIShareANodeWith.size() == 0);
+		return;
+	}
+	assert(splits.size()>1);
+	assert(splits.back() == cliquesIShareANodeWith.size());
+	while(splits.size() > 2) {
+		while(1) {
+			list<size_t>::iterator t = splits.begin();
+			list<size_t>::iterator m = t;
+			assert(m != splits.end());
+			m++; assert(m != splits.end());
+			list<size_t>::iterator h = m;
+			h++; assert(h != splits.end());
+			// PP2(*t, *m);PP( *h);
+			inplace_merge(
+			 	cliquesIShareANodeWith.begin() + *t
+				,cliquesIShareANodeWith.begin() + *m
+				,cliquesIShareANodeWith.begin() + *h
+				);
+			splits.erase(m);
+			break;
 		}
+	}
+	// sort(cliquesIShareANodeWith.begin(), cliquesIShareANodeWith.end());
+	for(int i=1; i<(int)cliquesIShareANodeWith.size(); i++) {
+		assert(cliquesIShareANodeWith.at(i) >= cliquesIShareANodeWith.at(i-1));
 	}
 }
 static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g, const vector<pair<double,bool> > &option_thresholds) {
