@@ -1,4 +1,4 @@
-
+#include <boost/unordered_map.hpp>
 #include "clique_percolation4.hpp"
 #include "graph_utils.hpp"
 #if 0
@@ -258,17 +258,20 @@ void cliquePercolation4(const SimpleIntGraph &g_, const string &outputDirectory,
 	for(int i=0; i<(int)option_thresholds.size(); i++)
 		byRelative.at(i).setNumCliques(numCliques);
 	{ Timer timer("do the clique percolation (scheme 4)");
-		vector< pair<int,int> > allOverlaps;
+		boost::unordered_map< pair<int,int>, int > allOverlaps;
+		{ Timer timer("find size of overlaps");
 		for(int v = 0; v < g_->numNodes(); v++) {
 			const vector<int> &my_cliques = nodeToCliquesMap.at(v);
-			PP2(v, my_cliques.size());
+			if(v && v%100==0)
+				PP(v);
+			// if(my_cliques.size()>0) PP2(v, my_cliques.size());
 			vector<int>::const_iterator c1    = my_cliques.begin();
 			while(c1 != my_cliques.end()) {
 				vector<int>::const_iterator c2    = c1+1;
 				while(c2 != my_cliques.end()) {
 					// PP2(*v1, *v2);
 					assert(*c1 < *c2);
-					allOverlaps.push_back(make_pair(*c1, *c2));
+					allOverlaps[make_pair(*c1, *c2)]++;
 					c2++;
 				}
 				c1++;
@@ -276,27 +279,23 @@ void cliquePercolation4(const SimpleIntGraph &g_, const string &outputDirectory,
 			// break;
 			// percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
 		}
-		{	Timer timer("sorting");
-			sort(allOverlaps.begin(), allOverlaps.end());
 		}
+		// {	Timer timer("sorting");
+			// sort(allOverlaps.begin(), allOverlaps.end());
+		// }
 		{	Timer timer("count them");
-			vector< pair<int,int> >::const_iterator firstOfAKind = allOverlaps.begin();
-			while (firstOfAKind != allOverlaps.end()) {
-				vector< pair<int,int> >::const_iterator copies = firstOfAKind;
-				int num_copies = 0;
-				while(copies != allOverlaps.end() && *copies == *firstOfAKind) {
-					++copies;
-					++num_copies;
-				}
-				if(num_copies > 1) {
-					const int clid1 = firstOfAKind->first;
-					const int clid2 = firstOfAKind->second;
-					// PP2(clid1, clid2); PP(num_copies);
-					const vector<int> & cl1 = cliques.all_cliques.at(firstOfAKind->first);
-					const vector<int> & cl2 = cliques.all_cliques.at(firstOfAKind->second);
-					assert(num_copies < (int)cl1.size());
-					assert(num_copies < (int)cl2.size());
-					for(int k = 3; k <= num_copies+1; k++) {
+			boost::unordered_map< pair<int,int>, int >::const_iterator oneEdgeInCliqueGraph = allOverlaps.begin();
+			while (oneEdgeInCliqueGraph != allOverlaps.end()) {
+				int size_of_overlap = oneEdgeInCliqueGraph->second;
+				if(size_of_overlap > 1) {
+					const int clid1 = oneEdgeInCliqueGraph->first.first;
+					const int clid2 = oneEdgeInCliqueGraph->first.second;
+					// PP2(clid1, clid2); PP(size_of_overlap);
+					const vector<int> & cl1 = cliques.all_cliques.at(clid1);
+					const vector<int> & cl2 = cliques.all_cliques.at(clid2);
+					assert(size_of_overlap < (int)cl1.size());
+					assert(size_of_overlap < (int)cl2.size());
+					for(int k = 3; k <= size_of_overlap+1; k++) {
 						// if(cliqueID_size >= k)
 						{
 							// assert(k <= cliqueID_size);
@@ -314,7 +313,7 @@ void cliquePercolation4(const SimpleIntGraph &g_, const string &outputDirectory,
 						}
 					}
 				}
-				firstOfAKind = copies;
+				oneEdgeInCliqueGraph ++;
 			}
 		}
 	}
