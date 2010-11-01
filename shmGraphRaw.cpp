@@ -215,7 +215,7 @@ public:
 			return i->second;
 	}
 	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const {
-		assert(relId >=0 && relId <= this->numRels() );
+		assert(relId >=0 && relId < this->numRels() );
 		const pair<int,int> &endpoints = relationshipsRO->get<idT>().find(relId)->nodeIds;
 		const char *l = this->NodeAsString(endpoints.first); // (*strings_wrap)[nodes->get<idT>().find(endpoints.first )->string_h];
 		const char *r = this->NodeAsString(endpoints.second);// (*strings_wrap)[nodes->get<idT>().find(endpoints.second)->string_h];
@@ -233,7 +233,7 @@ public:
 		return i->id;
 	}
 	virtual const std::pair<int, int> & EndPoints(int relId) const {
-		assert(relId >=0 && relId <= this->numRels() );
+		assert(relId >=0 && relId < this->numRels() );
 		return relationshipsRO->get<idT>().find(relId)->nodeIds;
 	}
 	virtual bool are_connected(int v1, int v2) const {
