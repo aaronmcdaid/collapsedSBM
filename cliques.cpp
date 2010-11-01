@@ -152,5 +152,7 @@ void CliquesVector::operator () (Clique Compsub) { // We MUST sort this, the cli
 		}
 }
 bool moreBySize(const vector<V> & l, const vector<V> & r) { return l.size() > r.size(); }
+/*virtual */CliqueFunctionAdaptor::~CliqueFunctionAdaptor() {
+}
 
 } // namespace cliques
