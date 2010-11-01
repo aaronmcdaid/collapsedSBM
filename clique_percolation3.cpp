@@ -45,31 +45,39 @@ static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &
 	if(cliquesIShareANodeWith.size()==0)
 		return;
 
+	vector<int>::const_iterator cliquesIShareANodeWith_begin = cliquesIShareANodeWith.begin();
+	vector<int>::const_iterator cliquesIShareANodeWith_end = cliquesIShareANodeWith.end();
+
+	const bool do_asserts = false;
+
 	int currentClique = -1;
-	vector<int>::iterator next = cliquesIShareANodeWith.begin();
-	assert( next != cliquesIShareANodeWith.end());
+	const int cliqueID_size = (int)all_cliques.at(cliqueID).size();
+	vector<int>::const_iterator next = cliquesIShareANodeWith_begin;
+	assert( next != cliquesIShareANodeWith_end);
 	while(currentClique < (int)all_cliques.size()) {
 		int consecutiveLikeThis = 0;
-		while(next != cliquesIShareANodeWith.end() && currentClique == *next) {
+		while(next != cliquesIShareANodeWith_end && currentClique == *next) {
 			++consecutiveLikeThis;
 			++next;
 		}
 		if(currentClique > -1) {
-			assert(consecutiveLikeThis < (int)all_cliques.at(cliqueID).size());
-			assert(consecutiveLikeThis < (int)all_cliques.at(currentClique).size());
+			if(do_asserts) assert(consecutiveLikeThis < cliqueID_size);
+			if(do_asserts) assert(consecutiveLikeThis < (int)all_cliques.at(currentClique).size());
 			// cout << consecutiveLikeThis << " instances of clique #" << currentClique << endl;
 			if(consecutiveLikeThis >= 2) {
 				// PP(consecutiveLikeThis);
-				for(int k = 3; k <= consecutiveLikeThis+1; k++) {
-					if((int)all_cliques.at(cliqueID).size() >= k) {
+				for(int k = 3; k <= consecutiveLikeThis+1 && k <= cliqueID_size; k++) {
+					// if(cliqueID_size >= k)
+					{
+						// assert(k <= cliqueID_size);
 						amd::ConnectedComponents &cpmk = cpms.at(k);
 						if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique)) {
 							// PP(currentClique);
 							// PP(cpmk.component.at(currentClique));
-							assert((int)all_cliques.at(cliqueID).size() >= k);
-							assert((int)all_cliques.at(currentClique).size() >= k);
-							assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
-							assert(consecutiveLikeThis >= k-1);
+							if(do_asserts) assert(cliqueID_size >= k);
+							if(do_asserts) assert((int)all_cliques.at(currentClique).size() >= k);
+							if(do_asserts) assert(cliqueID_size <= (int)all_cliques.at(currentClique).size());
+							if(do_asserts) assert(consecutiveLikeThis >= k-1);
 							cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
 							// PP(cpmk.component.at(currentClique));
 						}
@@ -80,10 +88,10 @@ static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &
 				for(int k = 0; k < (int)option_thresholds.size(); k++) {
 					const int s_small = (int)all_cliques.at(cliqueID)     .size();
 					const int s_big   = (int)all_cliques.at(currentClique).size();
-					assert(consecutiveLikeThis > 0);
-					assert(consecutiveLikeThis < s_small);
-					assert(consecutiveLikeThis < s_big);
-					assert(s_small <= s_big);
+					if(do_asserts) assert(consecutiveLikeThis > 0);
+					if(do_asserts) assert(consecutiveLikeThis < s_small);
+					if(do_asserts) assert(consecutiveLikeThis < s_big);
+					if(do_asserts) assert(s_small <= s_big);
 					if(
 							   ( option_thresholds.at(k).second && consecutiveLikeThis >= s_small * 0.01*option_thresholds.at(k).first)
 							|| (!option_thresholds.at(k).second && consecutiveLikeThis >  s_small * 0.01*option_thresholds.at(k).first)
@@ -92,9 +100,9 @@ static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &
 						if(cpmk.component.at(cliqueID) != cpmk.component.at(currentClique)) {
 							// PP(currentClique);
 							// PP(cpmk.component.at(currentClique));
-							// assert((int)all_cliques.at(cliqueID).size() >= k);
+							// assert((cliqueID_size>= k);
 							// assert((int)all_cliques.at(currentClique).size() >= k);
-							assert((int)all_cliques.at(cliqueID).size() <= (int)all_cliques.at(currentClique).size());
+							if(do_asserts) assert(cliqueID_size <= (int)all_cliques.at(currentClique).size());
 							// assert(consecutiveLikeThis >= k-1);
 							cpmk.joinNodesIntoSameComponent(cliqueID, currentClique);
 							// PP(cpmk.component.at(currentClique));
