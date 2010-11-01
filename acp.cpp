@@ -1,6 +1,7 @@
 using namespace std;
 #include <getopt.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
@@ -74,7 +75,14 @@ int main(int argc, char **argv) {
     }
 	}
 
-	if (argc - optind != 2) {
+	enum Version { DEFAULT=-1, ACP2=2, ACP3=3 } version = DEFAULT;
+	// PP(basename(argv[0]));
+	// PP(strcmp("acp3", basename(argv[0])));
+	if(strcmp("acp3", basename(argv[0])) == 0) version = ACP3;
+	if(strcmp("acp2", basename(argv[0])) == 0) version = ACP2;
+	// PP(version);
+	// exit(1);
+	unless (argc - optind == 2 && version == ACP3) {
 		cout << "Usage: edge_list directory_for_output" << endl;
 		exit(1);
 	}
