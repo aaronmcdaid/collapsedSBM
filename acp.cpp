@@ -8,6 +8,7 @@ using namespace std;
 #include "cliques.hpp"
 #include "clique_percolation.hpp"
 #include "clique_percolation3.hpp"
+#include "clique_percolation4.hpp"
 
 int option_minCliqueSize = 3;
 
@@ -75,14 +76,15 @@ int main(int argc, char **argv) {
     }
 	}
 
-	enum Version { DEFAULT=-1, ACP2=2, ACP3=3 } version = DEFAULT;
+	enum Version { DEFAULT=-1, ACP2=2, ACP3=3, ACP4=4 } version = DEFAULT;
 	// PP(basename(argv[0]));
 	// PP(strcmp("acp3", basename(argv[0])));
-	if(strcmp("acp3", basename(argv[0])) == 0) version = ACP3;
 	if(strcmp("acp2", basename(argv[0])) == 0) version = ACP2;
+	if(strcmp("acp3", basename(argv[0])) == 0) version = ACP3;
+	if(strcmp("acp4", basename(argv[0])) == 0) version = ACP4;
 	// PP(version);
 	// exit(1);
-	unless (argc - optind == 2 && version == ACP3) {
+	unless (argc - optind == 2 && (version == ACP3 || version==ACP4)) {
 		cout << "Usage: edge_list directory_for_output" << endl;
 		exit(1);
 	}
@@ -111,10 +113,11 @@ int main(int argc, char **argv) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
-	if(0)
-		cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
-	else
+		//cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+	if(version == ACP3)
 		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
+	if(version == ACP4)
+		cliquePercolation4(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
 
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
 }
