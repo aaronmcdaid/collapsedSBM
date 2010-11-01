@@ -29,7 +29,6 @@ struct CliqueFunctionAdaptor {
 
 template <class T> void findCliques(const SimpleIntGraph &, T &cliquesOut, unsigned int minimumSize);
 void cliquesForOneNode(const SimpleIntGraph &g, CliqueFunctionAdaptor &cliquesOut, int minimumSize, V v);
-void create_directory(const string& directory) throw();
 void cliquesToDirectory          (SimpleIntGraph, const string &outputDirectory, unsigned int minimumSize); // You're not allowed to ask for the 2-cliques
 
 
@@ -72,6 +71,13 @@ struct CliqueSink { // Dump the cliques to a file in the CFinder format
 		}
 	}
 };
+typedef	vector<V> Clique;
+struct CliquesVector /*: public CliqueSink*/ {
+	vector<Clique > all_cliques;
+	CliquesVector();
+	void operator () (Clique Compsub);
+};
+bool moreBySize(const vector<V> & l, const vector<V> & r);
 
 } // namespace cliques
 

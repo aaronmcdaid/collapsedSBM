@@ -6,6 +6,7 @@ using namespace std;
 #include "shmGraphRaw.hpp"
 #include "cliques.hpp"
 #include "clique_percolation.hpp"
+#include "clique_percolation3.hpp"
 
 int option_minCliqueSize = 3;
 
@@ -100,11 +101,10 @@ int main(int argc, char **argv) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
-#ifdef ACP1
-	cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
-#else
-	cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
-#endif
+	if(0)
+		cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+	else
+		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
 }

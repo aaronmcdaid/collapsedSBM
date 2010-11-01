@@ -1,4 +1,5 @@
 #include "cliques.hpp"
+#include "graph_utils.hpp"
 
 namespace cliques {
 
@@ -129,18 +130,10 @@ void cliquesWorker(const SimpleIntGraph & g, CliqueFunctionAdaptor &cliquesOut, 
 #endif
 }
 
-void create_directory(const string& directory) throw() {
-	errno=0;
-	mkdir(directory.c_str(), S_IRWXU|S_IRWXG);
-
-	if(errno && errno!=EEXIST)
-		throw ios_base::failure("Attemping to create directory:" + directory);
-	
-}
 
 
 void cliquesToDirectory(SimpleIntGraph g_, const string &outputDirectory, unsigned int minimumSize /* = 3*/ ) {
-	create_directory(outputDirectory);
+	amd::create_directory(outputDirectory);
 	string cliquesFileName(outputDirectory + "/cliques");
 
 	CliqueSink cliquesOut(g_, cliquesFileName);
@@ -149,5 +142,15 @@ void cliquesToDirectory(SimpleIntGraph g_, const string &outputDirectory, unsign
 
 	cout << cliquesOut.n << " cliques found" << endl;
 }
+
+CliquesVector::CliquesVector() /*: CliqueSink(_g, fileName)*/ {
+}
+void CliquesVector::operator () (Clique Compsub) { // We MUST sort this, the clique percolation relies on sorted cliques to help with checking of overlaps.
+		sort(Compsub.begin(), Compsub.end());
+		if(Compsub.size() >= 3) {
+			all_cliques.push_back(Compsub);
+		}
+}
+bool moreBySize(const vector<V> & l, const vector<V> & r) { return l.size() > r.size(); }
 
 } // namespace cliques
