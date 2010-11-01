@@ -862,7 +862,7 @@ int printCommsAndCliquesToFile(ofstream &cpm4Results, const ConnectedComponents 
 		return numComps;
 }
 
-void cliquePercolation2(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
+void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory, unsigned int minimumSize) {
 	assert(minimumSize >= 3);
 	create_directory(outputDirectory);
 

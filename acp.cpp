@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 #ifdef ACP1
 	cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 #else
-	cliquePercolation2(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+	cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
 #endif
 
 	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );

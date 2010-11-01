@@ -35,3 +35,5 @@ CXXFLAGS= ${BITS} -O3 -pg -g ${CFLAGS} # -DNDEBUG
 
 #acp: CXXFLAGS += -DNDEBUG
 acp: shmGraphRaw.o Range.o cliques.o clique_percolation.o aaron_utils.o
+
+#lineGraph: lineGraph.o shmGraphRaw.o Range.o
