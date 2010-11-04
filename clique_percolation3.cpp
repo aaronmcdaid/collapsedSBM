@@ -278,9 +278,18 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 	for(int i=0; i<(int)option_thresholds.size(); i++)
 		byRelative.at(i).setNumCliques(numCliques);
 	{ Timer timer("do the clique percolation");
+		int current_size = -1;
+		std::auto_ptr<Timer> timer2(NULL);
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
+			const int cliqueID_size = cliques.all_cliques.at(cliqueID).size();
+			if (cliqueID_size != current_size) {
+				timer2.reset(new Timer(printfstring("do the %d-cliques ", cliqueID_size)));
+				current_size = cliqueID_size;
+				PP(cliqueID_size);
+			}
 			percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
 		}
+		timer2.reset(NULL);
 	}
 	{	Timer timer("print the results");
 		for(int k=3; k<=maxCliqueSize; k++) {
