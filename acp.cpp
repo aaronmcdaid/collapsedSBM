@@ -10,14 +10,22 @@ using namespace std;
 #include "clique_percolation3.hpp"
 #include "clique_percolation4.hpp"
 
+const char gitstatus[] = 
+#include "comment.txt"
+#include "gitstatus.txt"
+;
+
+
+
 int option_minCliqueSize = 3;
 
 vector< pair<double,bool> > option_thresholds;
 
 int main(int argc, char **argv) {
-	// for (int i=0; i<argc; i++) {
-		// PP(argv[i]);
-	// }
+	PP(gitstatus);
+	for (int i=0; i<argc; i++) {
+		PP(argv[i]);
+	}
 	{ int c, option_index; while (1)
 		{
       static const struct option long_options[] = {
