@@ -4,16 +4,16 @@
 typedef pair< vector<int>::const_iterator, vector<int>::const_iterator > ListItem;
 struct ListItemComparator {
 	bool operator () (const ListItem &l, const ListItem &r) {
-		assert(l.first != l.second);
-		assert(r.first != r.second);
+		// assert(l.first != l.second);
+		// assert(r.first != r.second);
 		return *l.first > *r.first; // the smaller cliqueIDs (i.e. the larger cliques) are brought to the top of the queue.
 	}
 };
 typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
 
-static int pushes = 0;
+static int64 pushes = 0;
 
-void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID
+void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms
 		) {
 	// const int currentComponent = cpmk.component.at(cliqueID);
 			int fastforward = 0;
@@ -22,10 +22,13 @@ void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID
 				++l.first;
 				if(l.first == l.second)
 					break;
-				if(*l.first < newTop)
+				const int ahead_clique = *l.first;
+				if(ahead_clique < newTop)
 					continue;
-				// const int current_size = all_cliques.at(*l.first).size();
-				// const amd::ConnectedComponents &cpmk = cpmk.component.at(current_size);
+				const int current_size = all_cliques.at(ahead_clique).size();
+				const vector<int> &cpmk = cpms.at(current_size).component;
+				if(cpmk.at(ahead_clique) == cpmk.at(cliqueID))
+					continue;
 				break;
 			} while(1);
 			// if(fastforward>200) PP(fastforward);
@@ -37,12 +40,14 @@ void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID
 //   612,387,598 down to 101 seconds
 //   search from mid to smallest.
 //     1,351,901,215         178s(133s in cp)
+//     632,423,636    126s(81s in cp)
 
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
 	MergingQ q;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
 	const int clique_size = clique.size();
+	// PP2(cliqueID, clique_size);
 	forEach(const int v, amd::mk_range(clique)) {
 		vector<int>::const_iterator i_mid = upper_bound(nodeToCliquesMap.at(v).begin(),nodeToCliquesMap.at(v).end(),cliqueID); // this seems to take no time. Happy days
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
@@ -69,7 +74,7 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			const int newTop = *q.top().first;
 			assert(newTop >= adjClique);
 			// amd::ConnectedComponents &cpmk = cpms.at(adjClique_size);
-			advanceAsFarAsPossible(l, newTop, cliqueID);
+			advanceAsFarAsPossible(l, newTop, cliqueID, all_cliques, cpms);
 			if(l.first != l.second) {
 				q.push(l);
 				++pushes;
