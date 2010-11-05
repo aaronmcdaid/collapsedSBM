@@ -4,12 +4,77 @@
 typedef pair< vector<int>::const_iterator, vector<int>::const_iterator > ListItem;
 struct ListItemComparator {
 	bool operator () (const ListItem &l, const ListItem &r) {
-		// assert(l.first != l.second);
-		// assert(r.first != r.second);
+		if(l.first == l.second) {
+			if(r.first == r.second)
+				return false;
+			else
+				return true;
+		} else
+			if(r.first == r.second) {
+				return false;
+			}
+		assert(l.first < l.second);
+		assert(r.first < r.second);
 		return *l.first > *r.first; // the smaller cliqueIDs (i.e. the larger cliques) are brought to the top of the queue.
 	}
 };
 typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
+
+struct OptimisiticHeap {
+	// assume that pushed items should probably be near the top of the heap.
+	vector<ListItem> h;
+	ListItemComparator cmp;
+	void push(const ListItem &l) {
+		h.push_back(l);
+		this->bubbleUp(h.size()-1);
+	}
+	void bubbleUp(const size_t offset) {
+		// the node at offset may be better than it's parent.
+		if(offset==0)
+			return;
+		const size_t parentoffset = (offset-1)/2;
+		assert(parentoffset < offset);
+		if(this->cmp(this->h.at(parentoffset), this->h.at(offset))) {
+			swap(this->h.at(parentoffset), this->h.at(offset));
+			this->bubbleUp(parentoffset);
+		}
+	}
+	void bubbleDown(size_t offset) { // tail-recursion trick going on here, as it spends a lot of time here (recursively)
+	while(1) {
+		// the node at offset may be worse than it's children.
+		const size_t child1 = offset*2+1;
+		const size_t child2 = child1+1;
+		// assert(offset < child1);
+		if(child1 >= h.size())
+			return; // there are no children
+		if(child2 == h.size()) { // just one child location, check it and then return
+			if(this->cmp(this->h.at(offset), this->h.at(child1))) {
+				swap(this->h.at(offset), this->h.at(child1));
+			}
+			return;
+		}
+		// assert(child2 < h.size()); // both children are in scope.
+		const size_t bestChild = this->cmp(this->h.at(child1), this->h.at(child2)) ? child2 : child1;
+		// assert(*this->h.at(bestChild).first <= *this->h.at(child1).first);
+		// assert(*this->h.at(bestChild).first <= *this->h.at(child2).first);
+		if(this->cmp(this->h.at(offset), this->h.at(bestChild))) {
+			swap(this->h.at(offset), this->h.at(bestChild));
+			offset = bestChild;
+			continue;
+		}
+		break;
+	}
+	}
+	int size() const {
+		return this->h.size();
+	}
+	ListItem & top () {
+		return h.front();
+	}
+	bool empty() const {
+		return h.empty();
+	}
+};
 
 static int64 pushes = 0;
 
@@ -41,25 +106,60 @@ void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, c
 //   search from mid to smallest.
 //     1,351,901,215         178s(133s in cp)
 //     632,423,636    126s(81s in cp)
+//   my Heap
+//     1,685,956,731 139s(95s in cp)
+//     1,685,956,731 111s(67s in cp)
 
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
-	MergingQ q;
+	//MergingQ q;
+	OptimisiticHeap qo;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
-	const int clique_size = clique.size();
+	// const int clique_size = clique.size();
 	// PP2(cliqueID, clique_size);
 	forEach(const int v, amd::mk_range(clique)) {
 		vector<int>::const_iterator i_mid = upper_bound(nodeToCliquesMap.at(v).begin(),nodeToCliquesMap.at(v).end(),cliqueID); // this seems to take no time. Happy days
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
 		if(i_mid != i_end) {
 			assert(*i_mid > cliqueID);
-			q.push(ListItem(i_mid, i_end));
+			//q.push(ListItem(i_mid, i_end));
+			qo.push(ListItem(i_mid, i_end));
 		}
 		// PP(i_end - i_mid);
 	}
 	// PP(q.size());
+	/*
+	PP(qo.size());
+	forEach(const ListItem &l, amd::mk_range(qo.h)) {
+		PP2(l.second - l.first, *l.first);
+	}
+	*/
+	if(!qo.empty())
+	while(1) {
+		assert(!qo.empty());
+		ListItem &l_top = qo.top();
+		if(l_top.first == l_top.second)
+			break; // the best list left is empty, hence they're all empty
+		assert(l_top.first < l_top.second);
+		const int adjClique = *l_top.first;
+		int overlap=0;
+		do{
+			++l_top.first;
+			++overlap;
+			qo.bubbleDown(0);
+			++pushes;
+		} while(l_top.first != l_top.second && *l_top.first == adjClique);
+		int k = overlap + 1;
+		while (k >= 3) {
+			amd::ConnectedComponents &cpmk = cpms.at(k);
+			bool wasAnActualMerging = cpmk.joinNodesIntoSameComponent(cliqueID, adjClique);
+			if(!wasAnActualMerging) break; // we know that we always mark all the way down to three. Hence, if these two cliques have already been merged, then we needn't do that again.
+			k--;
+		}
+	}
 
-	while(!q.empty()) {
+#if 0
+	if(0) while(!q.empty()) {
 		const int adjClique = *q.top().first;
 		int overlap=0;
 		assert(adjClique > cliqueID);
@@ -92,7 +192,8 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			k--;
 		}
 	}
-	assert(q.empty());
+	// assert(q.empty());
+#endif
 }
 #if 0
 static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g, const vector<pair<double,bool> > &option_thresholds) {
