@@ -28,17 +28,18 @@ void create_directory(const std::string& directory) throw() {
 			prev     .at(i) = i;
 		}
 	}
-	void ConnectedComponents::joinNodesIntoSameComponent(int cl1, int cl2) {
-		assert(this->C>0);
+	bool ConnectedComponents::joinNodesIntoSameComponent(int cl1, int cl2) {
+		assert(this->C>0); // This is important. This represents the uninitialized components. We don't care about k=2 or k=1
+		assert(cl1 != cl2);
 		const int comp1 = this->component.at(cl1);
 		const int comp2 = this->component.at(cl2);
+		if(comp1 == comp2)
+			return false;
 		{ // this'd be faster if comp2 is smaller
 			if(this->sizes.at(comp1) < this->sizes.at(comp2)) {
-				this->joinNodesIntoSameComponent(cl2,cl1);
-				return;
+				return this->joinNodesIntoSameComponent(cl2,cl1);
 			}
 		}
-		assert(comp1 != comp2); // TODO: 
 #ifdef checkCompSizes
 		int sizeA = 0;
 		int sizeB = 0;
@@ -106,5 +107,6 @@ void create_directory(const std::string& directory) throw() {
 			assert(size == sizeA + sizeB);
 		}
 #endif
+		return true;
 	}
 } // namespace amd

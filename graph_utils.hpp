@@ -15,7 +15,7 @@ struct ConnectedComponents {
 	std::vector<int> sizes;
 	ConnectedComponents();
 	void setNumCliques(int _C);
-	void joinNodesIntoSameComponent(int cl1, int cl2);
+	bool joinNodesIntoSameComponent(int cl1, int cl2);
 };
 
 } // namespace amd
