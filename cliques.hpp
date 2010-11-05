@@ -49,8 +49,7 @@ template <class T> void findCliques(const SimpleIntGraph &g, T & cliquesOut, uns
 	CliqueFunctionAdaptor_<T> cfa(cliquesOut, g);
 	
 	for(V v = 0; v < (V) g->numNodes(); v++) {
-		if(v && v % 100 ==0)
-			PP(v);
+		// if(v && v % 100 ==0) PP(v);
 		cliquesForOneNode(g, cfa, minimumSize, v);
 	}
 }
