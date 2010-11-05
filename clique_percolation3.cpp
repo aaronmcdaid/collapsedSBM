@@ -2,8 +2,9 @@
 #include "graph_utils.hpp"
 #include <queue>
 typedef pair< vector<int>::const_iterator, vector<int>::const_iterator > ListItem;
-struct ListItemComparator {
-	bool operator () (const ListItem &l, const ListItem &r) {
+
+struct OptimisiticHeap {
+	static bool cmp (const ListItem &l, const ListItem &r) {
 		if(l.first == l.second) {
 			if(r.first == r.second)
 				return false;
@@ -17,13 +18,8 @@ struct ListItemComparator {
 		assert(r.first < r.second);
 		return *l.first > *r.first; // the smaller cliqueIDs (i.e. the larger cliques) are brought to the top of the queue.
 	}
-};
-typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
-
-struct OptimisiticHeap {
 	// assume that pushed items should probably be near the top of the heap.
 	vector<ListItem> h;
-	ListItemComparator cmp;
 	void push(const ListItem &l) {
 		h.push_back(l);
 		this->bubbleUp(h.size()-1);
@@ -34,7 +30,7 @@ struct OptimisiticHeap {
 			return;
 		const size_t parentoffset = (offset-1)/2;
 		assert(parentoffset < offset);
-		if(this->cmp(this->h.at(parentoffset), this->h.at(offset))) {
+		if(cmp(this->h.at(parentoffset), this->h.at(offset))) {
 			swap(this->h.at(parentoffset), this->h.at(offset));
 			this->bubbleUp(parentoffset);
 		}
@@ -48,16 +44,16 @@ struct OptimisiticHeap {
 		if(child1 >= h.size())
 			return; // there are no children
 		if(child2 == h.size()) { // just one child location, check it and then return
-			if(this->cmp(this->h.at(offset), this->h.at(child1))) {
+			if(cmp(this->h.at(offset), this->h.at(child1))) {
 				swap(this->h.at(offset), this->h.at(child1));
 			}
 			return;
 		}
 		// assert(child2 < h.size()); // both children are in scope.
-		const size_t bestChild = this->cmp(this->h.at(child1), this->h.at(child2)) ? child2 : child1;
+		const size_t bestChild = cmp(this->h.at(child1), this->h.at(child2)) ? child2 : child1;
 		// assert(*this->h.at(bestChild).first <= *this->h.at(child1).first);
 		// assert(*this->h.at(bestChild).first <= *this->h.at(child2).first);
-		if(this->cmp(this->h.at(offset), this->h.at(bestChild))) {
+		if(cmp(this->h.at(offset), this->h.at(bestChild))) {
 			swap(this->h.at(offset), this->h.at(bestChild));
 			offset = bestChild;
 			continue;
