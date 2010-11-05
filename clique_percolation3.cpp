@@ -13,13 +13,21 @@ typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
 
 static int pushes = 0;
 
-void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, amd::ConnectedComponents &cpmk) {
-	const int currentComponent = cpmk.component.at(cliqueID);
+void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID
+		) {
+	// const int currentComponent = cpmk.component.at(cliqueID);
 			int fastforward = 0;
 			do {
 				++ fastforward;
 				++l.first;
-			} while(l.first != l.second && *l.first < cliqueID && (*l.first < newTop || currentComponent == cpmk.component.at(*l.first) ) );
+				if(l.first == l.second)
+					break;
+				if(*l.first < newTop)
+					continue;
+				// const int current_size = all_cliques.at(*l.first).size();
+				// const amd::ConnectedComponents &cpmk = cpmk.component.at(current_size);
+				break;
+			} while(1);
 			// if(fastforward>200) PP(fastforward);
 }
 // ca-AstroPh
@@ -27,29 +35,32 @@ void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, a
 // cit-HepPh
 //   1,329,152,018 pushes
 //   612,387,598 down to 101 seconds
+//   search from mid to smallest.
+//     1,351,901,215         178s(133s in cp)
 
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
 	MergingQ q;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
 	const int clique_size = clique.size();
-	amd::ConnectedComponents &cpmk = cpms.at(clique_size);
 	forEach(const int v, amd::mk_range(clique)) {
-		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
+		vector<int>::const_iterator i_mid = upper_bound(nodeToCliquesMap.at(v).begin(),nodeToCliquesMap.at(v).end(),cliqueID); // this seems to take no time. Happy days
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
-		// PP(i_end - i);
-		q.push(ListItem(i, i_end));
+		if(i_mid != i_end) {
+			assert(*i_mid > cliqueID);
+			q.push(ListItem(i_mid, i_end));
+		}
+		// PP(i_end - i_mid);
 	}
 	// PP(q.size());
 
 	while(!q.empty()) {
 		const int adjClique = *q.top().first;
 		int overlap=0;
-		if(adjClique == cliqueID) {
-			// all done here
-			break;
-		}
-		while(*q.top().first == adjClique) {
+		assert(adjClique > cliqueID);
+		const int adjClique_size = all_cliques.at(adjClique).size();
+		assert(adjClique_size <= clique_size);
+		while(!q.empty() && *q.top().first == adjClique) {
 			overlap++;
 			ListItem l = q.top();
 			q.pop();
@@ -57,16 +68,17 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			// we can see what's on the top of the heap now. We should keep incrementing until we're at it
 			const int newTop = *q.top().first;
 			assert(newTop >= adjClique);
-			assert(newTop <= cliqueID);
-			advanceAsFarAsPossible(l, newTop, cliqueID, cpmk);
+			// amd::ConnectedComponents &cpmk = cpms.at(adjClique_size);
+			advanceAsFarAsPossible(l, newTop, cliqueID);
 			if(l.first != l.second) {
 				q.push(l);
 				++pushes;
 			}
 		}
+		assert(overlap > 0);
 		// PP2(adjClique, overlap);
-		assert(clique.size() <= all_cliques.at(adjClique).size());
-		assert(overlap < (int)clique.size());
+		assert(clique.size() >= all_cliques.at(adjClique).size());
+		assert(overlap < adjClique_size);
 		int k = overlap + 1;
 		while (k >= 3) {
 			amd::ConnectedComponents &cpmk = cpms.at(k);
@@ -75,6 +87,7 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			k--;
 		}
 	}
+	assert(q.empty());
 }
 #if 0
 static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g, const vector<pair<double,bool> > &option_thresholds) {
@@ -317,7 +330,6 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 				PP(cliqueID_size);
 			}
 			// percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
-			// PP(cliqueID);
 			myAdjacentCliques(cliqueID, nodeToCliquesMap, cliques.all_cliques, cpms);
 		}
 		PP(pushes);
