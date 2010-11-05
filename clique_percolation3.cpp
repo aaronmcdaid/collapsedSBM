@@ -11,6 +11,8 @@ struct ListItemComparator {
 };
 typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
 
+static int pushes = 0;
+
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
 	MergingQ q;
 
@@ -35,9 +37,20 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			ListItem l = q.top();
 			q.pop();
 			assert(l.first != l.second);
-			++ l.first;
-			if(l.first != l.second)
+			int fastforward = 0;
+			// we can see what's on the top of the heap now. We should keep incrementing until we're at it
+			const int newTop = *q.top().first;
+			assert(newTop >= adjClique);
+			assert(newTop <= cliqueID);
+			do {
+				++ fastforward;
+				++l.first;
+			} while(l.first != l.second && *l.first < newTop);
+			// if(fastforward>0) PP(fastforward);
+			if(l.first != l.second) {
 				q.push(l);
+				++pushes;
+			}
 		}
 		// PP2(adjClique, overlap);
 		assert(clique.size() <= all_cliques.at(adjClique).size());
@@ -286,6 +299,7 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
 			const int cliqueID_size = cliques.all_cliques.at(cliqueID).size();
 			if (cliqueID_size != current_size) {
+				PP(pushes);
 				timer2.reset(new Timer(printfstring("do the %d-cliques ", cliqueID_size)));
 				current_size = cliqueID_size;
 				PP(cliqueID_size);
@@ -294,6 +308,7 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 			// PP(cliqueID);
 			myAdjacentCliques(cliqueID, nodeToCliquesMap, cliques.all_cliques, cpms);
 		}
+		PP(pushes);
 		timer2.reset(NULL);
 	}
 	{	Timer timer("print the results");
