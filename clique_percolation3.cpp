@@ -13,10 +13,27 @@ typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
 
 static int pushes = 0;
 
+void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, amd::ConnectedComponents &cpmk) {
+	const int currentComponent = cpmk.component.at(cliqueID);
+			int fastforward = 0;
+			do {
+				++ fastforward;
+				++l.first;
+			} while(l.first != l.second && *l.first < cliqueID && (*l.first < newTop || currentComponent == cpmk.component.at(*l.first) ) );
+			// if(fastforward>200) PP(fastforward);
+}
+// ca-AstroPh
+//   35,752,927 pushes
+// cit-HepPh
+//   1,329,152,018 pushes
+//   612,387,598 down to 101 seconds
+
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
 	MergingQ q;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
+	const int clique_size = clique.size();
+	amd::ConnectedComponents &cpmk = cpms.at(clique_size);
 	forEach(const int v, amd::mk_range(clique)) {
 		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
@@ -37,16 +54,11 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			ListItem l = q.top();
 			q.pop();
 			assert(l.first != l.second);
-			int fastforward = 0;
 			// we can see what's on the top of the heap now. We should keep incrementing until we're at it
 			const int newTop = *q.top().first;
 			assert(newTop >= adjClique);
 			assert(newTop <= cliqueID);
-			do {
-				++ fastforward;
-				++l.first;
-			} while(l.first != l.second && *l.first < newTop);
-			// if(fastforward>0) PP(fastforward);
+			advanceAsFarAsPossible(l, newTop, cliqueID, cpmk);
 			if(l.first != l.second) {
 				q.push(l);
 				++pushes;
