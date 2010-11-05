@@ -1,56 +1,57 @@
 #include "clique_percolation3.hpp"
 #include "graph_utils.hpp"
-static void myAdjacentCliques(vector<int> &cliquesIShareANodeWith, const int cliqueID, /*vector<amd::ConnectedComponents> &cpms, */const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g) {
+#include <queue>
+typedef pair< vector<int>::const_iterator, vector<int>::const_iterator > ListItem;
+struct ListItemComparator {
+	bool operator () (const ListItem &l, const ListItem &r) {
+		assert(l.first != l.second);
+		assert(r.first != r.second);
+		return *l.first > *r.first; // the smaller cliqueIDs (i.e. the larger cliques) are brought to the top of the queue.
+	}
+};
+typedef priority_queue<ListItem, vector<ListItem>, ListItemComparator> MergingQ;
+
+static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
+	MergingQ q;
+
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
-	list<size_t> splits; // the end-offset of each
-	splits.push_back(0);
 	forEach(const int v, amd::mk_range(clique)) {
 		vector<int>::const_iterator i     = nodeToCliquesMap.at(v).begin();
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
-		i_end = lower_bound(i, i_end, cliqueID);
-		for(;i!=i_end;i++){
-			const int adjClique = *i;
-			assert(adjClique < cliqueID);
-			if(adjClique < cliqueID) { // clique[cliqueID] should only be compared against larger cliques
-				// if(cpm4.component.at(cliqueID) != cpm4.component.at(adjClique) ) {
-					// PP(adjClique);
-					cliquesIShareANodeWith.push_back(adjClique);
-				// }
-			}
-		}
-		const size_t split = cliquesIShareANodeWith.size();
-		if(splits.back() != split)
-			splits.push_back(split);
+		// PP(i_end - i);
+		q.push(ListItem(i, i_end));
 	}
-	if(splits.size() <= 1) {
-		assert(cliquesIShareANodeWith.size() == 0);
-		return;
-	}
-	assert(splits.size()>1);
-	assert(splits.back() == cliquesIShareANodeWith.size());
-	while(splits.size() > 2) {
-		while(1) {
-			list<size_t>::iterator t = splits.begin();
-			list<size_t>::iterator m = t;
-			assert(m != splits.end());
-			m++; assert(m != splits.end());
-			list<size_t>::iterator h = m;
-			h++; assert(h != splits.end());
-			// PP2(*t, *m);PP( *h);
-			inplace_merge(
-			 	cliquesIShareANodeWith.begin() + *t
-				,cliquesIShareANodeWith.begin() + *m
-				,cliquesIShareANodeWith.begin() + *h
-				);
-			splits.erase(m);
+	// PP(q.size());
+
+	while(!q.empty()) {
+		const int adjClique = *q.top().first;
+		int overlap=0;
+		if(adjClique == cliqueID) {
+			// all done here
 			break;
 		}
-	}
-	// sort(cliquesIShareANodeWith.begin(), cliquesIShareANodeWith.end());
-	for(int i=1; i<(int)cliquesIShareANodeWith.size(); i++) {
-		assert(cliquesIShareANodeWith.at(i) >= cliquesIShareANodeWith.at(i-1));
+		while(*q.top().first == adjClique) {
+			overlap++;
+			ListItem l = q.top();
+			q.pop();
+			assert(l.first != l.second);
+			++ l.first;
+			if(l.first != l.second)
+				q.push(l);
+		}
+		// PP2(adjClique, overlap);
+		assert(clique.size() <= all_cliques.at(adjClique).size());
+		assert(overlap < (int)clique.size());
+		int k = overlap + 1;
+		while (k >= 3) {
+			amd::ConnectedComponents &cpmk = cpms.at(k);
+			bool wasAnActualMerging = cpmk.joinNodesIntoSameComponent(cliqueID, adjClique);
+			if(!wasAnActualMerging) break; // we know that we always mark all the way down to three. Hence, if these two cliques have already been merged, then we needn't do that again.
+			k--;
+		}
 	}
 }
+#if 0
 static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &cpms, vector<amd::ConnectedComponents> &byRelative, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, const SimpleIntGraph &g, const vector<pair<double,bool> > &option_thresholds) {
 /*
 	cout << "                                                                  "; PP(cliqueID);
@@ -145,6 +146,7 @@ static void percolateThis(const int cliqueID, vector<amd::ConnectedComponents> &
 		}
 	}
 }
+#endif
 
 static int printCommsToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
 		int numComps = 0;
@@ -273,6 +275,7 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 	}
 	vector<amd::ConnectedComponents> cpms(1+maxCliqueSize);
 	vector<amd::ConnectedComponents> byRelative(option_thresholds.size());
+	assert(option_thresholds.size()==0); // option_thresholds won't be supported for a while. Breaking it until the heap is fixed.
 	for(int i=3; i<=maxCliqueSize; i++)
 		cpms.at(i).setNumCliques(numCliques);
 	for(int i=0; i<(int)option_thresholds.size(); i++)
@@ -287,7 +290,9 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 				current_size = cliqueID_size;
 				PP(cliqueID_size);
 			}
-			percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
+			// percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
+			// PP(cliqueID);
+			myAdjacentCliques(cliqueID, nodeToCliquesMap, cliques.all_cliques, cpms);
 		}
 		timer2.reset(NULL);
 	}
