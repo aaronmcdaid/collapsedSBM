@@ -143,6 +143,7 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			++l_top.first;
 			++overlap;
 			qo.bubbleDown(0);
+			// l_top might no longer point at the same thing, after the bubbleDown.
 			++pushes;
 		} while(l_top.first != l_top.second && *l_top.first == adjClique);
 		int k = overlap + 1;

@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 	if(strcmp("acp4", basename(argv[0])) == 0) version = ACP4;
 	// PP(version);
 	// exit(1);
-	unless (argc - optind == 2 && (version == ACP3 || version==ACP4)) {
+	unless (argc - optind == 2 && (version == ACP2 || version == ACP3 || version==ACP4)) {
 		cout << "Usage: edge_list directory_for_output" << endl;
 		exit(1);
 	}
@@ -120,8 +120,10 @@ int main(int argc, char **argv) {
 	auto_ptr<shmGraphRaw::ReadableShmGraph> g (shmGraphRaw::loadMmapFile(directoryForBinaryBlob, edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
-	// cliques::cliquesToDirectory(g.get(), "acp_results", 3);
-		//cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+	if(version == ACP2) {
+		// cliques::cliquesToDirectory(g.get(), "acp2_results", 3);
+		cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
+	}
 	if(version == ACP3)
 		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
 	if(version == ACP4)
