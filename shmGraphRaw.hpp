@@ -64,6 +64,7 @@ struct MapMem {
     		, ShmemAllocator>
 			neighbours_to_relationships_map;
 	typedef relationship_set_MapMem relationship_set;
+	static const int isMapMem = 1;
 };
 struct PlainMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int> > mmap_uset_of_ints;
@@ -76,6 +77,7 @@ struct PlainMem {
     		>
 			neighbours_to_relationships_map;
 	typedef relationship_set_PlainMem relationship_set;
+	static const int isMapMem = 0;
 };
 
 
@@ -134,7 +136,7 @@ public:
 template<class T>
 ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char * graphTextFileName);
 
-typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
+//typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
 
 } // namespace shmGraphRaw 
 

@@ -165,9 +165,6 @@ relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(
 }
 
 
-template<class T> struct relationship_set;
-template<       > struct relationship_set<MapMem>   { typedef relationship_set_MapMem t; };
-template<       > struct relationship_set<PlainMem> { typedef relationship_set_MapMem t; };
 
 template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
@@ -252,6 +249,7 @@ public:
 		// delete nodes; delete relationships; delete neighbouring_relationships; // seems like you can't/shouldn't delete objects like this
 	}
 	explicit DumbGraphReadONLYTemplate(const std::string &dir);
+	static DumbGraphReadONLYTemplate<T> * New(const std::string &dir);
 };
 template <>
 	DumbGraphReadONLYTemplate<MapMem>::DumbGraphReadONLYTemplate(const std::string &dir)
@@ -268,6 +266,16 @@ template <>
 		this->empty_set_for_neighboursRO = &empty_set_for_neighbours;
 	}
 template <>
+	DumbGraphReadONLYTemplate<MapMem> * DumbGraphReadONLYTemplate<MapMem>::New(const std::string &dir) {
+		return new DumbGraphReadONLYTemplate<MapMem>(dir);
+	}
+template <>
+	DumbGraphReadONLYTemplate<PlainMem> * DumbGraphReadONLYTemplate<PlainMem>::New(const std::string &dir) {
+		assert(1==2);
+		return NULL;
+	}
+#if 0
+template <>
 	DumbGraphReadONLYTemplate<PlainMem>::DumbGraphReadONLYTemplate(const std::string &dir)
 		: segment_strings     (open_read_only, (dir + "/" + STRINGS_MMAP       ).c_str() /*, 1000000*/)
 		, segment_nodesAndRels(open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() /*, 1000000*/)
@@ -281,6 +289,7 @@ template <>
 		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
 		this->empty_set_for_neighboursRO = &empty_set_for_neighbours;
 	}
+#endif
 
 template <class T>
 class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
@@ -356,7 +365,7 @@ DumbGraphRaw<MapMem>::DumbGraphRaw(const std::string &dir)
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 {
 		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		relationships = segment_nodesAndRels.find_or_construct<relationship_set<MapMem>::t> ("relationship_set") ( relationship_set<MapMem>::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		relationships = segment_nodesAndRels.find_or_construct<MapMem::relationship_set> ("relationship_set") ( MapMem::relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationships
 		              = segment_neigh.find_or_construct<MapMem::neighbours_to_relationships_map>("Neighbours") ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<MapMem::valtype>());    
 		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
@@ -391,6 +400,8 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 
 template <class T>
 ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char *graphTextFileName) {
+	DumbGraphRaw<T> *nodes_and_rels_wrap = NULL;
+	if(T::isMapMem) {
 		assert(directory && strlen(directory)>0);
 		std::string dir(directory);
 		{
@@ -402,9 +413,16 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char *gr
 		}
 
 		if(!graphTextFileName) {
-			return new DumbGraphReadONLYTemplate<T>(dir);
+			return DumbGraphReadONLYTemplate<T>::New(dir);
 		}
-		DumbGraphRaw<T> *nodes_and_rels_wrap = new DumbGraphRaw<T>(dir);
+		nodes_and_rels_wrap = new DumbGraphRaw<T>(dir);
+	} else {
+		assert(!directory);
+		assert(graphTextFileName);
+
+		nodes_and_rels_wrap = new DumbGraphRaw<T>("");
+	}
+	assert(nodes_and_rels_wrap);
 
 		// PP(nodes_and_rels_wrap->strings_wrap->size());
 
@@ -434,7 +452,6 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char *gr
 	return nodes_and_rels_wrap;
 }
 
-extern ReadableShmGraph *sldkfjljafqfw;
 template 
 ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *directory, const char *graphTextFileName);
 template 
