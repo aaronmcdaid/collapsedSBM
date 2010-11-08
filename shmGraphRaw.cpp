@@ -17,8 +17,7 @@ namespace shmGraphRaw {
 ReadableShmGraphBase::~ReadableShmGraphBase() {
 }
 
-template<class T>
-int ReadableShmGraphTemplate<T>::oppositeEndPoint(int relId, int oneEnd) const {
+int ReadableShmGraphBase::oppositeEndPoint(int relId, int oneEnd) const {
 		const std::pair<int, int> & eps = this->EndPoints(relId);
 		if(eps.first == oneEnd) {
 			return eps.second;
@@ -27,8 +26,7 @@ int ReadableShmGraphTemplate<T>::oppositeEndPoint(int relId, int oneEnd) const {
 			return eps.first;
 		}
 }
-template<class T>
-std::string ReadableShmGraphTemplate<T>::WhichNode(int v) const {
+std::string ReadableShmGraphBase::WhichNode(int v) const {
 		ostringstream s;
 		s << "\"";
 		s << this->NodeAsString(v); // (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];

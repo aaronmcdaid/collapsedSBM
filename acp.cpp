@@ -117,7 +117,8 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	auto_ptr<shmGraphRaw::ReadableShmGraph> g (shmGraphRaw::loadEdgeList<shmGraphRaw::MapMem>(directoryForBinaryBlob, edgeListFileName));
+	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::MapMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::MapMem>(directoryForBinaryBlob, edgeListFileName));
+	//auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(directoryForBinaryBlob, edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
 	if(version == ACP2) {

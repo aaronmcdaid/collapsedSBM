@@ -105,15 +105,19 @@ public:
 	virtual int StringToNodeId(const char *s) const = 0;
 	virtual const std::pair<int, int> & EndPoints(int relId) const = 0;
 	virtual bool are_connected(int v1, int v2) const = 0;
+	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
+	virtual std::string WhichNode(int v) const; // impure function
+
+	virtual int degree(int v) const = 0; // implemented in ReadableShmGraphTemplate<T>
+	virtual const std::set<int> & neighbours(int v) const = 0; // implemented in ReadableShmGraphTemplate<T>
 };
 
 template <class T>
 class ReadableShmGraphTemplate : public ReadableShmGraphBase { // this is mostly just an interface, but note that oppositeEndPoint is defined in this class
-public:
-	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
-	virtual std::string WhichNode(int v) const; // impure function
-	virtual int degree(int v) const { return this->myRels(v).size(); }
+private:
 	mutable std::map<int, std::set<int> > neighbours_cache;
+public:
+	virtual int degree(int v) const { return this->myRels(v).size(); }
 	virtual const std::set<int> & neighbours(int v) const { // sorted list of neighbours. Sorted by internal int id, not by the original string name
 		std::set<int> &  neighs = neighbours_cache[v]; // Will create an empty one, if it hasn't been requested before
 		if(neighs.size() == 0 && this->degree(v) != 0) {

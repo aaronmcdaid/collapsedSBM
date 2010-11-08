@@ -18,7 +18,7 @@ using namespace std;
 
 typedef int V;
 typedef int VertexIDType;
-typedef const shmGraphRaw::ReadableShmGraph* SimpleIntGraph;
+typedef const shmGraphRaw::ReadableShmGraphBase* SimpleIntGraph;
 
 namespace cliques {
 
