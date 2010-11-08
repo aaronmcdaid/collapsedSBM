@@ -8,18 +8,34 @@
 #include <boost/interprocess/managed_mapped_file.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-
 namespace bip = boost::interprocess;
 
-typedef boost::interprocess::managed_mapped_file MMapType;
-// typedef boost::interprocess::managed_shared_memory MMapType;
+typedef boost::interprocess::managed_mapped_file MMapType; // typedef boost::interprocess::managed_shared_memory MMapType;
 
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+namespace bmi = boost::multi_index;
+
 #include "Range.hpp"
 
 namespace shmGraphRaw {
+
+struct idT{}; // dummy tag type for use in boost::interprocess index names
+struct nameT{}; // dummy tag type for use in boost::interprocess index names
+struct nodeIdsT{}; // dummy tag type for use in boost::interprocess index names
+
+struct relationship
+{
+	int         relId;
+	typedef std::pair<int,int> relPairType;
+	std::pair<int,int>		nodeIds;
+	relationship( int id_ , const std::pair<int,int> &nodes_);
+};
 
 struct MapMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;

@@ -3,17 +3,14 @@
 #include <memory>
 
 #include <boost/interprocess/containers/string.hpp>
+using namespace boost::interprocess;
 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/hashed_index.hpp>
 
 #include <string.h>
 
 #include "aaron_utils.hpp"
 
-using namespace boost::interprocess;
+
 
 namespace shmGraphRaw {
 
@@ -43,14 +40,9 @@ static const char * NEIGHBOURS_MMAP = "Neighbours.mmap";
 struct fileDoesNotExistException {};
 struct invalideGraphFileFormatException {};
 
-namespace bmi = boost::multi_index;
-
 typedef MMapType  ::allocator<char>::type              char_allocator;
 typedef bip::basic_string<char, std::char_traits<char>, char_allocator> shm_string; // not to be confused with std::basic_string
 
-struct idT{}; // dummy tag type for use in boost::interprocess index names
-struct nameT{}; // dummy tag type for use in boost::interprocess index names
-struct nodeIdsT{}; // dummy tag type for use in boost::interprocess index names
 
 /*
  * strings. Every string, including but not limited to node names, to be stored in a mmaped file
@@ -167,15 +159,9 @@ typedef bmi::multi_index_container<
 > nodeWithName_set;
 
 
-struct relationship
-{
-	int         relId;
-	typedef std::pair<int,int> relPairType;
-	std::pair<int,int>		nodeIds;
-	relationship( int id_ , const std::pair<int,int> &nodes_) : relId(id_), nodeIds(nodes_) {
+relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(id_), nodeIds(nodes_) {
 		assert(nodes_ . first <= nodes_ . second); // make sure each relationship, including self-loops, appears only once
-	}
-};
+}
 
 typedef bmi::multi_index_container<
  		relationship,
