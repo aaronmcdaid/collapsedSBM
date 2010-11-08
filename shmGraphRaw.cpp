@@ -163,22 +163,6 @@ relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(
 		assert(nodes_ . first <= nodes_ . second); // make sure each relationship, including self-loops, appears only once
 }
 
-typedef bmi::multi_index_container<
- 		relationship,
-  		bmi::indexed_by<
-	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
-	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
-		>
-		, MMapType  ::allocator<relationship>::type
-> relationship_set_MapMem;
-typedef bmi::multi_index_container<
- 		relationship,
-  		bmi::indexed_by<
-	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
-	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
-		>
-		// , MMapType  ::allocator<relationship>::type
-> relationship_set_PlainMem;
 
 template<class T> struct relationship_set;
 template<       > struct relationship_set<MapMem>   { typedef relationship_set_MapMem t; };
@@ -188,7 +172,7 @@ template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const nodeWithName_set *nodesRO;
-	const typename relationship_set<MapMem>::t *relationshipsRO;
+	const typename MapMem::relationship_set *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
 	const typename T::neighbouring_relationship_set *empty_set_for_neighboursRO;
@@ -197,6 +181,26 @@ public:
 	virtual int numRels()  const;
 	virtual int numNodesWithAtLeastOneRel()  const;
 	virtual const typename T::mmap_uset_of_ints & myRels(int n) const;
+	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
+	virtual const char * NodeAsString(int v) const;
+	virtual int StringToNodeId(const char *s) const;
+	virtual const std::pair<int, int> & EndPoints(int relId) const;
+	virtual bool are_connected(int v1, int v2) const;
+};
+template <>
+class DumbGraphReadableTemplate<PlainMem> : public ReadableShmGraphTemplate<PlainMem> {
+protected:
+	const nodeWithName_set *nodesRO;
+	typedef PlainMem T;
+	const  PlainMem::relationship_set *relationshipsRO;
+	const  T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
+	std::auto_ptr<const StringArray> strings_wrapRO;
+	const  T::neighbouring_relationship_set *empty_set_for_neighboursRO;
+public:
+	virtual int numNodes() const;
+	virtual int numRels()  const;
+	virtual int numNodesWithAtLeastOneRel()  const;
+	virtual const  T::mmap_uset_of_ints & myRels(int n) const;
 	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
 	virtual const char * NodeAsString(int v) const;
 	virtual int StringToNodeId(const char *s) const;
@@ -276,7 +280,7 @@ template <>
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 	{
 		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = segment_nodesAndRels.find<relationship_set<MapMem>::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		this->relationshipsRO = segment_nodesAndRels.find<MapMem::relationship_set> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	this->neighbouring_relationshipsRO
 		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
 		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
@@ -290,7 +294,7 @@ template <>
 		, empty_set_for_neighbours()
 	{
 		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = segment_nodesAndRels.find<relationship_set<PlainMem>::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		this->relationshipsRO = new PlainMem::relationship_set();
 	 	this->neighbouring_relationshipsRO
 		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
 		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
@@ -393,7 +397,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 		              = new PlainMem::neighbours_to_relationships_map;
 		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
 		this->nodesRO = nodes;
-		this->relationshipsRO = relationships;
+		this->relationshipsRO = NULL; // relationships;
 		this->neighbouring_relationshipsRO = neighbouring_relationships;
 		this->strings_wrapRO.reset(strings_wrap);
 		this->empty_set_for_neighboursRO = &empty_set_for_neighbours;

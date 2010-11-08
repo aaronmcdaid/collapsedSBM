@@ -36,6 +36,22 @@ struct relationship
 	std::pair<int,int>		nodeIds;
 	relationship( int id_ , const std::pair<int,int> &nodes_);
 };
+typedef bmi::multi_index_container<
+ 		relationship,
+  		bmi::indexed_by<
+	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
+	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
+		>
+		, MMapType  ::allocator<relationship>::type
+> relationship_set_MapMem;
+typedef bmi::multi_index_container<
+ 		relationship,
+  		bmi::indexed_by<
+	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
+	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
+		>
+		// , MMapType  ::allocator<relationship>::type
+> relationship_set_PlainMem;
 
 struct MapMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
@@ -47,6 +63,7 @@ struct MapMem {
     		, boost::hash<int>  ,std::equal_to<int>
     		, ShmemAllocator>
 			neighbours_to_relationships_map;
+	typedef relationship_set_MapMem relationship_set;
 };
 struct PlainMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int> > mmap_uset_of_ints;
@@ -58,6 +75,7 @@ struct PlainMem {
     		, boost::hash<int>  ,std::equal_to<int>
     		>
 			neighbours_to_relationships_map;
+	typedef relationship_set_PlainMem relationship_set;
 };
 
 
