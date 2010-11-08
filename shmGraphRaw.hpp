@@ -36,11 +36,11 @@ struct PlainMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int> > mmap_uset_of_ints;
 	typedef mmap_uset_of_ints neighbouring_relationship_set;
 	typedef std::pair<const int, neighbouring_relationship_set> valtype;
-	typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
+	// typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
 	typedef boost::unordered_map
     		< int               , neighbouring_relationship_set
     		, boost::hash<int>  ,std::equal_to<int>
-    		, ShmemAllocator>
+    		>
 			neighbours_to_relationships_map;
 };
 
