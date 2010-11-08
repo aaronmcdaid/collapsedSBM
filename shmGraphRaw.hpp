@@ -94,19 +94,22 @@ public:
 	virtual StrH StringToStringId(const char *s) const = 0;
 };
 
-template <class T>
-class ReadableShmGraphTemplate { // this is mostly just an interface, but not that oppositeEndPoint is defined in this class
+class ReadableShmGraphBase {
 public:
-	virtual ~ReadableShmGraphTemplate() {};
+	virtual ~ReadableShmGraphBase();
 	virtual int numNodes() const = 0;
 	virtual int numRels() const = 0;
 	virtual int numNodesWithAtLeastOneRel() const = 0;
-	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
 	virtual std::pair<const char*, const char*> EndPointsAsStrings(int relId) const = 0;
 	virtual const char * NodeAsString(int v) const = 0;
 	virtual int StringToNodeId(const char *s) const = 0;
 	virtual const std::pair<int, int> & EndPoints(int relId) const = 0;
 	virtual bool are_connected(int v1, int v2) const = 0;
+};
+
+template <class T>
+class ReadableShmGraphTemplate : public ReadableShmGraphBase { // this is mostly just an interface, but note that oppositeEndPoint is defined in this class
+public:
 	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
 	virtual std::string WhichNode(int v) const; // impure function
 	virtual int degree(int v) const { return this->myRels(v).size(); }
@@ -121,6 +124,7 @@ public:
 		}
 		return neighs;
 	}
+	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
 };
 
 template<class T>
