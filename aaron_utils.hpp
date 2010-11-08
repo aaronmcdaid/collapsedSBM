@@ -30,7 +30,7 @@ enum {FALSE=0, TRUE=1};
 #define PPnn(x) cout << #x << ":" << x
 #define PP2(x,y) cout << #x << ',' << #y << ":\t" << x << ',' << y << endl
 #define PPLg(x) Pn("%s:%20.11Lg", #x, x)
-string thousandsSeparated(uint64 x);
+std::string thousandsSeparated(uint64 x);
 #define PPdec(x) cout << #x << ":" << thousandsSeparated(x) << endl
 #define PPhex(x) cout << #x << ":" << std::hex << std::setw(20) << x << std::dec << endl
 #define Print(x)  P("%s", show(x).c_str())
@@ -50,9 +50,9 @@ enum {
 int testForError(FILE * x);
 int testForError(int x);
 
-string show(int64 x);
-string show(const char * x);
-string show(const string &x);
+std::string show(int64 x);
+std::string show(const char * x);
+std::string show(const std::string &x);
 
 class runningAverage {
 	int64 total;
@@ -60,7 +60,7 @@ class runningAverage {
 public:
 	runningAverage();
 	void operator() (int64 i);
-	string operator() (void) const;
+	std::string operator() (void) const;
 } ;
 #define unless(x) if(!(x))
 
@@ -91,7 +91,7 @@ struct StopWatch { // TODO: put the stopWatch in another file?
 		last_laptime = tp;
 	}
 	void laptime(void) { laptime(""); }
-	void laptime(const string &tag) {
+	void laptime(const std::string &tag) {
 		struct timeval tp_new;
 		gettimeofday(&tp_new, NULL);
 		double sinceStart   = (double)(tp_new.tv_sec - tp.tv_sec) + (double)(tp_new.tv_usec - tp.tv_usec) / 1000000;
@@ -121,11 +121,11 @@ public:
 
 struct Timer {
 	struct timeval start;
-	string _s;
+	std::string _s;
 	Timer() {
 		gettimeofday(&start, NULL);
 	}
-	Timer(const string &s): _s(s) {
+	Timer(const std::string &s): _s(s) {
 		gettimeofday(&start, NULL);
 	}
 	double age() const {
