@@ -177,32 +177,54 @@ struct relationship
 	}
 };
 
-template <class T> struct relationship_set;
-template <class T> struct relationship_set {
-	typedef bmi::multi_index_container<
-  		relationship,
+typedef bmi::multi_index_container<
+ 		relationship,
   		bmi::indexed_by<
 	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
 	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
-		>,
-  		MMapType  ::allocator<relationship>::type
-	> t;
-};
+		>
+		, MMapType  ::allocator<relationship>::type
+> relationship_set_MapMem;
+typedef bmi::multi_index_container<
+ 		relationship,
+  		bmi::indexed_by<
+	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
+	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
+		>
+		// , MMapType  ::allocator<relationship>::type
+> relationship_set_PlainMem;
 
+template<class T> struct relationship_set;
+template<       > struct relationship_set<MapMem>   { typedef relationship_set_MapMem t; };
+template<       > struct relationship_set<PlainMem> { typedef relationship_set_MapMem t; };
 
 template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const nodeWithName_set *nodesRO;
-	const relationship_set<MapMem>::t *relationshipsRO;
+	const typename relationship_set<MapMem>::t *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
 	const typename T::neighbouring_relationship_set *empty_set_for_neighboursRO;
 public:
-	virtual int numNodes() const { return nodesRO->size(); }
-	virtual int numRels()  const { return relationshipsRO->size(); }
-	virtual int numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
-	virtual const typename T::mmap_uset_of_ints & myRels(int n) const {
+	virtual int numNodes() const;
+	virtual int numRels()  const;
+	virtual int numNodesWithAtLeastOneRel()  const;
+	virtual const typename T::mmap_uset_of_ints & myRels(int n) const;
+	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
+	virtual const char * NodeAsString(int v) const;
+	virtual int StringToNodeId(const char *s) const;
+	virtual const std::pair<int, int> & EndPoints(int relId) const;
+	virtual bool are_connected(int v1, int v2) const;
+};
+template<class T>
+/* virtual */ int DumbGraphReadableTemplate<T>::numNodes() const { return nodesRO->size(); }
+template<class T>
+/* virtual */ int DumbGraphReadableTemplate<T>::numRels()  const { return relationshipsRO->size(); }
+template<class T>
+/* virtual */ int DumbGraphReadableTemplate<T>::numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
+template<class T>
+/* virtual */ const typename T::mmap_uset_of_ints & DumbGraphReadableTemplate<T>::myRels(int n) const {
 		typename T::neighbours_to_relationships_map::const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
 			return *empty_set_for_neighboursRO;
@@ -210,17 +232,20 @@ public:
 		else
 			return i->second;
 	}
-	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const {
+template<class T>
+/* virtual */ pair<const char*, const char*> DumbGraphReadableTemplate<T>::EndPointsAsStrings(int relId) const {
 		assert(relId >=0 && relId < this->numRels() );
 		const pair<int,int> &endpoints = relationshipsRO->get<idT>().find(relId)->nodeIds;
 		const char *l = this->NodeAsString(endpoints.first); // (*strings_wrap)[nodes->get<idT>().find(endpoints.first )->string_h];
 		const char *r = this->NodeAsString(endpoints.second);// (*strings_wrap)[nodes->get<idT>().find(endpoints.second)->string_h];
 		return make_pair(l,r);
 	}
-	virtual const char * NodeAsString(int v) const {
+template<class T>
+/* virtual */ const char * DumbGraphReadableTemplate<T>::NodeAsString(int v) const {
 		return (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
 	}
-	virtual int StringToNodeId(const char *s) const {
+template<class T>
+/* virtual */ int DumbGraphReadableTemplate<T>::StringToNodeId(const char *s) const {
 		StrH string_handle = strings_wrapRO->StringToStringId(s);
 		// assert (0==strcmp(s , (*strings_wrapRO)[string_handle]));
 		nodeWithName_set::index_iterator<nameT>::type i = nodesRO->get<nameT>().find(string_handle );
@@ -228,17 +253,18 @@ public:
 		// assert (0==strcmp(s , (*strings_wrapRO)[i->string_h]));
 		return i->id;
 	}
-	virtual const std::pair<int, int> & EndPoints(int relId) const {
+template<class T>
+/* virtual */ const std::pair<int, int> & DumbGraphReadableTemplate<T>::EndPoints(int relId) const {
 		assert(relId >=0 && relId < this->numRels() );
 		return relationshipsRO->get<idT>().find(relId)->nodeIds;
 	}
-	virtual bool are_connected(int v1, int v2) const {
+template<class T>
+/* virtual */ bool DumbGraphReadableTemplate<T>::are_connected(int v1, int v2) const {
 		if(v1 > v2)
 			swap(v1,v2);
 		assert (v1 <= v2);
 		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(make_pair(v1,v2)) );
 	}
-};
 
 DumbGraphReadableTemplate<PlainMem> testosdlfjslkdfjlsdjfkldsbject;
 
