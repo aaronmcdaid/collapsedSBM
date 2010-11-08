@@ -9,16 +9,41 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 
+namespace bip = boost::interprocess;
+
 typedef boost::interprocess::managed_mapped_file MMapType;
 // typedef boost::interprocess::managed_shared_memory MMapType;
 
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 
 #include "Range.hpp"
 
 namespace shmGraphRaw {
 
-typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
+struct MMap {
+	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
+	typedef mmap_uset_of_ints neighbouring_relationship_set;
+	typedef std::pair<const int, neighbouring_relationship_set> valtype;
+	typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
+	typedef boost::unordered_map
+    		< int               , neighbouring_relationship_set
+    		, boost::hash<int>  ,std::equal_to<int>
+    		, ShmemAllocator>
+			neighbours_to_relationships_map;
+};
+struct PlainMem {
+	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int> > mmap_uset_of_ints;
+	typedef mmap_uset_of_ints neighbouring_relationship_set;
+	typedef std::pair<const int, neighbouring_relationship_set> valtype;
+	typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
+	typedef boost::unordered_map
+    		< int               , neighbouring_relationship_set
+    		, boost::hash<int>  ,std::equal_to<int>
+    		, ShmemAllocator>
+			neighbours_to_relationships_map;
+};
+
 
 class StrH { // string handle. It just wraps an int that refers to the memory mapped file
 	int i;
@@ -35,13 +60,14 @@ public:
 	virtual StrH StringToStringId(const char *s) const = 0;
 };
 
-class ReadableShmGraph { // this is mostly just an interface, but not that oppositeEndPoint is defined in this class
+template <class T>
+class ReadableShmGraphTemplate { // this is mostly just an interface, but not that oppositeEndPoint is defined in this class
 public:
-	virtual ~ReadableShmGraph() {};
+	virtual ~ReadableShmGraphTemplate() {};
 	virtual int numNodes() const = 0;
 	virtual int numRels() const = 0;
 	virtual int numNodesWithAtLeastOneRel() const = 0;
-	virtual const mmap_uset_of_ints & myRels(int n) const = 0;
+	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
 	virtual std::pair<const char*, const char*> EndPointsAsStrings(int relId) const = 0;
 	virtual const char * NodeAsString(int v) const = 0;
 	virtual int StringToNodeId(const char *s) const = 0;
@@ -62,6 +88,7 @@ public:
 		return neighs;
 	}
 };
+typedef ReadableShmGraphTemplate<MMap> ReadableShmGraph;
 
 
 ReadableShmGraph * loadMmapFile(const char *directory, const char * graphTextFileName);

@@ -9,17 +9,16 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
-#include <boost/unordered_map.hpp>
 #include <string.h>
 
 #include "aaron_utils.hpp"
 
 using namespace boost::interprocess;
-namespace bip = boost::interprocess;
 
 namespace shmGraphRaw {
 
-int ReadableShmGraph::oppositeEndPoint(int relId, int oneEnd) const {
+template<class T>
+int ReadableShmGraphTemplate<T>::oppositeEndPoint(int relId, int oneEnd) const {
 		const std::pair<int, int> & eps = this->EndPoints(relId);
 		if(eps.first == oneEnd) {
 			return eps.second;
@@ -28,7 +27,8 @@ int ReadableShmGraph::oppositeEndPoint(int relId, int oneEnd) const {
 			return eps.first;
 		}
 }
-std::string ReadableShmGraph::WhichNode(int v) const {
+template<class T>
+std::string ReadableShmGraphTemplate<T>::WhichNode(int v) const {
 		ostringstream s;
 		s << "\"";
 		s << this->NodeAsString(v); // (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
@@ -186,28 +186,21 @@ typedef bmi::multi_index_container<
   MMapType  ::allocator<relationship>::type
 > relationship_set;
 
-typedef mmap_uset_of_ints neighbouring_relationship_set;
-typedef std::pair<const int, neighbouring_relationship_set> valtype;
-typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
-typedef boost::unordered_map
-    < int               , neighbouring_relationship_set
-    , boost::hash<int>  ,std::equal_to<int>
-    , ShmemAllocator>
-neighbours_to_relationships_map;
 
-class DumbGraphReadable : public ReadableShmGraph {
+template <class T>
+class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const nodeWithName_set *nodesRO;
 	const relationship_set *relationshipsRO;
-	const neighbours_to_relationships_map *neighbouring_relationshipsRO;
+	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
-	const neighbouring_relationship_set *empty_set_for_neighboursRO;
+	const typename T::neighbouring_relationship_set *empty_set_for_neighboursRO;
 public:
 	virtual int numNodes() const { return nodesRO->size(); }
 	virtual int numRels()  const { return relationshipsRO->size(); }
 	virtual int numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
-	virtual const mmap_uset_of_ints & myRels(int n) const {
-		neighbours_to_relationships_map::const_iterator i = neighbouring_relationshipsRO->find(n);
+	virtual const typename T::mmap_uset_of_ints & myRels(int n) const {
+		typename T::neighbours_to_relationships_map::const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
 			return *empty_set_for_neighboursRO;
 		}
@@ -243,11 +236,15 @@ public:
 		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(make_pair(v1,v2)) );
 	}
 };
+typedef DumbGraphReadableTemplate<MMap> DumbGraphReadable;
+
+//DumbGraphReadableTemplate<PlainMem> testobject;
+
 class DumbGraphReadONLY : public DumbGraphReadable {
 	MMapType   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
 	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
 	MMapType   segment_neigh;
-	const neighbouring_relationship_set empty_set_for_neighbours;
+	const MMap::neighbouring_relationship_set empty_set_for_neighbours;
 
 public:
 	virtual ~DumbGraphReadONLY() {
@@ -262,7 +259,7 @@ public:
 		nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
 		relationshipsRO = segment_nodesAndRels.find<relationship_set> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationshipsRO
-		                = segment_neigh.find<neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
+		                = segment_neigh.find<MMap::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
 		strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
 		empty_set_for_neighboursRO = &empty_set_for_neighbours;
 	}
@@ -272,11 +269,11 @@ class DumbGraphRaw : public DumbGraphReadable {
 	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
 	MMapType   segment_neigh;
 
-	const neighbouring_relationship_set empty_set_for_neighbours;
+	const MMap::neighbouring_relationship_set empty_set_for_neighbours;
 
 	nodeWithName_set *nodes;
 	relationship_set *relationships;
-	neighbours_to_relationships_map *neighbouring_relationships;
+	MMap::neighbours_to_relationships_map *neighbouring_relationships;
 public:
 	StringWithId_Mic_Wrap *strings_wrap;
 public:
@@ -293,7 +290,7 @@ public:
 		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
 		relationships = segment_nodesAndRels.find_or_construct<relationship_set> ("relationship_set") ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationships
-		              = segment_neigh.find_or_construct<neighbours_to_relationships_map>("Neighbours") ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
+		              = segment_neigh.find_or_construct<MMap::neighbours_to_relationships_map>("Neighbours") ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<MMap::valtype>());    
 		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
 		nodesRO = nodes;
 		relationshipsRO = relationships;
@@ -327,7 +324,7 @@ public:
 			assert(p.second      == insertionResult.first->nodeIds.second  );
 			assert(insertionResult.second);
 			{ // add this to the neighbouring relationships object too
-				neighbours_to_relationships_map::iterator i;
+				MMap::neighbours_to_relationships_map::iterator i;
 				{
 					i = neighbouring_relationships->find(p.first);
 					if(i == neighbouring_relationships->end())
