@@ -21,7 +21,7 @@ typedef boost::interprocess::managed_mapped_file MMapType;
 
 namespace shmGraphRaw {
 
-struct MMap {
+struct MapMem {
 	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
 	typedef mmap_uset_of_ints neighbouring_relationship_set;
 	typedef std::pair<const int, neighbouring_relationship_set> valtype;
@@ -88,10 +88,11 @@ public:
 		return neighs;
 	}
 };
-typedef ReadableShmGraphTemplate<MMap> ReadableShmGraph;
 
+template<class T>
+ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char * graphTextFileName);
 
-ReadableShmGraph * loadMmapFile(const char *directory, const char * graphTextFileName);
+typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
 
 } // namespace shmGraphRaw 
 
