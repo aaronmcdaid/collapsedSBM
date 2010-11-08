@@ -177,7 +177,8 @@ struct relationship
 	}
 };
 
-struct relationship_set {
+template <class T> struct relationship_set;
+template <class T> struct relationship_set {
 	typedef bmi::multi_index_container<
   		relationship,
   		bmi::indexed_by<
@@ -193,7 +194,7 @@ template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const nodeWithName_set *nodesRO;
-	const relationship_set::t *relationshipsRO;
+	const relationship_set<MapMem>::t *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
 	const typename T::neighbouring_relationship_set *empty_set_for_neighboursRO;
@@ -263,7 +264,7 @@ template <>
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 	{
 		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = segment_nodesAndRels.find<relationship_set::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		this->relationshipsRO = segment_nodesAndRels.find<relationship_set<MapMem>::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	this->neighbouring_relationshipsRO
 		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
 		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
@@ -277,7 +278,7 @@ template <>
 		, empty_set_for_neighbours()
 	{
 		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = segment_nodesAndRels.find<relationship_set::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		this->relationshipsRO = segment_nodesAndRels.find<relationship_set<PlainMem>::t> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	this->neighbouring_relationshipsRO
 		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
 		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
@@ -293,7 +294,7 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 	const typename T::neighbouring_relationship_set empty_set_for_neighbours;
 
 	nodeWithName_set *nodes;
-	relationship_set::t *relationships;
+	relationship_set<MapMem>::t *relationships;
 	typename T::neighbours_to_relationships_map *neighbouring_relationships;
 public:
 	StringWithId_Mic_Wrap *strings_wrap;
@@ -320,10 +321,10 @@ public:
 		if(p.first > p.second)
 			swap(p.first, p.second);
 		assert(p.first <= p.second);
-		relationship_set::t::index_iterator<nodeIdsT>::type i = relationships->get<nodeIdsT>().find(p);
+		relationship_set<MapMem>::t::index_iterator<nodeIdsT>::type i = relationships->get<nodeIdsT>().find(p);
 		if(i == relationships->get<nodeIdsT>().end()) {
 			int relId = relationships->size();
-			std::pair<relationship_set::t::iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
+			std::pair<relationship_set<MapMem>::t::iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
 			assert(relId == insertionResult.first->relId        );
 			assert(p.first       == insertionResult.first->nodeIds.first  );
 			assert(p.second      == insertionResult.first->nodeIds.second  );
@@ -358,7 +359,7 @@ DumbGraphRaw<MapMem>::DumbGraphRaw(const std::string &dir)
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 {
 		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		relationships = segment_nodesAndRels.find_or_construct<relationship_set::t> ("relationship_set") ( relationship_set::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		relationships = segment_nodesAndRels.find_or_construct<relationship_set<MapMem>::t> ("relationship_set") ( relationship_set<MapMem>::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationships
 		              = segment_neigh.find_or_construct<MapMem::neighbours_to_relationships_map>("Neighbours") ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<MapMem::valtype>());    
 		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
@@ -375,7 +376,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 100000000)
 {
 		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		relationships = segment_nodesAndRels.find_or_construct<relationship_set::t> ("relationship_set") ( relationship_set::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
+		relationships = segment_nodesAndRels.find_or_construct<relationship_set<PlainMem>::t> ("relationship_set") ( relationship_set<PlainMem>::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationships
 		              = new PlainMem::neighbours_to_relationships_map;
 		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
