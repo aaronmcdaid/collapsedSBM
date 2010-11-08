@@ -95,7 +95,9 @@ public:
 		return StrH(i->id); // TODO: Remove Duplication of the two implementations of StringArrays members (and look for other dupes?)
 	}
 };
-class StringWithId_Mic_Wrap : public StringArray {
+class ModifiableStringArray : public StringArray {
+};
+class StringWithId_Mic_Wrap : public ModifiableStringArray {
 
 	char_allocator ca;
 	typedef StringWithId_Mic_WrapRO::StringWithId StringWithId;
@@ -111,7 +113,6 @@ public:
 		}
 	size_t size() const { return d->size(); }
 	StrH insert(const char * s) { // insert, or find, this string. Return its id
-		//const nodeWithName_set::index_iterator<name>::type i = nodes->get<name>().find(nn , hashSHMString , equalSHMStrings);
 		StringWithId_Mic::index_iterator<nameT>::type i = d->get<nameT>().find(s, hashSHMString, equalSHMStrings);
 		if(i == d->get<nameT>().end()) {
 			int proposedNewId = d->size();
@@ -150,14 +151,26 @@ struct nodeWithName {
 	   : id(_id), string_h(_string_h)
 	{}
 };
-typedef bmi::multi_index_container<
-  nodeWithName,
-  bmi::indexed_by<
-	 bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
-	 bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
-	>,
-  MMapType  ::allocator<nodeWithName>::type
-> nodeWithName_set;
+template<class T> struct nodeWithName_set;
+template<>        struct nodeWithName_set<MapMem> {
+	typedef bmi::multi_index_container<
+		nodeWithName,
+		bmi::indexed_by<
+			bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
+			bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
+		>
+		, MMapType  ::allocator<nodeWithName>::type
+	> t;
+};
+template<>        struct nodeWithName_set<PlainMem> {
+	typedef bmi::multi_index_container<
+		nodeWithName,
+		bmi::indexed_by<
+			bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
+			bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
+		>
+	> t;
+};
 
 
 relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(id_), nodeIds(nodes_) {
@@ -169,7 +182,7 @@ relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(
 template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
-	const nodeWithName_set *nodesRO;
+	const typename nodeWithName_set<T>::t *nodesRO;
 	const typename T::relationship_set *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
@@ -210,14 +223,14 @@ template<class T>
 	}
 template<class T>
 /* virtual */ const char * DumbGraphReadableTemplate<T>::NodeAsString(int v) const {
-		return (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
+		return (*strings_wrapRO)[nodesRO->template get<idT>().find(v )->string_h];
 	}
 template<class T>
 /* virtual */ int DumbGraphReadableTemplate<T>::StringToNodeId(const char *s) const {
 		StrH string_handle = strings_wrapRO->StringToStringId(s);
 		// assert (0==strcmp(s , (*strings_wrapRO)[string_handle]));
-		nodeWithName_set::index_iterator<nameT>::type i = nodesRO->get<nameT>().find(string_handle );
-		assert(i != nodesRO->get<nameT>().end());
+		typename nodeWithName_set<T>::t:: template index_iterator<nameT>::type i = nodesRO->template get<nameT>().find(string_handle );
+		assert(i != nodesRO->template get<nameT>().end());
 		// assert (0==strcmp(s , (*strings_wrapRO)[i->string_h]));
 		return i->id;
 	}
@@ -258,7 +271,7 @@ template <>
 		, segment_neigh       (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() /*, 1000000*/)
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 	{
-		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
+		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set<MapMem>::t > ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
 		this->relationshipsRO = segment_nodesAndRels.find<MapMem::relationship_set> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	this->neighbouring_relationshipsRO
 		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
@@ -299,7 +312,7 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 
 	const typename T::neighbouring_relationship_set empty_set_for_neighbours;
 
-	nodeWithName_set *nodes;
+	typename nodeWithName_set<T>::t *nodes;
 	typename T::relationship_set *relationships;
 	typename T::neighbours_to_relationships_map *neighbouring_relationships;
 public:
@@ -311,10 +324,10 @@ public:
 	}
 	explicit DumbGraphRaw(const std::string &dir);
 	int insertNode(StrH node_name) {
-		nodeWithName_set::index_iterator<nameT>::type i = nodes->get<nameT>().find(node_name);
-		if(i == nodes->get<nameT>().end()) {
+		typename nodeWithName_set<T>::t:: template index_iterator<nameT>::type i = nodes->template get<nameT>().find(node_name);
+		if(i == nodes->template get<nameT>().end()) {
 			int proposedNewId = nodes->size();
-			std::pair<nodeWithName_set::iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
+			std::pair<typename nodeWithName_set<T>::t::iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
 			assert(proposedNewId == insertionResult.first->id        );
 			assert(node_name     == insertionResult.first->string_h  );
 			assert(insertionResult.second);
@@ -327,7 +340,7 @@ public:
 		if(p.first > p.second)
 			swap(p.first, p.second);
 		assert(p.first <= p.second);
-		typename T::relationship_set::template index_iterator<nodeIdsT>::type i = relationships->template get<nodeIdsT>().find(p);
+		typename T::relationship_set:: template index_iterator<nodeIdsT>::type i = relationships->template get<nodeIdsT>().find(p);
 		if(i == relationships->template get<nodeIdsT>().end()) {
 			int relId = relationships->size();
 			std::pair<typename T::relationship_set::iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
@@ -364,7 +377,7 @@ DumbGraphRaw<MapMem>::DumbGraphRaw(const std::string &dir)
 		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 100000000)
 		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
 {
-		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
+		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set<MapMem>::t > ("nodeWithName_set") ( nodeWithName_set<MapMem>::t::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
 		relationships = segment_nodesAndRels.find_or_construct<MapMem::relationship_set> ("relationship_set") ( MapMem::relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
 	 	neighbouring_relationships
 		              = segment_neigh.find_or_construct<MapMem::neighbours_to_relationships_map>("Neighbours") ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<MapMem::valtype>());    
@@ -381,7 +394,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 		, segment_nodesAndRels(open_or_create, (dir + "/" + NODES_AND_RELS_MMAP).c_str() , 100000000)
 		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 100000000)
 {
-		nodes         = segment_nodesAndRels.find_or_construct<nodeWithName_set> ("nodeWithName_set") ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
+		nodes         = new nodeWithName_set<PlainMem>::t();
 		relationships = new PlainMem::relationship_set();
 	 	neighbouring_relationships
 		              = new PlainMem::neighbours_to_relationships_map;
