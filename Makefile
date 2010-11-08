@@ -30,7 +30,8 @@ boost_1_41_0:
 
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lstdc++ -lrt
-CXXFLAGS= ${BITS} -O3 -p -pg ${CFLAGS} # -DNDEBUG
+#CXXFLAGS= ${BITS} -O3 -p -pg ${CFLAGS} # -DNDEBUG
+CXXFLAGS= ${BITS} -O3        ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
 #acp: CXXFLAGS += -DNDEBUG

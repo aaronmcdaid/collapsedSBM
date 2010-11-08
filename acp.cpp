@@ -101,24 +101,7 @@ int main(int argc, char **argv) {
 	PP(edgeListFileName);
 	PP(directoryForOutput);
 
-	const char * defaultPrefix = "/tmp";
-	if(getenv("TMP"))
-		defaultPrefix = getenv("TMP");
-	string directoryForBinaryBlobString = defaultPrefix;
-
-	if(directoryForBinaryBlobString.length()==0) directoryForBinaryBlobString = ".";
-	if(directoryForBinaryBlobString.at(directoryForBinaryBlobString.length()-1)!='/') directoryForBinaryBlobString += "/";
-	directoryForBinaryBlobString += "acp-graph.XXXXXX";
-	char directoryForBinaryBlob[1000];
-	strcpy(directoryForBinaryBlob, directoryForBinaryBlobString.c_str());
-	if(NULL == mkdtemp(directoryForBinaryBlob)) {
-		cerr << "Couldn't create temp file: " << directoryForBinaryBlob << endl;
-		cerr << "You could specify an alternative folder with the TMP environment variable" << endl;
-		exit(1);
-	}
-
-	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::MapMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::MapMem>(directoryForBinaryBlob, edgeListFileName));
-	//auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(directoryForBinaryBlob, edgeListFileName));
+	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
 	if(version == ACP2) {
@@ -130,5 +113,4 @@ int main(int argc, char **argv) {
 	if(version == ACP4)
 		cliquePercolation4(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
 
-	UNUSED int ignore = system( (string("rm -r ") + directoryForBinaryBlob) .c_str() );
 }

@@ -1,5 +1,6 @@
 #include "shmGraphRaw.hpp"
 
+#include <vector>
 #include <memory>
 
 #include <boost/interprocess/containers/string.hpp>
@@ -96,6 +97,45 @@ public:
 	}
 };
 class ModifiableStringArray : public StringArray {
+public:
+	virtual size_t size() const = 0;
+	virtual StrH insert(const char * s) = 0;
+        virtual StrH insert(std::string &s) {
+			return insert(s.c_str());
+	}
+	virtual const char * operator[] (StrH sh) const = 0;
+	virtual StrH StringToStringId(const char *s) const = 0;
+};
+class ModifiableStringArrayInPlainMemory : public ModifiableStringArray {
+private:
+	std::vector<std::string> the_strings;
+	boost::unordered_map<std::string, int> string2id; // TODO: map by const char *
+public:
+	explicit ModifiableStringArrayInPlainMemory() {
+			this->insert("");
+	}
+	virtual size_t size() const {
+		return the_strings.size();
+	}
+	virtual StrH insert(const char * s) {
+		std::string str(s);
+		if(string2id.count(str)==0) {
+			int nextID = the_strings.size();
+			string2id[str] = nextID;
+			assert((int)string2id.size() == nextID+1);
+			the_strings.push_back(str);
+			return StrH(nextID);
+		} else {
+			return StrH(string2id.at(str));
+		}
+	}
+	virtual const char * operator[] (StrH sh) const {
+		return the_strings.at(sh.get_underlying_id()).c_str();
+	}
+	virtual StrH StringToStringId(const char *s) const {
+		std::string str(s);
+		return StrH(string2id.at(str));
+	}
 };
 class StringWithId_Mic_Wrap : public ModifiableStringArray {
 
@@ -306,9 +346,9 @@ template <>
 
 template <class T>
 class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
-	MMapType   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	MMapType   segment_neigh;
+	typename T::segment_type   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
+	typename T::segment_type   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
+	typename T::segment_type   segment_neigh;
 
 	const typename T::neighbouring_relationship_set empty_set_for_neighbours;
 
@@ -316,7 +356,8 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 	typename T::relationship_set *relationships;
 	typename T::neighbours_to_relationships_map *neighbouring_relationships;
 public:
-	StringWithId_Mic_Wrap *strings_wrap;
+	//StringWithId_Mic_Wrap *strings_wrap;
+	ModifiableStringArray *strings_wrap;
 public:
 	virtual ~DumbGraphRaw() {
 		assert(this->strings_wrap == this->strings_wrapRO.get()); // delete strings_wrap; // DO NOT delete here, the auto_ptr already has it
@@ -390,15 +431,12 @@ DumbGraphRaw<MapMem>::DumbGraphRaw(const std::string &dir)
 }
 template <>
 DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
-		: segment_strings     (open_or_create, (dir + "/" + STRINGS_MMAP       ).c_str() , 100000000)
-		, segment_nodesAndRels(open_or_create, (dir + "/" + NODES_AND_RELS_MMAP).c_str() , 100000000)
-		, segment_neigh       (open_or_create, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() , 100000000)
 {
 		nodes         = new nodeWithName_set<PlainMem>::t();
 		relationships = new PlainMem::relationship_set();
 	 	neighbouring_relationships
 		              = new PlainMem::neighbours_to_relationships_map;
-		strings_wrap = new StringWithId_Mic_Wrap(segment_strings);
+		strings_wrap = new ModifiableStringArrayInPlainMemory();
 		this->nodesRO = nodes;
 		this->relationshipsRO = relationships;
 		this->neighbouring_relationshipsRO = neighbouring_relationships;
@@ -412,7 +450,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
  */
 
 template <class T>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char *graphTextFileName) {
+ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const char *directory = 0) {
 	DumbGraphRaw<T> *nodes_and_rels_wrap = NULL;
 	if(T::isMapMem) {
 		assert(directory && strlen(directory)>0);
@@ -466,8 +504,8 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *directory, const char *gr
 }
 
 template 
-ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *directory, const char *graphTextFileName);
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *directory, const char *graphTextFileName);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const char * directory = 0);
 
 } // namespace shmGraphRaw {
