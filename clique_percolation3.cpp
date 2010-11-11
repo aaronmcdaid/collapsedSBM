@@ -107,7 +107,11 @@ void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, c
 //     1,685,956,731 111s(67s in cp)
 
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
-	//MergingQ q;
+	// this function is called repeatedly, once for each clique. Starting at the largest clique (smallest cliqueID)
+	// this function then compares its clique against all the smaller cliques (i.e. larger cliqueID).
+	// TODO: reorder the cliqueID such that the last two lines are not so confusing!
+	
+	vector<int> overlaps(all_cliques.size());
 	OptimisiticHeap qo;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
@@ -121,7 +125,10 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			//q.push(ListItem(i_mid, i_end));
 			qo.push(ListItem(i_mid, i_end));
 		}
-		// PP(i_end - i_mid);
+		while(i_mid != i_end) {
+			++ overlaps.at(*i_mid);
+			++ i_mid;
+		}
 	}
 	// PP(q.size());
 	/*
@@ -146,6 +153,7 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			// l_top might no longer point at the same thing, after the bubbleDown.
 			++pushes;
 		} while(l_top.first != l_top.second && *l_top.first == adjClique);
+		assert(overlap == overlaps.at(adjClique));
 		int k = overlap + 1;
 		while (k >= 3) {
 			amd::ConnectedComponents &cpmk = cpms.at(k);
