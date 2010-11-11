@@ -72,8 +72,6 @@ struct OptimisiticHeap {
 	}
 };
 
-static int64 pushes = 0;
-
 void advanceAsFarAsPossible(ListItem &l, const int newTop, const int cliqueID, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms
 		) {
 	// const int currentComponent = cpmk.component.at(cliqueID);
@@ -112,48 +110,18 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 	// TODO: reorder the cliqueID such that the last two lines are not so confusing!
 	
 	vector<int> overlaps(all_cliques.size());
-	OptimisiticHeap qo;
 
 	const cliques::Clique &clique = all_cliques.at(cliqueID);
-	// const int clique_size = clique.size();
-	// PP2(cliqueID, clique_size);
 	forEach(const int v, amd::mk_range(clique)) {
 		vector<int>::const_iterator i_mid = upper_bound(nodeToCliquesMap.at(v).begin(),nodeToCliquesMap.at(v).end(),cliqueID); // this seems to take no time. Happy days
 		vector<int>::const_iterator i_end = nodeToCliquesMap.at(v).end();
-		if(i_mid != i_end) {
-			assert(*i_mid > cliqueID);
-			//q.push(ListItem(i_mid, i_end));
-			qo.push(ListItem(i_mid, i_end));
-		}
 		while(i_mid != i_end) {
 			++ overlaps.at(*i_mid);
 			++ i_mid;
 		}
 	}
-	// PP(q.size());
-	/*
-	PP(qo.size());
-	forEach(const ListItem &l, amd::mk_range(qo.h)) {
-		PP2(l.second - l.first, *l.first);
-	}
-	*/
-	if(!qo.empty())
-	while(1) {
-		assert(!qo.empty());
-		ListItem &l_top = qo.top();
-		if(l_top.first == l_top.second)
-			break; // the best list left is empty, hence they're all empty
-		assert(l_top.first < l_top.second);
-		const int adjClique = *l_top.first;
-		int overlap=0;
-		do{
-			++l_top.first;
-			++overlap;
-			qo.bubbleDown(0);
-			// l_top might no longer point at the same thing, after the bubbleDown.
-			++pushes;
-		} while(l_top.first != l_top.second && *l_top.first == adjClique);
-		assert(overlap == overlaps.at(adjClique));
+	for( size_t adjClique = cliqueID+1; adjClique < all_cliques.size(); adjClique++) {
+		int overlap = overlaps.at(adjClique);
 		int k = overlap + 1;
 		while (k >= 3) {
 			amd::ConnectedComponents &cpmk = cpms.at(k);
@@ -435,7 +403,6 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 		for(int cliqueID = 0; cliqueID < numCliques; cliqueID++) {
 			const int cliqueID_size = cliques.all_cliques.at(cliqueID).size();
 			if (cliqueID_size != current_size) {
-				PP(pushes);
 				timer2.reset(new Timer(printfstring("do the %d-cliques ", cliqueID_size)));
 				current_size = cliqueID_size;
 				PP(cliqueID_size);
@@ -443,7 +410,6 @@ void cliquePercolation3(const SimpleIntGraph &g_, const string &outputDirectory,
 			// percolateThis(cliqueID, cpms, byRelative, nodeToCliquesMap, cliques.all_cliques, g_, option_thresholds);
 			myAdjacentCliques(cliqueID, nodeToCliquesMap, cliques.all_cliques, cpms);
 		}
-		PP(pushes);
 		timer2.reset(NULL);
 	}
 	{	Timer timer("print the results");
