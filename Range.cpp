@@ -23,7 +23,8 @@ void RangeOverStream::nextLine() {
 }
 RangeOverStream::RangeOverStream(std::istream &_istr, const char * _delims) : istr(_istr) , delims(_delims) , isEmpty(false) {
 		assert(delims && delims[0]);
-		nextLine();
+		this->popFront();
+		//nextLine();
 }
 /*virtual*/ bool RangeOverStream::empty() const {
 		return isEmpty;
