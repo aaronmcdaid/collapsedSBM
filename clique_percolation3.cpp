@@ -14,6 +14,19 @@
 //     1,685,956,731 139s(95s in cp)
 //     1,685,956,731 111s(67s in cp)
 
+static void applyOverlap(const vector<int> &overlaps, size_t cliqueID, size_t num_cliques, vector<amd::ConnectedComponents> &cpms) {
+	for( size_t adjClique = cliqueID+1; adjClique < num_cliques; adjClique++) {
+		int overlap = overlaps.at(adjClique);
+		int k = overlap + 1;
+		while (k >= 3) {
+			amd::ConnectedComponents &cpmk = cpms.at(k);
+			bool wasAnActualMerging = cpmk.joinNodesIntoSameComponent(cliqueID, adjClique);
+			if(!wasAnActualMerging) break; // we know that we always mark all the way down to three. Hence, if these two cliques have already been merged, then we needn't do that again.
+			k--;
+		}
+	}
+}
+
 static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &nodeToCliquesMap, const vector<cliques::Clique> &all_cliques, vector<amd::ConnectedComponents> &cpms) {
 	// this function is called repeatedly, once for each clique. Starting at the largest clique (smallest cliqueID)
 	// this function then compares its clique against all the smaller cliques (i.e. larger cliqueID).
@@ -30,17 +43,7 @@ static void myAdjacentCliques(const int cliqueID, const vector< vector<int> > &n
 			++ i_mid;
 		}
 	}
-	for( size_t adjClique = cliqueID+1; adjClique < all_cliques.size(); adjClique++) {
-		int overlap = overlaps.at(adjClique);
-		int k = overlap + 1;
-		while (k >= 3) {
-			amd::ConnectedComponents &cpmk = cpms.at(k);
-			bool wasAnActualMerging = cpmk.joinNodesIntoSameComponent(cliqueID, adjClique);
-			if(!wasAnActualMerging) break; // we know that we always mark all the way down to three. Hence, if these two cliques have already been merged, then we needn't do that again.
-			k--;
-		}
-	}
-
+	applyOverlap(overlaps, cliqueID, all_cliques.size(), cpms);
 }
 
 static int printCommsToFile(ofstream &cpm4Results, const amd::ConnectedComponents &one_set_of_comms, const int numCliques, const cliques::CliquesVector &cliques, int k, const SimpleIntGraph &g_) {
