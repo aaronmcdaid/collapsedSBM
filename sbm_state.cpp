@@ -5,6 +5,7 @@ namespace sbm {
 	State::State(const ReadableShmGraphBase * const g) : _g(g), _N(g->numNodes()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
+		this->clusters.reserve(100 + 2*_N); // this is important. We mustn't allow the clusters vector to be moving about in RAM.
 		this->clusters.push_back(Cluster());
 		assert(this->clusters.size()==1);
 
@@ -14,6 +15,7 @@ namespace sbm {
 			this->cluster_id.push_back(0);
 			this->clusters.back().members.push_front(i);
 			this->its.push_back( this->clusters.back().members.begin() );
+			assert(*this->its.at(i) == i);
 		}
 
 		assert((int)this->cluster_id.size()==this->_N);
@@ -33,8 +35,9 @@ namespace sbm {
 				assert(n>=0 && n<this->_N);
 				bool wasAccepted = alreadyConsidered.insert(n).second;
 				assert(wasAccepted);
-				assert(i == this->its.at(n));
+				assert(n == *this->its.at(n));
 				assert(CL == this->cluster_id.at(n));
+				assert(i == this->its.at(n));
 			}
 		}
 		assert((int)alreadyConsidered.size() == this->_N);
