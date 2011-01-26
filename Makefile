@@ -3,10 +3,12 @@ BITS=
 #BITS=-m32
 #BITS=-m64
 
-all: boost_1_41_0 acp
+MAIN=main
+
+all: boost_1_41_0 ${MAIN}
 
 clean:
-	-rm tags acp *.o
+	-rm tags ${MAIN} *.o
 
 tags:
 	ctags *.[ch]pp
@@ -34,8 +36,8 @@ LDFLAGS+= -lstdc++ -lrt
 CXXFLAGS= ${BITS} -O3        ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
-#acp: CXXFLAGS += -DNDEBUG
-acp: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o
+#${MAIN}: CXXFLAGS += -DNDEBUG
+${MAIN}: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 
