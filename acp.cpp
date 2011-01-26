@@ -6,9 +6,6 @@ using namespace std;
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
 #include "cliques.hpp"
-#include "clique_percolation.hpp"
-#include "clique_percolation3.hpp"
-#include "clique_percolation4.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"
@@ -104,13 +101,4 @@ int main(int argc, char **argv) {
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
 	PP(g->numNodes());
 	PP(g->numRels());
-	if(version == ACP2) {
-		// cliques::cliquesToDirectory(g.get(), "acp2_results", 3);
-		cliquePercolation(g.get(), directoryForOutput, option_minCliqueSize); // You're not allowed to ask for the 2-cliques
-	}
-	if(version == ACP3)
-		cliquePercolation3(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
-	if(version == ACP4)
-		cliquePercolation4(g.get(), directoryForOutput, option_minCliqueSize, option_thresholds); // You're not allowed to ask for the 2-cliques
-
 }
