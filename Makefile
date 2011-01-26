@@ -3,7 +3,7 @@ BITS=
 #BITS=-m32
 #BITS=-m64
 
-MAIN=main
+MAIN=sbm
 
 all: boost_1_41_0 ${MAIN}
 
@@ -37,7 +37,7 @@ CXXFLAGS= ${BITS} -O3        ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
 #${MAIN}: CXXFLAGS += -DNDEBUG
-${MAIN}: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o
+${MAIN}: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o sbm_state.o
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 

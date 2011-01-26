@@ -5,6 +5,7 @@ using namespace std;
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
+#include "sbm_state.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"
@@ -15,6 +16,8 @@ const char gitstatus[] =
 
 struct UsageMessage {
 };
+
+void runSBM(const shmGraphRaw::ReadableShmGraphBase *g);
 
 int main(int argc, char **argv) {
 	PP(gitstatus);
@@ -59,6 +62,11 @@ int main(int argc, char **argv) {
 	PP(directoryForOutput);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
+	runSBM(g.get());
+}
+
+void runSBM(const shmGraphRaw::ReadableShmGraphBase *g) {
 	PP(g->numNodes());
 	PP(g->numRels());
+	sbm::State s(g);
 }
