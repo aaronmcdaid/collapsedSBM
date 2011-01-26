@@ -66,7 +66,6 @@ int main(int argc, char **argv) {
 }
 
 void runSBM(const shmGraphRaw::ReadableShmGraphBase *g) {
-	PP(g->numNodes());
-	PP(g->numRels());
 	sbm::State s(g);
+	s.internalCheck();
 }
