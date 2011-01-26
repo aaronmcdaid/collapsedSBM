@@ -227,6 +227,9 @@ typename C::value_type constAt(const C &c, int i) {
 	return c.at(i);
 }
 
+struct NotImplemented {
+};
+
 } // namespace amd
 
 #define VERYCLOSE(a,b) (1e-10 > fabs((a)-(b)))

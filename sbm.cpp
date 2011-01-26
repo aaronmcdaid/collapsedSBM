@@ -68,4 +68,8 @@ int main(int argc, char **argv) {
 void runSBM(const shmGraphRaw::ReadableShmGraphBase *g) {
 	sbm::State s(g);
 	s.internalCheck();
+	for(int n=0; n<g->numNodes(); n+=3)
+		s.isolateNode(n);
+	s.shortSummary();
+	s.internalCheck();
 }
