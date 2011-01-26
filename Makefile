@@ -35,7 +35,7 @@ CXXFLAGS= ${BITS} -O3        ${CFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
 #acp: CXXFLAGS += -DNDEBUG
-acp: gitstatus.o shmGraphRaw.o Range.o cliques.o clique_percolation.o clique_percolation3.o clique_percolation4.o aaron_utils.o graph_utils.o
+acp: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 

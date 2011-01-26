@@ -5,7 +5,6 @@ using namespace std;
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
-#include "cliques.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"
@@ -14,9 +13,8 @@ const char gitstatus[] =
 
 
 
-int option_minCliqueSize = 3;
-
-vector< pair<double,bool> > option_thresholds;
+struct UsageMessage {
+};
 
 int main(int argc, char **argv) {
 	PP(gitstatus);
@@ -33,7 +31,6 @@ int main(int argc, char **argv) {
       c = getopt_long (argc, argv, "t:T:k:", long_options, &option_index);
       if (c == -1) break; /* Detect the end of the options. */
      
-			bool option_inclusiveThreshold = false; // this is not a global fixed option. Remember that multiple -t and -T may be specified by the user
       switch (c) {
         case '?': /* getopt_long already printed an error message. */ break;
         default: abort (); break;
@@ -45,53 +42,16 @@ int main(int argc, char **argv) {
           if (optarg) printf (" with arg %s", optarg);
           printf ("\n");
           break;
-        case 'T':
-					option_inclusiveThreshold = true;
-        case 't':
-					{
-					char * endptr;
-					double threshold = strtod(optarg, &endptr);
-					unless(threshold >= 0.0 && threshold <= 100.0)
-						Die("Percentage relative percolation threshold should be between 0 and 100: %g. Exiting", threshold);
-					unless(*endptr == '\0')
-						Die("Badly formed -t or -T relative threshold. Must be a real number between 0 and 100: '%s'", optarg);
-					if(option_inclusiveThreshold)
-						unless(threshold > 0.0)
-							Die("No point having a relative threshold of zero if it is inclusive. Exiting");
-
-					option_thresholds.push_back(make_pair(threshold, option_inclusiveThreshold));
-					}
-					break;
-        case 'k':
-					option_minCliqueSize = atoi(optarg);
-					unless(option_minCliqueSize >= 3)
-						Die("-k option must be at least three: %d. Exiting", option_minCliqueSize);
-					break;
-
-/*
-        case 21: // --saveMOSESscores= {"saveMOSESscores", required_argument,         0, 21},
-					strcpy(option_saveMOSESscores, optarg);
-					break;
-        case 22: // --seed= {"seed", required_argument,         0, 22},
-					option_seed = atol(optarg);
-					break;
-*/
-
+        // case 'T':
+					// option_inclusiveThreshold = true;
       }
     }
 	}
 
-	enum Version { DEFAULT=-1, ACP2=2, ACP3=3, ACP4=4 } version = DEFAULT;
-	// PP(basename(argv[0]));
-	// PP(strcmp("acp3", basename(argv[0])));
-	if(strcmp("acp2", basename(argv[0])) == 0) version = ACP2;
-	if(strcmp("acp3", basename(argv[0])) == 0) version = ACP3;
-	if(strcmp("acp4", basename(argv[0])) == 0) version = ACP4;
-	// PP(version);
-	// exit(1);
-	unless (argc - optind == 2 && (version == ACP2 || version == ACP3 || version==ACP4)) {
-		cout << "Usage: edge_list directory_for_output" << endl;
-		exit(1);
+	unless (argc - optind == 2) {
+		throw UsageMessage();
+		// cout << "Usage: edge_list directory_for_output" << endl;
+		// exit(1);
 	}
 	const char * edgeListFileName = argv[optind];
 	const char * directoryForOutput = argv[optind+1];
