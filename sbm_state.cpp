@@ -2,7 +2,7 @@
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;
 namespace sbm {
-	State::State(const ReadableShmGraphBase * const g) : _g(g), _N(g->numNodes()) {
+	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 		this->clusters.reserve(100 + 2*_N); // this is important. We mustn't allow the clusters vector to be moving about in RAM.
@@ -21,6 +21,14 @@ namespace sbm {
 		assert((int)this->cluster_id.size()==this->_N);
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back().members.size()==this->_N);
+
+		// inform EdgeCounts of all the edges
+		for(int relId = 0; relId < this->_g->numRels(); relId++) {
+			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
+			const int cl1 = this->cluster_id.at(eps.first);
+			const int cl2 = this->cluster_id.at(eps.second);
+			_edgeCounts.inform(cl1,cl2);
+		}
 	}
 	const int State::Cluster::order() const {
 		return this->members.size();
@@ -54,6 +62,8 @@ namespace sbm {
 		const list<int>::iterator newit = cl.newMember(n);
 		this->its.at(n) = newit;
 
+		this->informNodeMove(n, oldClusterID, newClusterID);
+
 		return newClusterID;
 	}
 
@@ -76,6 +86,22 @@ namespace sbm {
 			}
 		}
 		assert((int)alreadyConsidered.size() == this->_N);
+
+		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;
+		typedef                             boost::unordered_map<int,int>  ::value_type inner_value_type;
+		int numEdgeEnds = 0; // should end up at twice g->numRels() // assuming no self-loops of course
+		forEach(const outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
+			assert(outer.first >= 0 && outer.first < this->_k);
+			forEach(const inner_value_type & inner, amd::mk_range(outer.second)) {
+				cout << outer.first << ' ' << inner.first << '\t' << inner.second << endl;
+				assert(inner.first >= 0 && inner.first < this->_k);
+				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
+				numEdgeEnds += inner.second;
+				if(outer.first == inner.first) // we should double count those inside a cluster during this verification process
+					numEdgeEnds += inner.second;
+			}
+		}
+		assert(numEdgeEnds == 2*this->_g->numRels());
 	}
 
 	void State::shortSummary() const {
@@ -89,5 +115,30 @@ namespace sbm {
 				cout << (char)('a' + id_of_cluster - 10);
 		}
 		cout << endl;
+	}
+
+
+	void State::EdgeCounts::inform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
+		assert(cl1 >= 0); // && cl1 < this->_k);
+		assert(cl2 >= 0); // && cl2 < this->_k);
+		this->counts[cl1][cl2]++;
+		if(cl1 != cl2)
+			this->counts[cl2][cl1]++;
+	}
+	void State::EdgeCounts::uninform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
+		assert(cl1 >= 0); // && cl1 < this->_k);
+		assert(cl2 >= 0); // && cl2 < this->_k);
+		this->counts[cl1][cl2]--;
+		if(cl1 != cl2)
+			this->counts[cl2][cl1]--;
+	}
+	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
+		forEach(const int relId, amd::mk_range(rels)) {
+			const int otherEnd = this->_g->oppositeEndPoint(relId, n);
+			const int otherCl = this->cluster_id.at(otherEnd);
+			this->_edgeCounts.uninform(otherCl, oldcl);
+			this->_edgeCounts.  inform(otherCl, newcl);
+		}
 	}
 } // namespace sbm

@@ -2,10 +2,11 @@
 #include <vector>
 #include "shmGraphRaw.hpp"
 namespace sbm {
+typedef shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> GraphType;
 struct State {
-	const shmGraphRaw::ReadableShmGraphBase * const _g; // the graph
+	const GraphType * const _g; // the graph
 	const int _N; // the number of nodes in the graph
-	explicit State(const shmGraphRaw::ReadableShmGraphBase * const g);
+	explicit State(const GraphType * const g);
 
 	// the clustering
 	int _k; // the number of clusters (including empty ones)
@@ -26,6 +27,14 @@ struct State {
 
 	// summaries
 	void shortSummary() const;
+
+	struct EdgeCounts {
+		boost::unordered_map< int , boost::unordered_map<int,int> > counts;
+		void   inform(const int cl1, const int cl2) ; // inform us of an edge between cl1 and cl2
+		void uninform(const int cl1, const int cl2) ; // UNinform us of an edge between cl1 and cl2
+	};
+	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+	EdgeCounts _edgeCounts;
 };
 
 } // namespace sbm

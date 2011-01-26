@@ -17,7 +17,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const shmGraphRaw::ReadableShmGraphBase *g);
+void runSBM(const sbm::GraphType *g);
 
 int main(int argc, char **argv) {
 	PP(gitstatus);
@@ -65,11 +65,11 @@ int main(int argc, char **argv) {
 	runSBM(g.get());
 }
 
-void runSBM(const shmGraphRaw::ReadableShmGraphBase *g) {
+void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 	s.internalCheck();
-	for(int n=0; n<g->numNodes(); n+=3)
-		s.isolateNode(n);
+	//for(int n=0; n<g->numNodes(); n+=3) s.isolateNode(n);
+	s.isolateNode(0);
 	s.shortSummary();
 	s.internalCheck();
 }
