@@ -68,18 +68,23 @@ int main(int argc, char **argv) {
 void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 
-	s.shortSummary();
-	s.summarizeEdgeCounts();
-	s.internalCheck();
-	//for(int n=0; n<g->numNodes(); n+=3) s.isolateNode(n);
-	//
-	s.isolateNode(0);
-	s.shortSummary();
-	s.summarizeEdgeCounts();
-	s.internalCheck();
+	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
 
-	s.unIsolateTempNode(0, 0);
-	s.shortSummary();
-	s.summarizeEdgeCounts();
-	s.internalCheck();
+	s.isolateNode(0);
+	s.isolateNode(1); // to bring us up to three clusters
+	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
+
+	for(int i=0; i<300; i++) {
+		const int n = drand48() * s._N;
+		const int newClusterID = drand48() * s._k;
+		cout << endl << "Moving node: " << n << endl;
+		s.isolateNode(n);
+		// s.shortSummary(); s.summarizeEdgeCounts();
+		s.internalCheck();
+
+		s.unIsolateTempNode(n, newClusterID);
+		// s.shortSummary(); s.summarizeEdgeCounts();
+		s.internalCheck();
+	}
+	s.shortSummary(); s.summarizeEdgeCounts();
 }
