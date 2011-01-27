@@ -69,7 +69,12 @@ void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 	s.internalCheck();
 	//for(int n=0; n<g->numNodes(); n+=3) s.isolateNode(n);
+	//
 	s.isolateNode(0);
+	s.shortSummary();
+	s.internalCheck();
+
+	s.unIsolateNode(0, 0);
 	s.shortSummary();
 	s.internalCheck();
 }

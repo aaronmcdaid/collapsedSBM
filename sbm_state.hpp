@@ -20,7 +20,9 @@ struct State {
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
 
 	int appendEmptyCluster();
+	void moveNode(const int n, const int newClusterID);
 	int isolateNode(const int n); // create a new (probably temporary) cluster to hold this one node
+	void unIsolateNode(const int n, const int newClusterID); // move a node from its 'temporary' cluster to an existing cluster
 
 	// internalcheck
 	void internalCheck() const;

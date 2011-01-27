@@ -46,25 +46,47 @@ namespace sbm {
 		assert(newCluster->members.size()==0);
 		return newClusterID;
 	}
+	void State::moveNode(const int n, const int newClusterID) {
+		const int oldClusterID = this->cluster_id.at(n);
+		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
+		assert(newClusterID >= 0 && newClusterID < this->_k);
+		assert(oldClusterID >= 0 && oldClusterID < this->_k);
+		assert(newClusterID != oldClusterID);
+
+		Cluster *cl = this->clusters.at(newClusterID);
+		assert(cl);
+
+		const list<int>::iterator it = this->its.at(n);
+		assert(*it == n);
+		this->clusters.at(oldClusterID)->members.erase(it); // fix up this->clusters.members
+		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
+		this->its.at(n) = newit; // fix up this->its
+
+		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
+
+		assert(oldClusterSize-1 == this->clusters.at(oldClusterID)->order());
+	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
 		const int newClusterID = this->appendEmptyCluster();
 		const int oldClusterID = this->cluster_id.at(n);
-		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		const list<int>::iterator it = this->its.at(n);
-		assert(*it == n);
-		this->clusters.at(oldClusterID)->members.erase(it);
-		assert(oldClusterSize-1 == this->clusters.at(oldClusterID)->order());
 
-		this->cluster_id.at(n) = newClusterID;
 		Cluster *cl = this->clusters.at(newClusterID);
 		assert(cl->order()==0);
-		const list<int>::iterator newit = cl->newMember(n);
-		this->its.at(n) = newit;
+
+		this->moveNode(n, newClusterID);
 
 		this->informNodeMove(n, oldClusterID, newClusterID);
 
 		return newClusterID;
+	}
+	void State::unIsolateNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
+		const int oldClusterID = this->cluster_id.at(n);
+		this->moveNode(n, newClusterID);
+		Cluster *cl = this->clusters.at(oldClusterID);
+		assert(cl && cl->order() == 0);
+
+		this->informNodeMove(n, oldClusterID, newClusterID);
 	}
 
 	void State::internalCheck() const {
@@ -106,7 +128,7 @@ namespace sbm {
 	}
 
 	void State::shortSummary() const {
-		cout << " == Summary: ==" << endl;
+		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		for(int n=0; n<this->_N;n++) {
 			const int id_of_cluster = this->cluster_id.at(n);
@@ -115,7 +137,7 @@ namespace sbm {
 			else
 				cout << (char)('a' + id_of_cluster - 10);
 		}
-		cout << endl;
+		cout << endl << endl;
 	}
 
 
