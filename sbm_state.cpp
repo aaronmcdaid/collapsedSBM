@@ -46,6 +46,13 @@ namespace sbm {
 		assert(newCluster->members.size()==0);
 		return newClusterID;
 	}
+	void State:: deleteClusterFromTheEnd() {
+		assert(this->_k >= 1);
+		this->_k --;
+		Cluster * clusterToDelete = this->clusters.at(this->_k);
+		assert(clusterToDelete->order() == 0);
+		this->clusters.pop_back();
+	}
 	void State::moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
@@ -83,8 +90,8 @@ namespace sbm {
 	void State::unIsolateTempNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
 		const int oldClusterID = this->cluster_id.at(n);
 		this->moveNode(n, newClusterID);
-		Cluster *cl = this->clusters.at(oldClusterID);
-		assert(cl && cl->order() == 0);
+		assert(oldClusterID+1 == this->_k);
+		this->deleteClusterFromTheEnd();
 
 		this->informNodeMove(n, oldClusterID, newClusterID);
 	}
