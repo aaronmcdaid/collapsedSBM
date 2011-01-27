@@ -74,7 +74,7 @@ void runSBM(const sbm::GraphType *g) {
 	s.shortSummary();
 	s.internalCheck();
 
-	s.unIsolateNode(0, 0);
+	s.unIsolateTempNode(0, 0);
 	s.shortSummary();
 	s.internalCheck();
 }

@@ -80,7 +80,7 @@ namespace sbm {
 
 		return newClusterID;
 	}
-	void State::unIsolateNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
+	void State::unIsolateTempNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
 		const int oldClusterID = this->cluster_id.at(n);
 		this->moveNode(n, newClusterID);
 		Cluster *cl = this->clusters.at(oldClusterID);
@@ -110,12 +110,10 @@ namespace sbm {
 		}
 		assert((int)alreadyConsidered.size() == this->_N);
 
-		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;
-		typedef                             boost::unordered_map<int,int>  ::value_type inner_value_type;
 		int numEdgeEnds = 0; // should end up at twice g->numRels() // assuming no self-loops of course
-		forEach(const outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
+		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
 			assert(outer.first >= 0 && outer.first < this->_k);
-			forEach(const inner_value_type & inner, amd::mk_range(outer.second)) {
+			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
 				cout << outer.first << ' ' << inner.first << '\t' << inner.second << endl;
 				assert(inner.first >= 0 && inner.first < this->_k);
 				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
@@ -148,12 +146,21 @@ namespace sbm {
 		if(cl1 != cl2)
 			this->counts[cl2][cl1]++;
 	}
+	void State::EdgeCounts::partialUnInform(const int clA, const int clB) { // private to EdgeCounts
+		EdgeCounts::outer_value_type::second_type & edgeMapForOneCluster = this->counts.at(clA);
+		EdgeCounts::outer_value_type::second_type::iterator aSingleEntry = edgeMapForOneCluster.find(clB);
+		assert(edgeMapForOneCluster.at(clB) == aSingleEntry->second);
+		aSingleEntry->second --;
+		assert(edgeMapForOneCluster.at(clB) == aSingleEntry->second);
+		if(aSingleEntry->second == 0)
+			edgeMapForOneCluster.erase(aSingleEntry);
+	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
-		this->counts[cl1][cl2]--;
+		this->partialUnInform(cl1,cl2);
 		if(cl1 != cl2)
-			this->counts[cl2][cl1]--;
+			this->partialUnInform(cl2,cl1);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
