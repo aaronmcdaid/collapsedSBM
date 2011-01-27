@@ -1,3 +1,4 @@
+#include <gsl/gsl_sf.h>
 #include "sbm_state.hpp"
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;
@@ -170,7 +171,9 @@ namespace sbm {
 			else
 				cout << (char)('a' + id_of_cluster - 10);
 		}
-		cout << endl << endl;
+		cout << endl;
+		PP(this->P_z());
+		cout << endl;
 	}
 
 
@@ -207,5 +210,27 @@ namespace sbm {
 			this->_edgeCounts.uninform(otherCl, oldcl);
 			this->_edgeCounts.  inform(otherCl, newcl);
 		}
+	}
+	long double assertNonPositiveFinite(const long double x) {
+		assert(isfinite(x));
+		assert(x<=0.0L);
+		return x;
+	}
+
+#define LOG2GAMMA(x) (M_LOG2E * gsl_sf_lngamma(x))
+#define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
+	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
+		const long double K_dependant_bits = LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
+		PP(K_dependant_bits);
+		long double perCluster_bits = 0.0L;
+		for(int CL=0; CL < this->_k; CL++) {
+			const Cluster *cl = this->clusters.at(CL);
+			assert(cl);
+			perCluster_bits += LOG2FACT(cl->order());
+		}
+		return assertNonPositiveFinite(K_dependant_bits + perCluster_bits);
+	}
+	long double State:: pmf_slow() const {
+		return this->P_z();
 	}
 } // namespace sbm

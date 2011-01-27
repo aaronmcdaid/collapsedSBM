@@ -77,7 +77,10 @@ void runSBM(const sbm::GraphType *g) {
 	for(int i=0; i<300; i++) {
 		const int n = drand48() * s._N;
 		const int newClusterID = drand48() * s._k;
-		cout << endl << "Moving node: " << n << endl;
+		cout << endl
+			<< "Moving node: " << n
+			<< " move# " << i
+			<< endl;
 		s.isolateNode(n);
 		// s.shortSummary(); s.summarizeEdgeCounts();
 		s.internalCheck();
@@ -85,6 +88,7 @@ void runSBM(const sbm::GraphType *g) {
 		s.unIsolateTempNode(n, newClusterID);
 		// s.shortSummary(); s.summarizeEdgeCounts();
 		s.internalCheck();
+		PP(s.pmf_slow());
 	}
 	s.shortSummary(); s.summarizeEdgeCounts();
 }

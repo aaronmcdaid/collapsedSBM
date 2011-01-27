@@ -32,6 +32,7 @@ struct State {
 	void shortSummary() const;
 	void summarizeEdgeCounts() const ;
 
+	// counting the edges between each pair of clusters
 	struct EdgeCounts {
 		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;
 		typedef                             boost::unordered_map<int,int>  ::value_type inner_value_type;
@@ -43,6 +44,10 @@ struct State {
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 	EdgeCounts _edgeCounts;
+
+	// pmf - probability mass function to guide sampling
+	long double P_z() const;
+	long double pmf_slow() const;
 };
 
 } // namespace sbm
