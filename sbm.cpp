@@ -67,14 +67,19 @@ int main(int argc, char **argv) {
 
 void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
+
+	s.shortSummary();
+	s.summarizeEdgeCounts();
 	s.internalCheck();
 	//for(int n=0; n<g->numNodes(); n+=3) s.isolateNode(n);
 	//
 	s.isolateNode(0);
 	s.shortSummary();
+	s.summarizeEdgeCounts();
 	s.internalCheck();
 
 	s.unIsolateTempNode(0, 0);
 	s.shortSummary();
+	s.summarizeEdgeCounts();
 	s.internalCheck();
 }

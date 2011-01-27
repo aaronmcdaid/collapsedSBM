@@ -29,6 +29,7 @@ struct State {
 
 	// summaries
 	void shortSummary() const;
+	void summarizeEdgeCounts() const ;
 
 	struct EdgeCounts {
 		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;

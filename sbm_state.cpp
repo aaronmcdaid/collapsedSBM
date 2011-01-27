@@ -89,6 +89,17 @@ namespace sbm {
 		this->informNodeMove(n, oldClusterID, newClusterID);
 	}
 
+	void State:: summarizeEdgeCounts() const {
+		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
+			assert(outer.first >= 0 && outer.first < this->_k);
+			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
+				cout << " edges " << outer.first << ',' << inner.first << '\t' << inner.second << endl;
+				assert(inner.first >= 0 && inner.first < this->_k);
+				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
+			}
+		}
+	}
+
 	void State::internalCheck() const {
 		assert(this->_k>0);
 		assert(this->_k == (int)this->clusters.size());
@@ -114,7 +125,6 @@ namespace sbm {
 		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
 			assert(outer.first >= 0 && outer.first < this->_k);
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
-				cout << outer.first << ' ' << inner.first << '\t' << inner.second << endl;
 				assert(inner.first >= 0 && inner.first < this->_k);
 				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
 				numEdgeEnds += inner.second;
