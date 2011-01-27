@@ -121,18 +121,36 @@ namespace sbm {
 		}
 		assert((int)alreadyConsidered.size() == this->_N);
 
+		EdgeCounts edgeCountsVerification;
+		for(int relId = 0; relId < this->_g->numRels(); relId++) {
+			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
+			const int cl1 = this->cluster_id.at(eps.first);
+			const int cl2 = this->cluster_id.at(eps.second);
+			edgeCountsVerification.inform(cl1,cl2);
+		}
+		DYINGWORDS(edgeCountsVerification.counts.size() == this->_edgeCounts.counts.size()) {
+			PP(edgeCountsVerification.counts.size());
+			PP(this->_edgeCounts.counts.size());
+		}
+		assert(edgeCountsVerification.counts.size() == this->_edgeCounts.counts.size());
+
 		int numEdgeEnds = 0; // should end up at twice g->numRels() // assuming no self-loops of course
 		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
 			assert(outer.first >= 0 && outer.first < this->_k);
+			const EdgeCounts::outer_value_type::second_type & outerVerification = edgeCountsVerification.counts.at(outer.first);
+			assert(outerVerification.size() == outer.second.size());
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
 				assert(inner.first >= 0 && inner.first < this->_k);
-				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
+				assert(inner.second > 0); // maybe > 0 in future ? TODO SPEED ?
+				assert(inner.second == outerVerification.at(inner.first));
 				numEdgeEnds += inner.second;
 				if(outer.first == inner.first) // we should double count those inside a cluster during this verification process
 					numEdgeEnds += inner.second;
 			}
 		}
 		assert(numEdgeEnds == 2*this->_g->numRels());
+
+
 	}
 
 	void State::shortSummary() const {
@@ -164,6 +182,8 @@ namespace sbm {
 		assert(edgeMapForOneCluster.at(clB) == aSingleEntry->second);
 		if(aSingleEntry->second == 0)
 			edgeMapForOneCluster.erase(aSingleEntry);
+		if(edgeMapForOneCluster.size()==0)
+			this->counts.erase(clA);
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
