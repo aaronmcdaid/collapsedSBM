@@ -15,7 +15,7 @@ struct State {
 		const int order() const;
 		std::list<int>::iterator newMember(const int n);
 	}; // each cluster to know which nodes are in it
-	std::vector< Cluster > clusters; // numbered 0 to k-1
+	std::vector< Cluster* > clusters; // numbered 0 to k-1
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
 

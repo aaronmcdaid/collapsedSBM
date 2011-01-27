@@ -5,22 +5,22 @@ namespace sbm {
 	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
-		this->clusters.reserve(100 + 2*_N); // this is important. We mustn't allow the clusters vector to be moving about in RAM.
-		this->clusters.push_back(Cluster());
+		this->clusters.push_back(new Cluster());
 		assert(this->clusters.size()==1);
 
 		assert(this->cluster_id.size()==0);
 		assert(this->its.size()==0);
 		for(int i=0; i<this->_N; i++) {
 			this->cluster_id.push_back(0);
-			Cluster &cl = this->clusters.back();
-			this->its.push_back( cl.newMember(i) );
+			Cluster *cl = this->clusters.back();
+			assert(cl);
+			this->its.push_back( cl->newMember(i) );
 			assert(*this->its.at(i) == i);
 		}
 
 		assert((int)this->cluster_id.size()==this->_N);
 		assert((int)this->its.size()==this->_N);
-		assert((int)this->clusters.back().members.size()==this->_N);
+		assert((int)this->clusters.back()->members.size()==this->_N);
 
 		// inform EdgeCounts of all the edges
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
@@ -41,25 +41,25 @@ namespace sbm {
 	int State::appendEmptyCluster() {
 		const int newClusterID = this->_k;
 		this->_k ++;
-		assert(this->_k < (int)this->clusters.capacity());
-		this->clusters.push_back(Cluster());
-		assert((int)this->clusters.back().members.size()==0);
+		Cluster * newCluster = new Cluster();
+		this->clusters.push_back(newCluster);
+		assert(newCluster->members.size()==0);
 		return newClusterID;
 	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
 		const int newClusterID = this->appendEmptyCluster();
 		const int oldClusterID = this->cluster_id.at(n);
-		const int oldClusterSize = this->clusters.at(oldClusterID).order();
+		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
 		const list<int>::iterator it = this->its.at(n);
 		assert(*it == n);
-		this->clusters.at(oldClusterID).members.erase(it);
-		assert(oldClusterSize-1 == this->clusters.at(oldClusterID).order());
+		this->clusters.at(oldClusterID)->members.erase(it);
+		assert(oldClusterSize-1 == this->clusters.at(oldClusterID)->order());
 
 		this->cluster_id.at(n) = newClusterID;
-		Cluster &cl = this->clusters.at(newClusterID);
-		assert(cl.order()==0);
-		const list<int>::iterator newit = cl.newMember(n);
+		Cluster *cl = this->clusters.at(newClusterID);
+		assert(cl->order()==0);
+		const list<int>::iterator newit = cl->newMember(n);
 		this->its.at(n) = newit;
 
 		this->informNodeMove(n, oldClusterID, newClusterID);
@@ -74,8 +74,9 @@ namespace sbm {
 		assert(this->_N == (int)this->its.size());
 		boost::unordered_set<int> alreadyConsidered;
 		for(int CL = 0; CL < this->_k; CL++) {
-			const Cluster &cl = this->clusters.at(CL);
-			for(list<int>::const_iterator i = cl.members.begin(); i!=cl.members.end(); i++) {
+			const Cluster *cl = this->clusters.at(CL);
+			assert(cl);
+			for(list<int>::const_iterator i = cl->members.begin(); i!=cl->members.end(); i++) {
 				const int n = *i;
 				assert(n>=0 && n<this->_N);
 				bool wasAccepted = alreadyConsidered.insert(n).second;
