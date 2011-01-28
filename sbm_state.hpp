@@ -31,6 +31,7 @@ struct State {
 	// summaries
 	void shortSummary() const;
 	void summarizeEdgeCounts() const ;
+	void blockDetail() const ;
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {

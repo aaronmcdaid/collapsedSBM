@@ -111,6 +111,32 @@ namespace sbm {
 			}
 		}
 	}
+	void State:: blockDetail() const {
+			cout << "    | ";
+			for(int j=0; j<this->_k; j++) {
+				const Cluster *J = this->clusters.at(j);
+				assert(J);
+				const int nj = J->order();
+				cout << printfstring("      %5d     ", nj) << "   ";
+			}
+			cout << endl;
+		for(int i=0; i<this->_k; i++) {
+			const Cluster *I = this->clusters.at(i);
+			assert(I);
+			const int ni = I->order();
+			cout << printfstring("%3d", ni) << " | ";
+			for(int j=0; j<this->_k; j++) {
+				const Cluster *J = this->clusters.at(j);
+				assert(J);
+				const int nj = J->order();
+				const int edges = this->_edgeCounts.get(i,j);
+				const int pairs = i==j ? (ni * (nj-1) / 2) : (ni*nj);
+				assert(edges <= pairs);
+				cout << printfstring("%10s %-#5.2f", printfstring("%d/%d", edges, pairs).c_str(), double(edges)/double(pairs)) << " | ";
+			}
+			cout << endl;
+		}
+	}
 
 	void State::internalCheck() const {
 		assert(this->_k>0);
@@ -238,7 +264,7 @@ namespace sbm {
 			assert(cl);
 			perCluster_bits += LOG2FACT(cl->order());
 		}
-		PP(K_dependant_bits + perCluster_bits);
+		// PP(K_dependant_bits + perCluster_bits);
 		return assertNonPositiveFinite(K_dependant_bits + perCluster_bits);
 	}
 	long double State:: P_edges_given_z_slow() const {
@@ -270,7 +296,7 @@ namespace sbm {
 				// PP(edges_bits);
 			}
 		}
-		PP(edges_bits);
+		// PP(edges_bits);
 		return assertNonPositiveFinite(edges_bits);
 	}
 	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
