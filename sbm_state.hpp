@@ -39,6 +39,7 @@ struct State {
 		boost::unordered_map< int , boost::unordered_map<int,int> > counts;
 		void   inform(const int cl1, const int cl2) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2) ; // UNinform us of an edge between cl1 and cl2
+		int       get(const int cl1, const int cl2) const throw() ;
 		private:
 		void partialUnInform(const int cl1, const int cl2);
 	};
@@ -47,6 +48,7 @@ struct State {
 
 	// pmf - probability mass function to guide sampling
 	long double P_z() const;
+	long double P_edges_given_z_slow() const;
 	long double pmf_slow() const;
 };
 

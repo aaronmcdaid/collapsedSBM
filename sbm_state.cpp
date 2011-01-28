@@ -176,8 +176,6 @@ namespace sbm {
 				cout << (char)('a' + id_of_cluster - 10);
 		}
 		cout << endl;
-		PP(this->P_z());
-		cout << endl;
 	}
 
 
@@ -206,6 +204,13 @@ namespace sbm {
 		if(cl1 != cl2)
 			this->partialUnInform(cl2,cl1);
 	}
+	int  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
+		try {
+			return this->counts.at(cl1).at(cl2);
+		} catch (const std::out_of_range &e) {
+			return 0;
+		}
+	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
 		forEach(const int relId, amd::mk_range(rels)) {
@@ -225,16 +230,48 @@ namespace sbm {
 #define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
 		const long double K_dependant_bits = LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
-		PP(K_dependant_bits);
 		long double perCluster_bits = 0.0L;
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->clusters.at(CL);
 			assert(cl);
 			perCluster_bits += LOG2FACT(cl->order());
 		}
+		PP(K_dependant_bits + perCluster_bits);
 		return assertNonPositiveFinite(K_dependant_bits + perCluster_bits);
 	}
+	long double State:: P_edges_given_z_slow() const {
+		long double edges_bits = 0.0L;
+		for(int i=0; i<this->_k; i++) {
+			const Cluster *I = this->clusters.at(i);
+			assert(I);
+			for(int j=0; j<=i; j++) {
+				const Cluster *J = this->clusters.at(j);
+				assert(J);
+				const int ni = I->order();
+				const int nj = J->order();
+				const int edges = this->_edgeCounts.get(i,j);
+				/*
+				cout << ni << " x " << nj;
+				if(i==j)
+					cout << "-1 x1/2";
+				cout	<< " pairs. "
+					<< edges << " edges."
+					<< endl;
+					*/
+				const int pairs = i==j ? (ni * (nj-1) / 2) : (ni*nj);
+				assert(edges <= pairs);
+				// PP2(pairs,edges);
+				if(pairs > 0) {
+					edges_bits -= log2(pairs);
+					edges_bits -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+				}
+				// PP(edges_bits);
+			}
+		}
+		PP(edges_bits);
+		return assertNonPositiveFinite(edges_bits);
+	}
 	long double State:: pmf_slow() const {
-		return this->P_z();
+		return this->P_edges_given_z_slow() + this->P_z();
 	}
 } // namespace sbm
