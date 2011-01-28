@@ -1,3 +1,3 @@
 " "
-"SBM: Randomize into 3 clusters. I think I'm ready to start sampling soon, I think"
+"SBM: Exponential prior on K. MetropolisOnK()"
 "\n"

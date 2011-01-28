@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
 	assert(s._k <= K);
-	for(int i=0; i<100000 || s._k < K; i++) {
+	for(int i=0; i<10000 || s._k < K; i++) {
 		int n;
 		do {
 			n = drand48() * s._N;
@@ -84,6 +84,19 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 		s.internalCheck();
 	}
 	assert(s._k == K);
+}
+
+bool fiftyfifty() {
+	if(drand48() < 0.5)
+		return true;
+	else
+		return false;
+}
+bool acceptTest(const long double delta) {
+	if(log2(drand48()) < delta)
+		return true;
+	else
+		return false;
 }
 
 long double MoneNode(sbm::State &s) {
@@ -104,7 +117,7 @@ long double MoneNode(sbm::State &s) {
 	// PP(pre);
 	// PP(post);
 	// PP(delta);
-	if(log2(drand48()) < delta) {
+	if(acceptTest(delta)) {
 		cout << " + ";
 		return delta;
 	} else {
@@ -115,18 +128,74 @@ long double MoneNode(sbm::State &s) {
 		return 0.0L;
 	}
 }
+void MetropolisOnK(sbm::State &s) {
+	const long double pre = s.pmf();
+	const int preK = s._k;
+	if(fiftyfifty()) { // propose increase in K
+		s.appendEmptyCluster();
+		const long double post = s.pmf();
+		assert(post < pre);
+		if(acceptTest(post - pre)) {
+			// cout << "k: acc inc" << endl;
+			assert(s._k>preK);
+		} else {
+			// cout << "k: rej inc" << endl;
+			s.deleteClusterFromTheEnd();
+			assert(s.pmf()==pre);
+			assert(s._k==preK);
+		}
+	} else { // propose decrease
+		if(s._k >= 1 && s.clusters.back()->order()==0) {
+			s.deleteClusterFromTheEnd();
+			const long double post = s.pmf();
+			assert(post > pre);
+			if(acceptTest(post - pre)) {
+				// cout << "k: acc dec" << endl;
+				assert(s._k<preK);
+			} else {
+				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function.
+				// cout << "k: rej dec" << endl;
+				s.appendEmptyCluster();
+				assert(s.pmf()==post);
+				assert(s._k==preK);
+			}
+		} else {// otherwise, not possible to remove it
+			// cout << "k: rej-dec" << endl;
+			assert(s._k==preK);
+		}
+	}
+}
 
 void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 
-	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
+	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.internalCheck();
 
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
-	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
+
+	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.internalCheck();
 	PP(s.pmf());
 
 	randomize(s, 3);
-	s.shortSummary(); s.summarizeEdgeCounts();
+	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	PP(s.pmf());
+
+	for(int i=1; i<=20000; i++) {
+		// PP(i);
+		MoneNode(s);
+		MetropolisOnK(s);
+		// PP(s.pmf());
+		// cout << endl;
+		s.internalCheck();
+		if(i%100 == 0) {
+			cout << endl;
+			PP(i);
+			s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+		}
+	}
+	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.internalCheck();
 }

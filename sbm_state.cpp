@@ -260,6 +260,7 @@ namespace sbm {
 #define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
 		const long double priorOnK = -this->_k; // Exponential prior on K
+		// const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
 		long double perCluster_bits = 0.0L;
 		for(int CL=0; CL < this->_k; CL++) {
