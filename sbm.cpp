@@ -86,6 +86,36 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 	assert(s._k == K);
 }
 
+long double MoneNode(sbm::State &s) {
+	const long double pre = s.pmf();
+	const int n = drand48() * s._N;
+	const int oldClusterID = s.cluster_id.at(n);
+	int newClusterID;
+	do {
+		newClusterID = drand48() * s._k;
+	} while (newClusterID == oldClusterID);
+	assert(newClusterID != oldClusterID);
+	// PP(oldClusterID);
+	// PP(newClusterID);
+	s.moveNode(n, newClusterID);
+	s.informNodeMove(n, oldClusterID, newClusterID);
+	const long double post = s.pmf();
+	const long double delta = post - pre;
+	// PP(pre);
+	// PP(post);
+	// PP(delta);
+	if(log2(drand48()) < delta) {
+		cout << " + ";
+		return delta;
+	} else {
+		cout << "   ";
+		s.moveNode(n, oldClusterID);
+		s.informNodeMove(n, newClusterID, oldClusterID);
+		assert(s.pmf() == pre); // make sure it has undone it properly
+		return 0.0L;
+	}
+}
+
 void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 
