@@ -172,8 +172,10 @@ namespace sbm {
 			const int id_of_cluster = this->cluster_id.at(n);
 			if(id_of_cluster<10)
 				cout << (char)('0' + id_of_cluster);
-			else
+			else if(id_of_cluster < 36)
 				cout << (char)('a' + id_of_cluster - 10);
+			else
+				cout << '<' << id_of_cluster << '>';
 		}
 		cout << endl;
 	}
@@ -271,7 +273,15 @@ namespace sbm {
 		PP(edges_bits);
 		return assertNonPositiveFinite(edges_bits);
 	}
+	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
+		const long double slow = this->P_edges_given_z_slow();
+		// TODO: Use a faster implementation
+		return slow;
+	}
 	long double State:: pmf_slow() const {
 		return this->P_edges_given_z_slow() + this->P_z();
+	}
+	long double State:: pmf() const {
+		return this->P_edges_given_z() + this->P_z();
 	}
 } // namespace sbm

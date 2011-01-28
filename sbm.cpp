@@ -65,6 +65,27 @@ int main(int argc, char **argv) {
 	runSBM(g.get());
 }
 
+void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
+	assert(s._k <= K);
+	for(int i=0; i<100000 || s._k < K; i++) {
+		int n;
+		do {
+			n = drand48() * s._N;
+			//cout << endl << "Moving node: " << n << " move# " << i << endl;
+			s.isolateNode(n);
+		} while (s._k <= K);
+		const int newClusterID = drand48() * (s._k-1); // -1 because we must move the node from the "temporary" community
+		// s.shortSummary(); s.summarizeEdgeCounts();
+		s.internalCheck();
+
+		s.unIsolateTempNode(n, newClusterID);
+		assert(s._k <= K);
+		// s.shortSummary(); s.summarizeEdgeCounts();
+		s.internalCheck();
+	}
+	assert(s._k == K);
+}
+
 void runSBM(const sbm::GraphType *g) {
 	sbm::State s(g);
 
@@ -73,23 +94,9 @@ void runSBM(const sbm::GraphType *g) {
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
 	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
-	PP(s.pmf_slow());
+	PP(s.pmf());
 
-	for(int i=0; i<30000; i++) {
-		const int n = drand48() * s._N;
-		const int newClusterID = drand48() * s._k;
-		cout << endl
-			<< "Moving node: " << n
-			<< " move# " << i
-			<< endl;
-		s.isolateNode(n);
-		// s.shortSummary(); s.summarizeEdgeCounts();
-		s.internalCheck();
-
-		s.unIsolateTempNode(n, newClusterID);
-		// s.shortSummary(); s.summarizeEdgeCounts();
-		s.internalCheck();
-	}
+	randomize(s, 3);
 	s.shortSummary(); s.summarizeEdgeCounts();
-	PP(s.pmf_slow());
+	PP(s.pmf());
 }

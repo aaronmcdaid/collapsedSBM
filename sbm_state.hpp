@@ -49,7 +49,9 @@ struct State {
 	// pmf - probability mass function to guide sampling
 	long double P_z() const;
 	long double P_edges_given_z_slow() const;
+	long double P_edges_given_z() const;
 	long double pmf_slow() const;
+	long double pmf() const;
 };
 
 } // namespace sbm
