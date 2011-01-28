@@ -3,6 +3,8 @@
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;
 namespace sbm {
+	struct SelfLoopsNotSupported : public std::exception {
+	};
 	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
@@ -26,6 +28,8 @@ namespace sbm {
 		// inform EdgeCounts of all the edges
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
 			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
+			if(eps.first == eps.second)
+				throw SelfLoopsNotSupported();
 			const int cl1 = this->cluster_id.at(eps.first);
 			const int cl2 = this->cluster_id.at(eps.second);
 			_edgeCounts.inform(cl1,cl2);
