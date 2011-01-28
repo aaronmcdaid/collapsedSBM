@@ -43,7 +43,7 @@ namespace sbm {
 		return this->members.begin();
 	}
 
-	int State::appendEmptyCluster() {
+	int State:: appendEmptyCluster() {
 		const int newClusterID = this->_k;
 		this->_k ++;
 		Cluster * newCluster = new Cluster();
@@ -57,6 +57,7 @@ namespace sbm {
 		Cluster * clusterToDelete = this->clusters.at(this->_k);
 		assert(clusterToDelete->order() == 0);
 		this->clusters.pop_back();
+		delete clusterToDelete;
 	}
 	void State::moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
