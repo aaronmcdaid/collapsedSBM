@@ -195,6 +195,7 @@ namespace sbm {
 	void State::shortSummary() const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
+		PP(this->pmf());
 		for(int n=0; n<this->_N;n++) {
 			const int id_of_cluster = this->cluster_id.at(n);
 			if(id_of_cluster<10)
@@ -258,7 +259,8 @@ namespace sbm {
 #define LOG2GAMMA(x) (M_LOG2E * gsl_sf_lngamma(x))
 #define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
-		const long double K_dependant_bits = LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
+		const long double priorOnK = -this->_k; // Exponential prior on K
+		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
 		long double perCluster_bits = 0.0L;
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->clusters.at(CL);
