@@ -73,8 +73,9 @@ void runSBM(const sbm::GraphType *g) {
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
 	s.shortSummary(); s.summarizeEdgeCounts(); s.internalCheck();
+	PP(s.pmf_slow());
 
-	for(int i=0; i<300; i++) {
+	for(int i=0; i<30000; i++) {
 		const int n = drand48() * s._N;
 		const int newClusterID = drand48() * s._k;
 		cout << endl
@@ -88,7 +89,7 @@ void runSBM(const sbm::GraphType *g) {
 		s.unIsolateTempNode(n, newClusterID);
 		// s.shortSummary(); s.summarizeEdgeCounts();
 		s.internalCheck();
-		PP(s.pmf_slow());
 	}
 	s.shortSummary(); s.summarizeEdgeCounts();
+	PP(s.pmf_slow());
 }
