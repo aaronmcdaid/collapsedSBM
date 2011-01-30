@@ -5,7 +5,7 @@ using namespace shmGraphRaw;
 namespace sbm {
 	struct SelfLoopsNotSupported : public std::exception {
 	};
-	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
+	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()), NonEmptyClusters(1) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 		this->clusters.push_back(new Cluster());
@@ -78,6 +78,10 @@ namespace sbm {
 		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
 
 		assert(oldClusterSize-1 == this->clusters.at(oldClusterID)->order());
+		if(this->clusters.at(oldClusterID)->order() == 0)
+			this->NonEmptyClusters--;
+		if(this->clusters.at(newClusterID)->order() == 1)
+			this->NonEmptyClusters++;
 	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
@@ -349,6 +353,7 @@ namespace sbm {
 			if(order > 0)
 				++nonEmptyClusters;
 		}
+		assert(this->NonEmptyClusters == nonEmptyClusters);
 		forEach(const Cluster * cl, amd::mk_range(this->clusters)) {
 			const int order = cl->order();
 			switch(order){
@@ -389,9 +394,9 @@ namespace sbm {
 		return this->P_edges_given_z_slow() + this->P_z();
 	}
 	long double State:: pmf() const {
-		const long double fast = this->P_edges_given_z_baseline() + this->P_edges_given_z_correction() + P_z_K() + P_z_orders();
-		const long double slow = this->P_edges_given_z() + this->P_z();
-		assert(fast == slow);
+		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
+		const long double slow = this->P_z() + this->P_edges_given_z();
+		assert(VERYCLOSE(fast, slow));
 		return assertNonPositiveFinite(fast);
 	}
 } // namespace sbm

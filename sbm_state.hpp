@@ -18,6 +18,7 @@ struct State {
 	std::vector< Cluster* > clusters; // numbered 0 to k-1
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
+	int NonEmptyClusters;
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;
