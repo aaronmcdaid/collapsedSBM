@@ -280,8 +280,6 @@ namespace sbm {
 		return x;
 	}
 
-#define LOG2GAMMA(x) (M_LOG2E * gsl_sf_lngamma(x))
-#define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
 	long double State:: P_z_K() const { // 1 and 2
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);

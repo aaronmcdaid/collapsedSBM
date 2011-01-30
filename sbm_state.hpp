@@ -1,6 +1,14 @@
 #include <list>
 #include <vector>
 #include "shmGraphRaw.hpp"
+
+static inline double LOG2GAMMA(double x) {
+	return M_LOG2E * gsl_sf_lngamma(x);
+}
+static inline double LOG2FACT(double x) {
+	return M_LOG2E * gsl_sf_lnfact(x);
+}
+
 namespace sbm {
 typedef shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> GraphType;
 struct State {
