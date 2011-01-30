@@ -108,7 +108,7 @@ namespace sbm {
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
 				cout << " edges " << outer.first << ',' << inner.first << '\t' << inner.second << endl;
 				assert(inner.first >= 0 && inner.first < this->_k);
-				assert(inner.second >= 0); // maybe > 0 in future ? TODO SPEED ?
+				assert(inner.second >  0);
 			}
 		}
 	}
@@ -180,7 +180,7 @@ namespace sbm {
 			assert(outerVerification.size() == outer.second.size());
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
 				assert(inner.first >= 0 && inner.first < this->_k);
-				assert(inner.second > 0); // maybe > 0 in future ? TODO SPEED ?
+				assert(inner.second > 0);
 				assert(inner.second == outerVerification.at(inner.first));
 				numEdgeEnds += inner.second;
 				if(outer.first == inner.first) // we should double count those inside a cluster during this verification process
@@ -258,6 +258,22 @@ namespace sbm {
 
 #define LOG2GAMMA(x) (M_LOG2E * gsl_sf_lngamma(x))
 #define LOG2FACT(x)  (M_LOG2E * gsl_sf_lnfact(x))
+	long double State:: P_z_K() const { // 1 and 2
+		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
+		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
+		return assertNonPositiveFinite(K_dependant_bits);
+	}
+	long double State:: P_z_orders() const { // given our current this->_k, what's P(z | k)
+		long double perCluster_bits = 0.0L;
+		for(int CL=0; CL < this->_k; CL++) {
+			const Cluster *cl = this->clusters.at(CL);
+			assert(cl);
+			perCluster_bits += LOG2FACT(cl->order());
+		}
+		assertNonPositiveFinite(-perCluster_bits);
+		return perCluster_bits;
+	}
+
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
 		// const long double priorOnK = -this->_k; // Exponential prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
@@ -269,10 +285,34 @@ namespace sbm {
 			perCluster_bits += LOG2FACT(cl->order());
 		}
 		// PP(K_dependant_bits + perCluster_bits);
+		assert(K_dependant_bits + perCluster_bits == P_z_K() + P_z_orders());
 		return assertNonPositiveFinite(K_dependant_bits + perCluster_bits);
 	}
+
+	
+	long double P_edges_OneColumn(const sbm::State *s, const int clusterID) {
+		const sbm::State:: Cluster * myCluster = s->clusters.at(clusterID);
+		forEach(const State:: EdgeCounts::inner_value_type & inner, amd::mk_range(s->_edgeCounts.counts.at(clusterID))) {
+			const int otherClusterID = inner.first;
+			const sbm::State:: Cluster *otherCluster = s->clusters.at(otherClusterID);
+			const int edges = inner.second;
+			PP(clusterID);
+			PP(otherClusterID);
+			const int pairs = clusterID == otherClusterID ? (myCluster->order() * (myCluster->order()-1) / 2) : (myCluster->order() * otherCluster->order()) ;
+			PP2(edges, pairs);
+		}
+		return 0.0L;
+	}
+	long double State:: isolateNodeAndInform(const int n) {
+		cout << "  isolateNodeAndInform()" << endl;
+		const int oldClusterID = this->cluster_id.at(n);
+		PP(P_edges_OneColumn(this, oldClusterID));
+		return 0.0;
+	}
 	long double State:: P_edges_given_z_slow() const {
+		long double edges_bits_no_edges = 0.0L;
 		long double edges_bits = 0.0L;
+		int pairsEncountered = 0;
 		for(int i=0; i<this->_k; i++) {
 			const Cluster *I = this->clusters.at(i);
 			assert(I);
@@ -290,23 +330,79 @@ namespace sbm {
 					<< edges << " edges."
 					<< endl;
 					*/
-				const int pairs = i==j ? (ni * (nj-1) / 2) : (ni*nj);
+				const int pairs = (i==j) ? (ni * (nj-1) / 2) : (ni*nj);
 				assert(edges <= pairs);
 				// PP2(pairs,edges);
 				if(pairs > 0) {
-					edges_bits -= log2(pairs);
+					pairsEncountered += pairs;
+					edges_bits -= log2l(pairs);
+					edges_bits_no_edges -= log2l(pairs);
 					edges_bits -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
 				}
 				// PP(edges_bits);
 			}
 		}
-		// PP(edges_bits);
+		assert(pairsEncountered == this->_N * (this->_N-1) / 2);
+		DYINGWORDS(VERYCLOSE(edges_bits, this->P_edges_given_z_baseline() + this->P_edges_given_z_correction())) {
+			cout << endl << "DYINGWORDS:" << __LINE__ << endl;
+			PP(this->P_edges_given_z_baseline() + this->P_edges_given_z_correction() - edges_bits);
+			PP(this->P_edges_given_z_baseline() + this->P_edges_given_z_correction());
+			PP(this->P_edges_given_z_baseline());
+			PP(edges_bits_no_edges);
+			PP(this->P_edges_given_z_correction());
+			PP(- edges_bits);
+		}
 		return assertNonPositiveFinite(edges_bits);
 	}
 	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow();
-		// TODO: Use a faster implementation
-		return slow;
+		const long double fast = this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
+		DYINGWORDS(VERYCLOSE(slow,fast));
+		return assertNonPositiveFinite(fast);
+	}
+	long double State:: P_edges_given_z_baseline() const {
+		long double pretend_no_edges = 0.0L;
+		int nonEmptyClusters = 0;
+		forEach(const Cluster * cl, amd::mk_range(this->clusters)) {
+			const int order = cl->order();
+			if(order > 0)
+				++nonEmptyClusters;
+		}
+		forEach(const Cluster * cl, amd::mk_range(this->clusters)) {
+			const int order = cl->order();
+			switch(order){
+				break;  case 0: // nothing to do, but rememember that empty clusters are weird in here
+				break;  case 1:
+					// pretend_no_edges += (this->_k-1) * log2l(order)
+						// +  log2l((order * order - order)/2);
+				break;  default:
+					assert(order >= 2 );
+					pretend_no_edges += (nonEmptyClusters-1) * log2l(order)
+						+  log2l((order * order - order)/2);
+			}
+			// PP(pretend_no_edges);
+			// PP(log2l(order * order - order) - log2l(2));
+			// PP(log2l((order * order - order)/2) );
+		}
+		return assertNonPositiveFinite(- pretend_no_edges);
+	}
+	long double State:: P_edges_given_z_correction() const {
+		long double correction = 0.0L;
+		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
+			assert(outer.first >= 0 && outer.first < this->_k);
+			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
+				if(inner.first <= outer.first) {
+					const int edges = inner.second;
+					const int order1 = this->clusters.at(outer.first)->order();
+					const int order2 = this->clusters.at(inner.first)->order();
+					const int pairs = (inner.first == outer.first) ? ((order1 * (order1-1))/2) : (order1 * order2);
+					correction -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+					// PP2(order1,order2);
+					// PP2(pairs,edges);
+				}
+			}
+		}
+		return assertNonPositiveFinite(correction);
 	}
 	long double State:: pmf_slow() const {
 		return this->P_edges_given_z_slow() + this->P_z();

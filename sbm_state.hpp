@@ -48,9 +48,18 @@ struct State {
 	EdgeCounts _edgeCounts;
 
 	// pmf - probability mass function to guide sampling
+	// The overall objective can be divided into four parts:
+	// 1. The K-dependant part, including its prior
+	// 2. The bits for each cluster's size
+	// 3. The edges "baseline", where there are assumed to be no edges
+	// 4. The edges correction over the baseline.
+	long double P_z_K() const; // 1.
+	long double P_z_orders() const; // 2.
 	long double P_z() const;
 	long double P_edges_given_z_slow() const;
 	long double P_edges_given_z() const;
+	long double P_edges_given_z_baseline() const; // 3.
+	long double P_edges_given_z_correction() const; // 4.
 	long double pmf_slow() const;
 	long double pmf() const;
 };
