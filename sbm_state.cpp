@@ -5,7 +5,7 @@ using namespace shmGraphRaw;
 namespace sbm {
 	struct SelfLoopsNotSupported : public std::exception {
 	};
-	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()), NonEmptyClusters(1) {
+	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()), NonEmptyClusters(1), SumOfLog2LOrders(log2l(this->_N)) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 		this->clusters.push_back(new Cluster());
@@ -67,21 +67,32 @@ namespace sbm {
 		assert(newClusterID != oldClusterID);
 
 		Cluster *cl = this->clusters.at(newClusterID);
+		Cluster *oldcl = this->clusters.at(oldClusterID);
 		assert(cl);
 
 		const list<int>::iterator it = this->its.at(n);
 		assert(*it == n);
-		this->clusters.at(oldClusterID)->members.erase(it); // fix up this->clusters.members
+		oldcl->members.erase(it); // fix up this->clusters.members
 		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
 		this->its.at(n) = newit; // fix up this->its
 
 		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
 
-		assert(oldClusterSize-1 == this->clusters.at(oldClusterID)->order());
-		if(this->clusters.at(oldClusterID)->order() == 0)
+		assert(oldClusterSize-1 == oldcl->order());
+		if(oldcl->order() == 0) {
 			this->NonEmptyClusters--;
-		if(this->clusters.at(newClusterID)->order() == 1)
+		}
+		if(cl->order() == 1) {
 			this->NonEmptyClusters++;
+		}
+		this->SumOfLog2LOrders +=
+					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
+					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
+					;
+		this->SumOfLog2LOrders +=
+					+ (cl->order()<2   ?0.0L:log2l(cl->order()))
+					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
+					;
 	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
@@ -149,6 +160,8 @@ namespace sbm {
 		assert(this->_N == (int)this->cluster_id.size());
 		assert(this->_N == (int)this->its.size());
 		boost::unordered_set<int> alreadyConsidered;
+		long double sumVerify = 0.0L;
+		int NonEmptyVerify = 0;
 		for(int CL = 0; CL < this->_k; CL++) {
 			const Cluster *cl = this->clusters.at(CL);
 			assert(cl);
@@ -161,7 +174,14 @@ namespace sbm {
 				assert(CL == this->cluster_id.at(n));
 				assert(i == this->its.at(n));
 			}
+			if(cl->order() >0)
+				NonEmptyVerify++;
+			if(cl->order() >=2)
+				sumVerify += log2l(cl->order());
 		}
+		assert(NonEmptyVerify == this->NonEmptyClusters);
+		assert(VERYCLOSE(sumVerify , this->SumOfLog2LOrders));
+		this->SumOfLog2LOrders = sumVerify;
 		assert((int)alreadyConsidered.size() == this->_N);
 
 		EdgeCounts edgeCountsVerification;
@@ -346,31 +366,35 @@ namespace sbm {
 		return assertNonPositiveFinite(fast);
 	}
 	long double State:: P_edges_given_z_baseline() const {
-		long double pretend_no_edges = 0.0L;
-		int nonEmptyClusters = 0;
-		forEach(const Cluster * cl, amd::mk_range(this->clusters)) {
-			const int order = cl->order();
-			if(order > 0)
-				++nonEmptyClusters;
-		}
-		assert(this->NonEmptyClusters == nonEmptyClusters);
+		// cout << "     P_edges_given_z_baseline()" << endl;
+		//
+		// offDiagonal isn't really used here, it's just to check again SumOfLog2LOrders (which is meant to be a 'cached' version thereof
+		// 
+		// By understanding SumOfLog2LOrders and onDiagonal, one can easily calculate the change in P_edges_given_z_baseline given a change in nodes
+		
+		long double offDiagonal = 0.0L;
+		long double  onDiagonal = 0.0L;
 		forEach(const Cluster * cl, amd::mk_range(this->clusters)) {
 			const int order = cl->order();
 			switch(order){
 				break;  case 0: // nothing to do, but rememember that empty clusters are weird in here
 				break;  case 1:
-					// pretend_no_edges += (this->_k-1) * log2l(order)
-						// +  log2l((order * order - order)/2);
 				break;  default:
 					assert(order >= 2 );
-					pretend_no_edges += (nonEmptyClusters-1) * log2l(order)
-						+  log2l((order * order - order)/2);
+					offDiagonal += (this->NonEmptyClusters-1) * log2l(order);
+					onDiagonal +=  log2l((order * order - order)/2);
+					// PP(offDiagonal);
 			}
-			// PP(pretend_no_edges);
-			// PP(log2l(order * order - order) - log2l(2));
-			// PP(log2l((order * order - order)/2) );
 		}
-		return assertNonPositiveFinite(- pretend_no_edges);
+		DYINGWORDS(VERYCLOSE(offDiagonal , this->SumOfLog2LOrders * (this->NonEmptyClusters-1))) {
+			PP(this->SumOfLog2LOrders);
+			PP(offDiagonal);
+			PP(this->NonEmptyClusters);
+			PP(this->SumOfLog2LOrders * (this->NonEmptyClusters-1) );
+			PP(this->SumOfLog2LOrders * (this->NonEmptyClusters-1) - offDiagonal);
+		}
+		// cout << "    ~P_edges_given_z_baseline()" << endl;
+		return assertNonPositiveFinite( -(this->SumOfLog2LOrders*(this->NonEmptyClusters-1)) -onDiagonal);
 	}
 	long double State:: P_edges_given_z_correction() const {
 		long double correction = 0.0L;

@@ -19,6 +19,7 @@ struct State {
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
 	int NonEmptyClusters;
+	mutable long double SumOfLog2LOrders;
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

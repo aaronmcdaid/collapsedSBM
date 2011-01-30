@@ -124,7 +124,7 @@ long double MoneNode(sbm::State &s) {
 		cout << "   ";
 		s.moveNode(n, oldClusterID);
 		s.informNodeMove(n, newClusterID, oldClusterID);
-		assert(s.pmf() == pre); // make sure it has undone it properly
+		assert(VERYCLOSE(s.pmf(), pre)); // make sure it has undone it properly
 		return 0.0L;
 	}
 }
