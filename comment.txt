@@ -1,3 +1,3 @@
 " "
-"SBM: print before MetropolisOnK(). 20,000k iters. Poisson(1) prior on K. MetropolisOnK()"
+"SBM: check fast is getting the same results as slow()"
 "\n"

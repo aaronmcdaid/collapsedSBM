@@ -290,25 +290,6 @@ namespace sbm {
 	}
 
 	
-	long double P_edges_OneColumn(const sbm::State *s, const int clusterID) {
-		const sbm::State:: Cluster * myCluster = s->clusters.at(clusterID);
-		forEach(const State:: EdgeCounts::inner_value_type & inner, amd::mk_range(s->_edgeCounts.counts.at(clusterID))) {
-			const int otherClusterID = inner.first;
-			const sbm::State:: Cluster *otherCluster = s->clusters.at(otherClusterID);
-			const int edges = inner.second;
-			PP(clusterID);
-			PP(otherClusterID);
-			const int pairs = clusterID == otherClusterID ? (myCluster->order() * (myCluster->order()-1) / 2) : (myCluster->order() * otherCluster->order()) ;
-			PP2(edges, pairs);
-		}
-		return 0.0L;
-	}
-	long double State:: isolateNodeAndInform(const int n) {
-		cout << "  isolateNodeAndInform()" << endl;
-		const int oldClusterID = this->cluster_id.at(n);
-		PP(P_edges_OneColumn(this, oldClusterID));
-		return 0.0;
-	}
 	long double State:: P_edges_given_z_slow() const {
 		long double edges_bits_no_edges = 0.0L;
 		long double edges_bits = 0.0L;
@@ -408,6 +389,9 @@ namespace sbm {
 		return this->P_edges_given_z_slow() + this->P_z();
 	}
 	long double State:: pmf() const {
-		return this->P_edges_given_z() + this->P_z();
+		const long double fast = this->P_edges_given_z_baseline() + this->P_edges_given_z_correction() + P_z_K() + P_z_orders();
+		const long double slow = this->P_edges_given_z() + this->P_z();
+		assert(fast == slow);
+		return assertNonPositiveFinite(fast);
 	}
 } // namespace sbm
