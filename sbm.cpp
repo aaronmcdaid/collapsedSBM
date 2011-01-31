@@ -224,6 +224,7 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	return OneChoice(delta2 , delta3 , delta4);
 }
 void M3(sbm::State &s) {
+	const bool verbose = false;
 	// cout << endl << "     ========== M3 =========" << endl;
 	const long double preM3   = s.pmf();
 	const long double preM3_1 = s.P_z_K();
@@ -242,7 +243,7 @@ void M3(sbm::State &s) {
 	const int cl2 = drand48() * s._k;
 	if(cl1 == cl2)
 		return;
-	cout << endl << "     ========== M3 (found two clusters) =========" << endl;
+	if(verbose) cout << endl << "     ========== M3 (found two clusters) =========" << endl;
 	const sbm::State::Cluster * CL1 = s.clusters.at(cl1);
 	const sbm::State::Cluster * CL2 = s.clusters.at(cl2);
 	vector<int> allNodes;
@@ -424,14 +425,14 @@ void M3(sbm::State &s) {
 	const long double pmfOfTheNewProposal = midM3 - midM3_1 + preM3_1 + deltaSumOfTheNewProposal;
 	assert(VERYCLOSE(pmfOfTheNewProposal, s.pmf()));
 
-	cout << "Accept or Reject? Not yet implemented." << endl;
+	if(verbose) cout << "Accept or Reject? Not yet implemented." << endl;
 	long double acceptanceLog2 = pmfOfTheNewProposal - preM3 - log2ProductOfProposalProbabilitiesForNewProposal + log2ProductOfProposalProbabilitiesForStatusQuo;
 	if(VERYCLOSE(acceptanceLog2, 0.0L))
 		acceptanceLog2 = 0.0L;
-	PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
-	PP2(preM3, pmfOfTheNewProposal);
-	PP(acceptanceLog2);
-	PP(IsRandomProposalIdenticalToStatusQuo);
+	// PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
+	// PP2(preM3, pmfOfTheNewProposal);
+	// PP(acceptanceLog2);
+	// PP(IsRandomProposalIdenticalToStatusQuo);
 	// assert(VERYCLOSE(log2ProductOfProposalProbabilitiesForStatusQuo , log2ProductOfProposalProbabilitiesForNewProposal)); // only true if the proposal is for no change
 
 	assert(preM3_k == s._k);
@@ -440,7 +441,7 @@ void M3(sbm::State &s) {
 
 	if(log2(drand48()) < acceptanceLog2 /*|| IsRandomProposalIdenticalToStatusQuo*/) {
 		// accepting.
-		cout << "!! ACCEPT !!" << endl;
+		if(verbose) cout << "!! ACCEPT !!" << endl;
 	} else {
 		// reject. let's put them all back
 		for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
@@ -465,7 +466,7 @@ void M3(sbm::State &s) {
 		assert(preM3_4 == postM3_4);
 		assert(VERYCLOSE(preM3 , postM3));
 	}
-	cout << "     ========== ~M3 =========" << endl;
+	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 void MetropolisOnK(sbm::State &s) {
 	// const long double prePMF = s.pmf();
@@ -533,7 +534,7 @@ void runSBM(const sbm::GraphType *g) {
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	PP(s.pmf());
 
-	for(int i=1; i<=20000000; i++) {
+	for(int i=1; i<=2000000; i++) {
 		// PP(i);
 		// MoneNode(s);
 		// PP(s.pmf());
