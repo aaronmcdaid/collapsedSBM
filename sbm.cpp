@@ -166,7 +166,7 @@ struct TwoChoices {
 	}
 };
 static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
-	const long double pre = s.pmf(); // TODO remove this, and the corresponding check at the end
+	// const long double pre = s.pmf(); // TODO remove this, and the corresponding check at the end
 	// given an isolated node, and a candidate cluster to join, what's the delta in the fitness?
 	
 	const int isolatedClusterID = s.cluster_id.at(n);
@@ -214,14 +214,12 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	// PP(delta3);
 	// PP(delta4);
 	
-	const long double postTempMove = s.pmf();
-	assert(VERYCLOSE(postTempMove , pre + delta2 + delta3 + delta4));
+	// const long double postTempMove = pre + delta2 + delta3 + delta4;
+	// assert(VERYCLOSE(postTempMove , s.pmf()));
 
 	s.moveNodeAndInformOfEdges(n, isolatedClusterID); // move the node back again
 
-	const long double undone = s.pmf();
-	// PP(undone);
-	assert(VERYCLOSE(pre, undone)); // to ensure that we've undone the change
+	// assert(VERYCLOSE(pre, s.pmf())); // to ensure that we've undone the change
 
 	return OneChoice(delta2 , delta3 , delta4);
 }
@@ -266,16 +264,16 @@ void M3(sbm::State &s) {
 	for(vector<int>::const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
 		const int node_to_remove = *remover;
 		// PP(node_to_remove);
-		const long double pre = s.pmf();
-		const long double pre1 = s.P_z_K();
+		// const long double pre = s.pmf();
+		// const long double pre1 = s.P_z_K();
 		const long double pre2 = s.P_z_orders();
 		const long double pre3 = s.P_edges_given_z_baseline();
-		const long double pre4 = s.P_edges_given_z_correction();
-		assert(pre == pre1+pre2+pre3+pre4);
+		// const long double pre4 = s.P_edges_given_z_correction();
+		// assert(pre == pre1+pre2+pre3+pre4);
 		const long double preSumOfLog2l = s.SumOfLog2LOrders;
 		// PP(preSumOfLog2l);
 		const long double preNonEmpty = s.NonEmptyClusters;
-		assert(pre == pre1 + pre2 + pre3 + pre4);
+		// assert(pre == pre1 + pre2 + pre3 + pre4);
 
 		const int old_clusterID = s.cluster_id.at(node_to_remove);
 		const sbm::State:: Cluster * old_cluster = s.clusters.at(old_clusterID);
@@ -309,7 +307,7 @@ void M3(sbm::State &s) {
 		// PP(delta3);
 		assert(VERYCLOSE(delta3 , post3 - pre3));
 
-		const long double post4 = s.P_edges_given_z_correction();
+		// const long double post4 = s.P_edges_given_z_correction();
 		delta4 += s.P_edges_given_z_correction_JustOneCluster(old_clusterID);
 		delta4 += s.P_edges_given_z_correction_JustOneCluster(tempClusterID);
 		// Any edges between tempClusterID and old_clusterID (i.e. old internal edges) will have been double counted.
@@ -319,10 +317,10 @@ void M3(sbm::State &s) {
 		// PP2(post4,pre4);
 		// PP(post4 - pre4);
 		// PP(delta4);
-		assert(post4 - pre4 == delta4);
+		// assert(post4 - pre4 == delta4);
 
-		const long double post1 = s.P_z_K();
-		long double delta1 = post1 - pre1;
+		// const long double post1 = s.P_z_K();
+		// long double delta1 = post1 - pre1;
 
 		// PP(delta1);
 		// PP(delta2);
@@ -330,18 +328,18 @@ void M3(sbm::State &s) {
 		// PP(delta4);
 
 		// cout << " ==  M3_oneNode ==" << endl;
-		long double left  = M3_oneNode(s, node_to_remove, cl1).deltaSum();
-		long double right = M3_oneNode(s, node_to_remove, cl2).deltaSum();
 		TwoChoices two_choices(M3_oneNode(s, node_to_remove, cl1),M3_oneNode(s, node_to_remove, cl2));
+		const long double left  = two_choices.left_deltaSum;
+		const long double right = two_choices.right_deltaSum;
 		assert(cl1 == old_clusterID || cl2 == old_clusterID);
 		const long double statusQuo = cl1 == old_clusterID ? left : right;
 		// PP2(left, right);
 		// PP2(two_choices.Pleft, two_choices.Pright);
 		// cout << " == ~M3_oneNode ==" << endl;
 		assert(VERYCLOSE(-statusQuo , delta2 + delta3 + delta4));
-		const long double post = s.pmf();
-		assert(VERYCLOSE(post, post1+post2+post3+post4));
-		assert(VERYCLOSE(post, pre + delta1 + delta2 + delta3 + delta4));
+		// const long double post = s.pmf();
+		// assert(VERYCLOSE(post, post1+post2+post3+post4));
+		// assert(VERYCLOSE(post, pre + delta1 + delta2 + delta3 + delta4));
 
 		const long double prpsl = cl1 == old_clusterID ? two_choices.Pleft : two_choices.Pright;
 		// PP(prpsl);
@@ -377,15 +375,15 @@ void M3(sbm::State &s) {
 			assert(clIsolated->order()==1);
 			assert(clIsolated->members.front()==node_to_Add);
 			// which of the two to add to?
-			long double left  = M3_oneNode(s, node_to_Add, cl1).deltaSum();
-			long double right = M3_oneNode(s, node_to_Add, cl2).deltaSum();
 			// PP2(left,right);
 			assert(cl1 != clID && cl2 != clID);
 			assert(cl1 != cl2);
 			const TwoChoices two_choices(M3_oneNode(s, node_to_Add, cl1),M3_oneNode(s, node_to_Add, cl2));
+			const long double left = two_choices.left_deltaSum;
+			const long double right = two_choices.right_deltaSum;
+			assert(VERYCLOSE(left  , M3_oneNode(s, node_to_Add, cl1).deltaSum()));
+			assert(VERYCLOSE(right , M3_oneNode(s, node_to_Add, cl2).deltaSum()));
 			// PP2(left , two_choices.left.deltaSum());
-			assert(VERYCLOSE(left , two_choices.left.deltaSum()));
-			assert(VERYCLOSE(right, two_choices.right.deltaSum()));
 			// PP2(two_choices.left.deltaSum(),two_choices.right.deltaSum());
 			// PP2(two_choices.Pleft,two_choices.Pright);
 			long double prpsl;
