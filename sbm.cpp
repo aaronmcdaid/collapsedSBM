@@ -155,8 +155,8 @@ struct TwoChoices {
 		assert(isfinite(LeftOverRight));
 		Pright = 1.0L / (LeftOverRight + 1.0L);
 		Pleft = 1.0L - Pright;
-		PP2(left_deltaSum, right_deltaSum);
-		PP2(Pleft, Pright);
+		// PP2(left_deltaSum, right_deltaSum);
+		// PP2(Pleft, Pright);
 		assert(Pleft >= 0.0L);
 		assert(Pleft <= 1.0L);
 		assert(Pright >= 0.0L);
@@ -180,7 +180,7 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	const int new_NonEmpty = old_order==0 ? s.NonEmptyClusters : (s.NonEmptyClusters-1);
 	const long double preSumOfLog2l = s.SumOfLog2LOrders;
 	const long double postReMergeSumOfLog2l = preSumOfLog2l + log2l(new_order) - ( old_order>1 ? log2l(old_order) : 0.0L);
-	PP(postReMergeSumOfLog2l);
+	// PP(postReMergeSumOfLog2l);
 
 
 	long double delta2 = 0.0L;
@@ -210,9 +210,9 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 
 	delta4 += s.P_edges_given_z_correction_JustOneCluster(candCluster);
 
-	PP(delta2);
-	PP(delta3);
-	PP(delta4);
+	// PP(delta2);
+	// PP(delta3);
+	// PP(delta4);
 	
 	const long double postTempMove = s.pmf();
 	assert(VERYCLOSE(postTempMove , pre + delta2 + delta3 + delta4));
@@ -220,13 +220,13 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	s.moveNodeAndInformOfEdges(n, isolatedClusterID); // move the node back again
 
 	const long double undone = s.pmf();
-	PP(undone);
+	// PP(undone);
 	assert(VERYCLOSE(pre, undone)); // to ensure that we've undone the change
 
 	return OneChoice(delta2 , delta3 , delta4);
 }
 void M3(sbm::State &s) {
-	cout << endl << "     ========== M3 =========" << endl;
+	// cout << endl << "     ========== M3 =========" << endl;
 	const long double preM3   = s.pmf();
 	const long double preM3_1 = s.P_z_K();
 	const long double preM3_2 = s.P_z_orders();
@@ -244,27 +244,28 @@ void M3(sbm::State &s) {
 	const int cl2 = drand48() * s._k;
 	if(cl1 == cl2)
 		return;
+	cout << endl << "     ========== M3 (found two clusters) =========" << endl;
 	const sbm::State::Cluster * CL1 = s.clusters.at(cl1);
 	const sbm::State::Cluster * CL2 = s.clusters.at(cl2);
 	vector<int> allNodes;
 	boost::unordered_map<int, int> statusQuoClustering;
 	allNodes.insert(allNodes.end(), CL1->members.begin(), CL1->members.end());
 	allNodes.insert(allNodes.end(), CL2->members.begin(), CL2->members.end());
-	PP(CL1->members.size());
-	PP(CL2->members.size());
-	PP(allNodes.size());
+	// PP(CL1->members.size());
+	// PP(CL2->members.size());
+	// PP(allNodes.size());
 	assert(CL1->members.size() + CL2->members.size() == allNodes.size());
 	forEach(int x, amd::mk_range(CL1->members)) { statusQuoClustering[x] = cl1; }
 	forEach(int y, amd::mk_range(CL2->members)) { statusQuoClustering[y] = cl2; }
-	forEach(int x, amd::mk_range(CL1->members)) { PPt(x); } cout << endl;
-	forEach(int y, amd::mk_range(CL2->members)) { PPt(y); } cout << endl;
+	// forEach(int x, amd::mk_range(CL1->members)) { PPt(x); } cout << endl;
+	// forEach(int y, amd::mk_range(CL2->members)) { PPt(y); } cout << endl;
 	random_shuffle(allNodes.begin(), allNodes.end());
-	forEach(int z2, amd::mk_range(allNodes    )) { PPt(z2); } cout << endl;
+	// forEach(int z2, amd::mk_range(allNodes    )) { PPt(z2); } cout << endl;
 	long double deltaSumOfTheStatusQuo = 0.0L;
 	long double log2ProductOfProposalProbabilitiesForStatusQuo = 0.0;
 	for(vector<int>::const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
 		const int node_to_remove = *remover;
-		PP(node_to_remove);
+		// PP(node_to_remove);
 		const long double pre = s.pmf();
 		const long double pre1 = s.P_z_K();
 		const long double pre2 = s.P_z_orders();
@@ -272,7 +273,7 @@ void M3(sbm::State &s) {
 		const long double pre4 = s.P_edges_given_z_correction();
 		assert(pre == pre1+pre2+pre3+pre4);
 		const long double preSumOfLog2l = s.SumOfLog2LOrders;
-		PP(preSumOfLog2l);
+		// PP(preSumOfLog2l);
 		const long double preNonEmpty = s.NonEmptyClusters;
 		assert(pre == pre1 + pre2 + pre3 + pre4);
 
@@ -295,9 +296,9 @@ void M3(sbm::State &s) {
 		assert(VERYCLOSE(post2, pre2 + delta2));
 
 		const long double post3 = s.P_edges_given_z_baseline();
-		PP(post3 - pre3);
+		// PP(post3 - pre3);
 		long double delta3 = 0.0;
-		PP2(old_order, new_order);
+		// PP2(old_order, new_order);
 		delta3 += postSumOfLog2l * (postNonEmpty-1);
 		delta3 -= preSumOfLog2l  * (preNonEmpty-1);
 		if(new_order >= 2)
@@ -305,7 +306,7 @@ void M3(sbm::State &s) {
 		if(old_order >= 2)
 			delta3 -= log2l((old_order * old_order - old_order)/2);
 		delta3 = -delta3;
-		PP(delta3);
+		// PP(delta3);
 		assert(VERYCLOSE(delta3 , post3 - pre3));
 
 		const long double post4 = s.P_edges_given_z_correction();
@@ -315,35 +316,35 @@ void M3(sbm::State &s) {
 		const int doubleCounted_edges = s._edgeCounts.get(tempClusterID, old_clusterID);
 		delta4 += M_LOG2E * gsl_sf_lnchoose(new_order/*doubleCounted_pairs*/, doubleCounted_edges);
 
-		PP2(post4,pre4);
-		PP(post4 - pre4);
-		PP(delta4);
+		// PP2(post4,pre4);
+		// PP(post4 - pre4);
+		// PP(delta4);
 		assert(post4 - pre4 == delta4);
 
 		const long double post1 = s.P_z_K();
 		long double delta1 = post1 - pre1;
 
-		PP(delta1);
-		PP(delta2);
-		PP(delta3);
-		PP(delta4);
+		// PP(delta1);
+		// PP(delta2);
+		// PP(delta3);
+		// PP(delta4);
 
-		cout << " ==  M3_oneNode ==" << endl;
+		// cout << " ==  M3_oneNode ==" << endl;
 		long double left  = M3_oneNode(s, node_to_remove, cl1).deltaSum();
 		long double right = M3_oneNode(s, node_to_remove, cl2).deltaSum();
 		TwoChoices two_choices(M3_oneNode(s, node_to_remove, cl1),M3_oneNode(s, node_to_remove, cl2));
 		assert(cl1 == old_clusterID || cl2 == old_clusterID);
 		const long double statusQuo = cl1 == old_clusterID ? left : right;
-		PP2(left, right);
-		PP2(two_choices.Pleft, two_choices.Pright);
-		cout << " == ~M3_oneNode ==" << endl;
+		// PP2(left, right);
+		// PP2(two_choices.Pleft, two_choices.Pright);
+		// cout << " == ~M3_oneNode ==" << endl;
 		assert(VERYCLOSE(-statusQuo , delta2 + delta3 + delta4));
 		const long double post = s.pmf();
 		assert(VERYCLOSE(post, post1+post2+post3+post4));
 		assert(VERYCLOSE(post, pre + delta1 + delta2 + delta3 + delta4));
 
 		const long double prpsl = cl1 == old_clusterID ? two_choices.Pleft : two_choices.Pright;
-		PP(prpsl);
+		// PP(prpsl);
 #define assertFinite(x) assert(isfinite(x))
 		assertFinite(prpsl);
 		log2ProductOfProposalProbabilitiesForStatusQuo += log2(prpsl);
@@ -357,18 +358,18 @@ void M3(sbm::State &s) {
 	// const long double midM3_2 = s.P_z_orders();
 	// const long double midM3_3 = s.P_edges_given_z_baseline();
 	// const long double midM3_4 = s.P_edges_given_z_correction();
-	PP2(-deltaSumOfTheStatusQuo, midM3 - midM3_1 - preM3 + preM3_1);
+	// PP2(-deltaSumOfTheStatusQuo, midM3 - midM3_1 - preM3 + preM3_1);
 	assert(VERYCLOSE(-deltaSumOfTheStatusQuo , midM3 - midM3_1 - preM3 + preM3_1));
 
 	long double log2ProductOfProposalProbabilitiesForNewProposal = 0.0L;
 	long double deltaSumOfTheNewProposal = 0.0L;
 	{ // random proposal
-		cout << endl << "  random proposals for M3" << endl << endl;
+		// cout << endl << "  random proposals for M3" << endl << endl;
 		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
-			cout << endl << "  random proposal for M3" << endl << endl;
+			// cout << endl << "  random proposal for M3" << endl << endl;
 			const long double preM3OneRandom = s.pmf();
 			const int node_to_Add = *adder;
-			PP(node_to_Add);
+			// PP(node_to_Add);
 			const int clID = s.cluster_id.at(node_to_Add);
 			assert(clID + 1 == s._k);
 			const sbm::State:: Cluster * clIsolated = s.clusters.at(clID);
@@ -377,21 +378,21 @@ void M3(sbm::State &s) {
 			// which of the two to add to?
 			long double left  = M3_oneNode(s, node_to_Add, cl1).deltaSum();
 			long double right = M3_oneNode(s, node_to_Add, cl2).deltaSum();
-			PP2(left,right);
+			// PP2(left,right);
 			assert(cl1 != clID && cl2 != clID);
 			assert(cl1 != cl2);
 			const TwoChoices two_choices(M3_oneNode(s, node_to_Add, cl1),M3_oneNode(s, node_to_Add, cl2));
-			PP2(left , two_choices.left.deltaSum());
+			// PP2(left , two_choices.left.deltaSum());
 			assert(VERYCLOSE(left , two_choices.left.deltaSum()));
 			assert(VERYCLOSE(right, two_choices.right.deltaSum()));
-			PP2(two_choices.left.deltaSum(),two_choices.right.deltaSum());
-			PP2(two_choices.Pleft,two_choices.Pright);
+			// PP2(two_choices.left.deltaSum(),two_choices.right.deltaSum());
+			// PP2(two_choices.Pleft,two_choices.Pright);
 			long double prpsl;
 			enum LeftOrRight { Left, Right };
 			LeftOrRight lr = drand48() < two_choices.Pright ? Right : Left;
 			// LeftOrRight lr = (statusQuoClustering.at(node_to_Add)==cl2) ? Right : Left; // clone the status quo clustering
 			if(lr == Right) {
-				cout << " go right" << endl;
+				// cout << " go right" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl2);
 				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right.deltaSum()));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
@@ -399,7 +400,7 @@ void M3(sbm::State &s) {
 				prpsl = two_choices.Pright;
 				deltaSumOfTheNewProposal += two_choices.right.deltaSum();
 			} else {
-				cout << " go left" << endl;
+				// cout << " go left" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl1);
 				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.left.deltaSum()));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
@@ -412,9 +413,10 @@ void M3(sbm::State &s) {
 			log2ProductOfProposalProbabilitiesForNewProposal += log2(prpsl);
 			assertFinite(log2ProductOfProposalProbabilitiesForNewProposal);
 
-			cout << endl << " ~random proposal for M3" << endl << endl;
+			// cout << endl << " ~random proposal for M3" << endl << endl;
 		}
 		assert(VERYCLOSE(midM3 + deltaSumOfTheNewProposal + preM3_1 - midM3_1 , s.pmf()));
+		// cout << endl << " ~random proposals for M3" << endl << endl;
 	}
 	const long double pmfOfTheNewProposal = midM3 - midM3_1 + preM3_1 + deltaSumOfTheNewProposal;
 	assert(VERYCLOSE(pmfOfTheNewProposal, s.pmf()));
@@ -433,7 +435,7 @@ void M3(sbm::State &s) {
 	for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
 		// these should all be isolated nodes, and at the end of the list of clusters
 		const int node_to_reAdd = *reAdder;
-		PP(node_to_reAdd);
+		// PP(node_to_reAdd);
 		// const int clID = s.cluster_id.at(node_to_reAdd);
 		s.isolateNode(node_to_reAdd);
 		s.moveNodeAndInformOfEdges(node_to_reAdd, statusQuoClustering.at(node_to_reAdd));
@@ -445,13 +447,13 @@ void M3(sbm::State &s) {
 	const long double postM3_2 = s.P_z_orders();
 	const long double postM3_3 = s.P_edges_given_z_baseline();
 	const long double postM3_4 = s.P_edges_given_z_correction();
-	PP2(preM3, postM3);
-	cout << endl << "     ========= ~M3 =========" << endl;
+	// PP2(preM3, postM3);
 	assert(preM3_1 == postM3_1);
 	assert(preM3_2 == postM3_2);
 	assert(VERYCLOSE(preM3_3, postM3_3));
 	assert(preM3_4 == postM3_4);
 	assert(VERYCLOSE(preM3 , postM3));
+	cout << "     ========== ~M3 =========" << endl;
 }
 void MetropolisOnK(sbm::State &s) {
 	const long double pre = s.pmf();
