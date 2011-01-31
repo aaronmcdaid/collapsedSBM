@@ -104,6 +104,9 @@ bool acceptTest(const long double delta) {
 }
 
 long double MoneNode(sbm::State &s) {
+	if(s._k == 1)
+	       return 0.0L;	// can't move a node unless there exist other clusters
+	assert(s._k > 1); // can't move a node unless there exist other clusters
 	const long double pre = s.pmf();
 	const int n = drand48() * s._N;
 	const int oldClusterID = s.cluster_id.at(n);
