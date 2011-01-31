@@ -344,7 +344,10 @@ void M3(sbm::State &s) {
 
 		const long double prpsl = cl1 == old_clusterID ? two_choices.Pleft : two_choices.Pright;
 		PP(prpsl);
+#define assertFinite(x) assert(isfinite(x))
+		assertFinite(prpsl);
 		log2ProductOfProposalProbabilitiesForStatusQuo += log2(prpsl);
+		assertFinite(log2ProductOfProposalProbabilitiesForStatusQuo);
 
 		deltaSumOfTheStatusQuo += cl1 == old_clusterID ? two_choices.left_deltaSum : two_choices.right_deltaSum;
 	}
@@ -405,7 +408,9 @@ void M3(sbm::State &s) {
 				deltaSumOfTheNewProposal += two_choices.left.deltaSum();
 			}
 
+			assertFinite(prpsl);
 			log2ProductOfProposalProbabilitiesForNewProposal += log2(prpsl);
+			assertFinite(log2ProductOfProposalProbabilitiesForNewProposal);
 
 			cout << endl << " ~random proposal for M3" << endl << endl;
 		}
