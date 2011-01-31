@@ -155,11 +155,12 @@ struct TwoChoices {
 		assert(isfinite(LeftOverRight));
 		Pright = 1.0L / (LeftOverRight + 1.0L);
 		Pleft = 1.0L - Pright;
+		PP2(left_deltaSum, right_deltaSum);
 		PP2(Pleft, Pright);
-		assert(Pleft > 0.0L);
+		assert(Pleft >= 0.0L);
 		assert(Pleft <= 1.0L);
-		assert(Pright > 0.0L);
-		assert(Pright < 1.0L);
+		assert(Pright >= 0.0L);
+		assert(Pright <= 1.0L);
 		assert(isfinite(Pleft));
 		assert(isfinite(Pright));
 	}
