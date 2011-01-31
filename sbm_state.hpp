@@ -55,6 +55,7 @@ struct State {
 		void partialUnInform(const int cl1, const int cl2);
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+	void moveNodeAndInformOfEdges(const int n, const int newcl);
 	EdgeCounts _edgeCounts;
 
 	// pmf - probability mass function to guide sampling
@@ -70,6 +71,7 @@ struct State {
 	long double P_edges_given_z() const;
 	long double P_edges_given_z_baseline() const; // 3.
 	long double P_edges_given_z_correction() const; // 4.
+	long double P_edges_given_z_correction_JustOneCluster(const int clusterID) const;
 	long double pmf_slow() const;
 	long double pmf() const;
 };

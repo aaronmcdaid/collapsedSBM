@@ -274,6 +274,11 @@ namespace sbm {
 			this->_edgeCounts.  inform(otherCl, newcl);
 		}
 	}
+	void State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
+		const int oldClusterID = this->cluster_id.at(n);
+		this->moveNode(n, newcl);
+		this->informNodeMove(n, oldClusterID, newcl);
+	}
 	long double assertNonPositiveFinite(const long double x) {
 		assert(isfinite(x));
 		assert(x<=0.0L);
@@ -408,6 +413,23 @@ namespace sbm {
 					// PP2(order1,order2);
 					// PP2(pairs,edges);
 				}
+			}
+		}
+		return assertNonPositiveFinite(correction);
+	}
+	long double State:: P_edges_given_z_correction_JustOneCluster(const int clusterID) const {
+		long double correction = 0.0L;
+		if(this->_edgeCounts.counts.count(clusterID)) {
+			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(this->_edgeCounts.counts.at(clusterID))) {
+					const int edges = inner.second;
+					const int order1 = this->clusters.at(clusterID)->order();
+					const int order2 = this->clusters.at(inner.first)->order();
+					const int pairs = (inner.first == clusterID) ? ((order1 * (order1-1))/2) : (order1 * order2);
+					assert(edges > 0);
+					assert(edges <= pairs);
+					correction -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+					// PP2(order1,order2);
+					// PP2(pairs,edges);
 			}
 		}
 		return assertNonPositiveFinite(correction);
