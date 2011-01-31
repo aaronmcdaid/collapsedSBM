@@ -468,34 +468,45 @@ void M3(sbm::State &s) {
 	cout << "     ========== ~M3 =========" << endl;
 }
 void MetropolisOnK(sbm::State &s) {
-	const long double pre = s.pmf();
+	// const long double prePMF = s.pmf();
+	const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
 	if(fiftyfifty()) { // propose increase in K
 		s.appendEmptyCluster();
-		const long double post = s.pmf();
-		assert(post < pre);
-		if(acceptTest(post - pre)) {
+		const long double postPMF12 = s.P_z_K();
+		// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
+		// const long double postPMF = prePMF - prePMF12 + postPMF12; 
+		// assert(VERYCLOSE(s.pmf(), postPMF));
+		// assert(postPMF < prePMF);
+		assert(postPMF12 < prePMF12);
+		// assert(VERYCLOSE(postPMF - prePMF, postPMF12 - prePMF12));
+		if(acceptTest(postPMF12 - prePMF12)) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
-			assert(s.pmf()==pre);
+			// assert(s.pmf()==prePMF);
+			assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
 		}
 	} else { // propose decrease
 		if(s._k >= 1 && s.clusters.back()->order()==0) {
 			s.deleteClusterFromTheEnd();
-			const long double post = s.pmf();
-			assert(post > pre);
-			if(acceptTest(post - pre)) {
+			const long double postPMF12 = s.P_z_K();
+			// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
+			// const long double postPMF = prePMF - prePMF12 + postPMF12; 
+			// assert(VERYCLOSE(s.pmf(), postPMF));
+			// assert(postPMF > prePMF);
+			if(acceptTest(postPMF12 - prePMF12)) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function.
 				// cout << "k: rej dec" << endl;
 				s.appendEmptyCluster();
-				assert(s.pmf()==post);
+				// assert(s.pmf()==postPMF);
+				assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
 			}
 		} else {// otherwise, not possible to remove it
