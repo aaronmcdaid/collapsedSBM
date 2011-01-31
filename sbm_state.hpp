@@ -1,5 +1,6 @@
 #include <list>
 #include <vector>
+#include <set>
 #include "shmGraphRaw.hpp"
 
 static inline double LOG2GAMMA(double x) {
@@ -29,6 +30,7 @@ struct State {
 	int NonEmptyClusters;
 	mutable long double SumOfLog2LOrders;
 	mutable long double SumOfLog2LOrderForInternal;
+	std::set<int> nodeNamesInOrder;
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

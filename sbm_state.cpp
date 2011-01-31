@@ -35,6 +35,12 @@ namespace sbm {
 			_edgeCounts.inform(cl1,cl2);
 		}
 		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
+
+		// to ensure the nodes are dealt with in the order of their integer node name
+		for(int n=0; n<this->_N;n++) {
+			nodeNamesInOrder.insert(atoi(this->_g->NodeAsString(n)));
+		}
+		assert( (int)nodeNamesInOrder.size() == this->_N);
 	}
 	const int State::Cluster::order() const {
 		return this->members.size();
@@ -236,7 +242,11 @@ namespace sbm {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		PP(this->pmf());
-		for(int n=0; n<this->_N;n++) {
+		forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
+		// for(int n=0; n<this->_N;n++)
+		{
+			const int n = this->_g->StringToNodeId(printfstring("%d", node_name).c_str());
+			// PP2(n, this->_g->NodeAsString(n));
 			const int id_of_cluster = this->cluster_id.at(n);
 			if(id_of_cluster<10)
 				cout << (char)('0' + id_of_cluster);
