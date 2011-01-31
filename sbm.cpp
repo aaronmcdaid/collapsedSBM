@@ -5,6 +5,7 @@ using namespace std;
 #include <getopt.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <float.h>
 #include <gsl/gsl_sf.h>
 
 #include "aaron_utils.hpp"
@@ -160,9 +161,13 @@ struct TwoChoices {
 		Pleft = 1.0L - Pright;
 		// PP2(left_deltaSum, right_deltaSum);
 		// PP2(Pleft, Pright);
-		assert(Pleft >= 0.0L);
+		if(Pleft == 0.0L)
+			Pleft = DBL_MIN;
+		if(Pright == 0.0L)
+			Pright = DBL_MIN;
+		assert(Pleft > 0.0L);
 		assert(Pleft <= 1.0L);
-		assert(Pright >= 0.0L);
+		assert(Pright > 0.0L);
 		assert(Pright <= 1.0L);
 		assert(isfinite(Pleft));
 		assert(isfinite(Pright));
@@ -337,6 +342,8 @@ void M3(sbm::State &s) {
 		const long double right = two_choices.right_deltaSum;
 		assert(cl1 == old_clusterID || cl2 == old_clusterID);
 		const long double statusQuo = cl1 == old_clusterID ? left : right;
+		// PP2(cl1, cl2);
+		// PP (old_clusterID);
 		// PP2(left, right);
 		// PP2(two_choices.Pleft, two_choices.Pright);
 		// cout << " == ~M3_oneNode ==" << endl;
@@ -345,11 +352,16 @@ void M3(sbm::State &s) {
 		// assert(VERYCLOSE(post, post1+post2+post3+post4));
 		// assert(VERYCLOSE(post, pre + delta1 + delta2 + delta3 + delta4));
 
+		// PP2(two_choices.Pleft,two_choices.Pright);
+		// PP( (cl1 == old_clusterID) );
 		const long double prpsl = cl1 == old_clusterID ? two_choices.Pleft : two_choices.Pright;
 		// PP(prpsl);
 #define assertFinite(x) assert(isfinite(x))
 		assertFinite(prpsl);
+		// PP2(prpsl , log2(prpsl));
+		// PP2(log2ProductOfProposalProbabilitiesForStatusQuo , log2(prpsl));
 		log2ProductOfProposalProbabilitiesForStatusQuo += log2(prpsl);
+		// PP(log2ProductOfProposalProbabilitiesForStatusQuo);
 		assertFinite(log2ProductOfProposalProbabilitiesForStatusQuo);
 
 		deltaSumOfTheStatusQuo += cl1 == old_clusterID ? two_choices.left_deltaSum : two_choices.right_deltaSum;
