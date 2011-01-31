@@ -358,6 +358,7 @@ void M3(sbm::State &s) {
 	assert(VERYCLOSE(-deltaSumOfTheStatusQuo , midM3 - midM3_1 - preM3 + preM3_1));
 
 	long double log2ProductOfProposalProbabilitiesForNewProposal = 0.0L;
+	long double deltaSumOfTheNewProposal = 0.0L;
 	{ // random proposal
 		cout << endl << "  random proposals for M3" << endl << endl;
 		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
@@ -376,20 +377,24 @@ void M3(sbm::State &s) {
 			PP2(left,right);
 			assert(cl1 != clID && cl2 != clID);
 			assert(cl1 != cl2);
-			TwoChoices two_choices(M3_oneNode(s, node_to_Add, cl1),M3_oneNode(s, node_to_Add, cl2));
+			const TwoChoices two_choices(M3_oneNode(s, node_to_Add, cl1),M3_oneNode(s, node_to_Add, cl2));
 			PP2(left , two_choices.left.deltaSum());
 			assert(VERYCLOSE(left , two_choices.left.deltaSum()));
 			assert(VERYCLOSE(right, two_choices.right.deltaSum()));
 			PP2(two_choices.left.deltaSum(),two_choices.right.deltaSum());
 			PP2(two_choices.Pleft,two_choices.Pright);
 			long double prpsl;
-			if(drand48() < two_choices.Pright) {
+			enum LeftOrRight { Left, Right };
+			LeftOrRight lr = drand48() < two_choices.Pright ? Right : Left;
+			// LeftOrRight lr = (statusQuoClustering.at(node_to_Add)==cl2) ? Right : Left; // clone the status quo clustering
+			if(lr == Right) {
 				cout << " go right" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl2);
 				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right.deltaSum()));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
 				prpsl = two_choices.Pright;
+				deltaSumOfTheNewProposal += two_choices.right.deltaSum();
 			} else {
 				cout << " go left" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl1);
@@ -397,16 +402,22 @@ void M3(sbm::State &s) {
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
 				prpsl = two_choices.Pleft;
+				deltaSumOfTheNewProposal += two_choices.left.deltaSum();
 			}
 
 			log2ProductOfProposalProbabilitiesForNewProposal += log2(prpsl);
 
 			cout << endl << " ~random proposal for M3" << endl << endl;
 		}
+		assert(VERYCLOSE(midM3 + deltaSumOfTheNewProposal + preM3_1 - midM3_1 , s.pmf()));
 	}
+	const long double pmfOfTheNewProposal = midM3 - midM3_1 + preM3_1 + deltaSumOfTheNewProposal;
+	assert(VERYCLOSE(pmfOfTheNewProposal, s.pmf()));
 
 	cout << "Accept or Reject? Not yet implemented." << endl;
 	PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
+	PP2(preM3, pmfOfTheNewProposal);
+	// assert(VERYCLOSE(log2ProductOfProposalProbabilitiesForStatusQuo , log2ProductOfProposalProbabilitiesForNewProposal)); // only true if the proposal is for no change
 
 	// let's put them all back
 	assert(preM3_k == s._k);
