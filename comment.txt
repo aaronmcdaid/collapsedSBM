@@ -1,3 +1,3 @@
 " "
-"SBM: SumOfLog2LOrders. check fast is getting the same results as slow()"
+"SBM: null M3() to be paranoid about deltaSumOfTheStatusQuo"
 "\n"
