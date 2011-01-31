@@ -228,6 +228,7 @@ namespace sbm {
 		}
 		assert(numEdgeEnds == 2*this->_g->numRels());
 
+		assert(VERYCLOSE(this->pmf() , this->pmf_slow()));
 
 	}
 
@@ -467,8 +468,8 @@ namespace sbm {
 	}
 	long double State:: pmf() const {
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
-		const long double slow = this->P_z() + this->P_edges_given_z();
-		assert(VERYCLOSE(fast, slow));
+		// const long double slow = this->P_z() + this->P_edges_given_z();
+		// assert(VERYCLOSE(fast, slow));
 		return assertNonPositiveFinite(fast);
 	}
 } // namespace sbm
