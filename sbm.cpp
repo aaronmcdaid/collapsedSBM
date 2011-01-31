@@ -238,10 +238,21 @@ void M3(sbm::State &s) {
 	// 3. Verify 
 	if(s._k < 2)
 		return;
+	unsigned short seed16v_old[3];
+	unsigned short seed16v[3];
+
+	unsigned short * seed16v_old_ptr = seed48(seed16v); // to store the old state
+	seed16v_old[0] = seed16v_old_ptr[0];
+	seed16v_old[1] = seed16v_old_ptr[1];
+	seed16v_old[2] = seed16v_old_ptr[2];
+	seed48(seed16v_old);
+
 	const int cl1 = drand48() * s._k;
 	const int cl2 = drand48() * s._k;
-	if(cl1 == cl2)
+	if(cl1 == cl2) {
+		seed48(seed16v_old);
 		return;
+	}
 	const sbm::State::Cluster * CL1 = s.clusters.at(cl1);
 	const sbm::State::Cluster * CL2 = s.clusters.at(cl2);
 	vector<int> allNodes;
@@ -257,6 +268,9 @@ void M3(sbm::State &s) {
 	forEach(int x, amd::mk_range(CL1->members)) { PPt(x); } cout << endl;
 	forEach(int y, amd::mk_range(CL2->members)) { PPt(y); } cout << endl;
 	random_shuffle(allNodes.begin(), allNodes.end());
+
+	seed48(seed16v_old);
+
 	forEach(int z2, amd::mk_range(allNodes    )) { PPt(z2); } cout << endl;
 	long double deltaSumOfTheStatusQuo = 0.0L;
 	for(vector<int>::const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
