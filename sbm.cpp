@@ -173,6 +173,7 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	const sbm::State:: Cluster * isoCl = s.clusters.at(isolatedClusterID);
 	assert(isoCl->order() == 1);
 	const sbm::State:: Cluster * candCl = s.clusters.at(candCluster);
+	assert(isolatedClusterID != candCluster);
 	const int old_order = candCl->order();
 	const int new_order = old_order+1;
 	const int old_NonEmpty = s.NonEmptyClusters;
@@ -231,6 +232,7 @@ void M3(sbm::State &s) {
 	const long double preM3_2 = s.P_z_orders();
 	const long double preM3_3 = s.P_edges_given_z_baseline();
 	const long double preM3_4 = s.P_edges_given_z_correction();
+	const int preM3_k = s._k;
 	// as per Nobile & Fearnside's allocation sampler
 	// 1. Choose two clusters at random
 	// 2. Decide the random order in which the nodes are to be considered.
@@ -259,6 +261,7 @@ void M3(sbm::State &s) {
 	random_shuffle(allNodes.begin(), allNodes.end());
 	forEach(int z2, amd::mk_range(allNodes    )) { PPt(z2); } cout << endl;
 	long double deltaSumOfTheStatusQuo = 0.0L;
+	long double log2ProductOfProposalProbabilitiesForStatusQuo = 0.0;
 	for(vector<int>::const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
 		const int node_to_remove = *remover;
 		PP(node_to_remove);
@@ -341,6 +344,7 @@ void M3(sbm::State &s) {
 
 		const long double prpsl = cl1 == old_clusterID ? two_choices.Pleft : two_choices.Pright;
 		PP(prpsl);
+		log2ProductOfProposalProbabilitiesForStatusQuo += log2(prpsl);
 
 		deltaSumOfTheStatusQuo += cl1 == old_clusterID ? two_choices.left_deltaSum : two_choices.right_deltaSum;
 	}
@@ -353,16 +357,69 @@ void M3(sbm::State &s) {
 	PP2(-deltaSumOfTheStatusQuo, midM3 - midM3_1 - preM3 + preM3_1);
 	assert(VERYCLOSE(-deltaSumOfTheStatusQuo , midM3 - midM3_1 - preM3 + preM3_1));
 
+	long double log2ProductOfProposalProbabilitiesForNewProposal = 0.0L;
+	{ // random proposal
+		cout << endl << "  random proposals for M3" << endl << endl;
+		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
+			cout << endl << "  random proposal for M3" << endl << endl;
+			const long double preM3OneRandom = s.pmf();
+			const int node_to_Add = *adder;
+			PP(node_to_Add);
+			const int clID = s.cluster_id.at(node_to_Add);
+			assert(clID + 1 == s._k);
+			const sbm::State:: Cluster * clIsolated = s.clusters.at(clID);
+			assert(clIsolated->order()==1);
+			assert(clIsolated->members.front()==node_to_Add);
+			// which of the two to add to?
+			long double left  = M3_oneNode(s, node_to_Add, cl1).deltaSum();
+			long double right = M3_oneNode(s, node_to_Add, cl2).deltaSum();
+			PP2(left,right);
+			assert(cl1 != clID && cl2 != clID);
+			assert(cl1 != cl2);
+			TwoChoices two_choices(M3_oneNode(s, node_to_Add, cl1),M3_oneNode(s, node_to_Add, cl2));
+			PP2(left , two_choices.left.deltaSum());
+			assert(VERYCLOSE(left , two_choices.left.deltaSum()));
+			assert(VERYCLOSE(right, two_choices.right.deltaSum()));
+			PP2(two_choices.left.deltaSum(),two_choices.right.deltaSum());
+			PP2(two_choices.Pleft,two_choices.Pright);
+			long double prpsl;
+			if(drand48() < two_choices.Pright) {
+				cout << " go right" << endl;
+				s.moveNodeAndInformOfEdges(node_to_Add, cl2);
+				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right.deltaSum()));
+				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
+				s.deleteClusterFromTheEnd();
+				prpsl = two_choices.Pright;
+			} else {
+				cout << " go left" << endl;
+				s.moveNodeAndInformOfEdges(node_to_Add, cl1);
+				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.left.deltaSum()));
+				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
+				s.deleteClusterFromTheEnd();
+				prpsl = two_choices.Pleft;
+			}
+
+			log2ProductOfProposalProbabilitiesForNewProposal += log2(prpsl);
+
+			cout << endl << " ~random proposal for M3" << endl << endl;
+		}
+	}
+
+	cout << "Accept or Reject? Not yet implemented." << endl;
+	PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
+
 	// let's put them all back
+	assert(preM3_k == s._k);
 	for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
 		// these should all be isolated nodes, and at the end of the list of clusters
 		const int node_to_reAdd = *reAdder;
 		PP(node_to_reAdd);
-		const int clID = s.cluster_id.at(node_to_reAdd);
-		assert(clID + 1 == s._k);
-		s.moveNodeAndInformOfEdges(node_to_reAdd, statusQuoClustering.at(node_to_reAdd)); // move the node temporarily, leaving an empty cluster behind, it'll be moved back again in a few lines
+		// const int clID = s.cluster_id.at(node_to_reAdd);
+		s.isolateNode(node_to_reAdd);
+		s.moveNodeAndInformOfEdges(node_to_reAdd, statusQuoClustering.at(node_to_reAdd));
 		s.deleteClusterFromTheEnd();
 	}
+	assert(preM3_k == s._k);
 	const long double postM3 = s.pmf();
 	const long double postM3_1 = s.P_z_K();
 	const long double postM3_2 = s.P_z_orders();
