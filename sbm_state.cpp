@@ -430,6 +430,7 @@ namespace sbm {
 	}
 	long double State:: P_edges_given_z_correction() const {
 		long double correction = 0.0L;
+		// for(EdgeCounts::map_type::const_iterator outer = this->_edgeCounts.counts.begin(); outer != this->_edgeCounts.counts.end(); outer++) {
 		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
 			assert(outer.first >= 0 && outer.first < this->_k);
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {

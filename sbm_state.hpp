@@ -46,6 +46,7 @@ struct State {
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
+		typedef boost::unordered_map< int , boost::unordered_map<int,int> > map_type;
 		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;
 		typedef                             boost::unordered_map<int,int>  ::value_type inner_value_type;
 		boost::unordered_map< int , boost::unordered_map<int,int> > counts;

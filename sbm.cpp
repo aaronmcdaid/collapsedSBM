@@ -125,13 +125,13 @@ long double MoneNode(sbm::State &s) {
 	// PP(post);
 	// PP(delta);
 	if(acceptTest(delta)) {
-		cout << " + ";
+		// cout << " + ";
 		return delta;
 	} else {
-		cout << "   ";
+		// cout << "   ";
 		s.moveNode(n, oldClusterID);
 		s.informNodeMove(n, newClusterID, oldClusterID);
-		assert(VERYCLOSE(s.pmf(), pre)); // make sure it has undone it properly
+		// assert(VERYCLOSE(s.pmf(), pre)); // make sure it has undone it properly
 		return 0.0L;
 	}
 }
@@ -526,6 +526,7 @@ void runSBM(const sbm::GraphType *g) {
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
 
+	/*
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
 
@@ -535,11 +536,12 @@ void runSBM(const sbm::GraphType *g) {
 
 	randomize(s, 3);
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	*/
 	PP(s.pmf());
 
 	for(int i=1; i<=2000000; i++) {
 		// PP(i);
-		// MoneNode(s);
+		MoneNode(s);
 		// PP(s.pmf());
 		// cout << endl;
 		s.internalCheck();
@@ -549,7 +551,7 @@ void runSBM(const sbm::GraphType *g) {
 			s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 		}
 		MetropolisOnK(s);
-		M3(s);
+		// M3(s);
 	}
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
