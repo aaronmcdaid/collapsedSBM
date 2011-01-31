@@ -363,6 +363,7 @@ void M3(sbm::State &s) {
 
 	long double log2ProductOfProposalProbabilitiesForNewProposal = 0.0L;
 	long double deltaSumOfTheNewProposal = 0.0L;
+	bool IsRandomProposalIdenticalToStatusQuo = true;
 	{ // random proposal
 		// cout << endl << "  random proposals for M3" << endl << endl;
 		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
@@ -394,6 +395,8 @@ void M3(sbm::State &s) {
 			if(lr == Right) {
 				// cout << " go right" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl2);
+				if(statusQuoClustering.at(node_to_Add)!=cl2)
+					IsRandomProposalIdenticalToStatusQuo = false;
 				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right.deltaSum()));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
@@ -402,6 +405,8 @@ void M3(sbm::State &s) {
 			} else {
 				// cout << " go left" << endl;
 				s.moveNodeAndInformOfEdges(node_to_Add, cl1);
+				if(statusQuoClustering.at(node_to_Add)!=cl1)
+					IsRandomProposalIdenticalToStatusQuo = false;
 				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.left.deltaSum()));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
@@ -428,6 +433,7 @@ void M3(sbm::State &s) {
 	PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
 	PP2(preM3, pmfOfTheNewProposal);
 	PP(acceptanceLog2);
+	PP(IsRandomProposalIdenticalToStatusQuo);
 	// assert(VERYCLOSE(log2ProductOfProposalProbabilitiesForStatusQuo , log2ProductOfProposalProbabilitiesForNewProposal)); // only true if the proposal is for no change
 
 	// let's put them all back
