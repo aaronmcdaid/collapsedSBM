@@ -34,6 +34,7 @@ namespace sbm {
 			const int cl2 = this->cluster_id.at(eps.second);
 			_edgeCounts.inform(cl1,cl2);
 		}
+		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
 	}
 	const int State::Cluster::order() const {
 		return this->members.size();
@@ -85,13 +86,23 @@ namespace sbm {
 		if(cl->order() == 1) {
 			this->NonEmptyClusters++;
 		}
+		const int from_order = oldcl->order();
+		const int   to_order =    cl->order();
 		this->SumOfLog2LOrders +=
 					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
 					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
 					;
+		this->SumOfLog2LOrderForInternal +=
+					+ (oldcl->order()<2?0.0L:log2l( (from_order  )*(from_order  -1)/2 ))
+					- (oldcl->order()<1?0.0L:log2l( (from_order+1)*(from_order+1-1)/2 ))
+					;
 		this->SumOfLog2LOrders +=
 					+ (cl->order()<2   ?0.0L:log2l(cl->order()))
 					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
+					;
+		this->SumOfLog2LOrderForInternal +=
+					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
+					- (cl->order()<3   ?0.0L:log2l( (to_order-1)*(to_order-1-1)/2 ))
 					;
 	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
@@ -161,6 +172,7 @@ namespace sbm {
 		assert(this->_N == (int)this->its.size());
 		boost::unordered_set<int> alreadyConsidered;
 		long double sumVerify = 0.0L;
+		long double sumVerifyInternal = 0.0L;
 		int NonEmptyVerify = 0;
 		for(int CL = 0; CL < this->_k; CL++) {
 			const Cluster *cl = this->clusters.at(CL);
@@ -176,12 +188,15 @@ namespace sbm {
 			}
 			if(cl->order() >0)
 				NonEmptyVerify++;
-			if(cl->order() >=2)
+			if(cl->order() >=2) {
 				sumVerify += log2l(cl->order());
+				sumVerifyInternal += log2l(cl->order()*(cl->order()-1)/2);
+			}
 		}
 		assert(NonEmptyVerify == this->NonEmptyClusters);
 		assert(VERYCLOSE(sumVerify , this->SumOfLog2LOrders));
-		this->SumOfLog2LOrders = sumVerify;
+		assert(VERYCLOSE(sumVerifyInternal , this->SumOfLog2LOrderForInternal));
+		// this->SumOfLog2LOrders = sumVerify;
 		assert((int)alreadyConsidered.size() == this->_N);
 
 		EdgeCounts edgeCountsVerification;
@@ -389,6 +404,9 @@ namespace sbm {
 					// PP(offDiagonal);
 			}
 		}
+		DYINGWORDS(VERYCLOSE( onDiagonal , this->SumOfLog2LOrderForInternal)) {
+			PP2(onDiagonal , this->SumOfLog2LOrderForInternal);
+		}
 		DYINGWORDS(VERYCLOSE(offDiagonal , this->SumOfLog2LOrders * (this->NonEmptyClusters-1))) {
 			PP(this->SumOfLog2LOrders);
 			PP(offDiagonal);
@@ -398,7 +416,7 @@ namespace sbm {
 		}
 		// cout << "    ~P_edges_given_z_baseline()" << endl;
 		
-		long double answer = -(this->SumOfLog2LOrders*(this->NonEmptyClusters-1)) -onDiagonal;
+		long double answer = -(this->SumOfLog2LOrders*(this->NonEmptyClusters-1)) - this->SumOfLog2LOrderForInternal;
 		if(VERYCLOSE(answer,0.0L))
 			answer = 0.0L; // for large k, this might go slightly positive. Hence, I'll bring it back down again.
 		DYINGWORDS(answer<=0.0L) {
