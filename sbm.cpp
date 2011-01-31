@@ -436,29 +436,37 @@ void M3(sbm::State &s) {
 	PP(IsRandomProposalIdenticalToStatusQuo);
 	// assert(VERYCLOSE(log2ProductOfProposalProbabilitiesForStatusQuo , log2ProductOfProposalProbabilitiesForNewProposal)); // only true if the proposal is for no change
 
-	// let's put them all back
 	assert(preM3_k == s._k);
-	for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
-		// these should all be isolated nodes, and at the end of the list of clusters
-		const int node_to_reAdd = *reAdder;
-		// PP(node_to_reAdd);
-		// const int clID = s.cluster_id.at(node_to_reAdd);
-		s.isolateNode(node_to_reAdd);
-		s.moveNodeAndInformOfEdges(node_to_reAdd, statusQuoClustering.at(node_to_reAdd));
-		s.deleteClusterFromTheEnd();
+
+	// Now we either accept it with probability exp2(acceptanceLog2), or reject it
+
+	if(log2(drand48()) < acceptanceLog2 /*|| IsRandomProposalIdenticalToStatusQuo*/) {
+		// accepting.
+		cout << "!! ACCEPT !!" << endl;
+	} else {
+		// reject. let's put them all back
+		for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
+			// these should all be isolated nodes, and at the end of the list of clusters
+			const int node_to_reAdd = *reAdder;
+			// PP(node_to_reAdd);
+			// const int clID = s.cluster_id.at(node_to_reAdd);
+			s.isolateNode(node_to_reAdd);
+			s.moveNodeAndInformOfEdges(node_to_reAdd, statusQuoClustering.at(node_to_reAdd));
+			s.deleteClusterFromTheEnd();
+		}
+		assert(preM3_k == s._k);
+		const long double postM3 = s.pmf();
+		const long double postM3_1 = s.P_z_K();
+		const long double postM3_2 = s.P_z_orders();
+		const long double postM3_3 = s.P_edges_given_z_baseline();
+		const long double postM3_4 = s.P_edges_given_z_correction();
+		// PP2(preM3, postM3);
+		assert(preM3_1 == postM3_1);
+		assert(preM3_2 == postM3_2);
+		assert(VERYCLOSE(preM3_3, postM3_3));
+		assert(preM3_4 == postM3_4);
+		assert(VERYCLOSE(preM3 , postM3));
 	}
-	assert(preM3_k == s._k);
-	const long double postM3 = s.pmf();
-	const long double postM3_1 = s.P_z_K();
-	const long double postM3_2 = s.P_z_orders();
-	const long double postM3_3 = s.P_edges_given_z_baseline();
-	const long double postM3_4 = s.P_edges_given_z_correction();
-	// PP2(preM3, postM3);
-	assert(preM3_1 == postM3_1);
-	assert(preM3_2 == postM3_2);
-	assert(VERYCLOSE(preM3_3, postM3_3));
-	assert(preM3_4 == postM3_4);
-	assert(VERYCLOSE(preM3 , postM3));
 	cout << "     ========== ~M3 =========" << endl;
 }
 void MetropolisOnK(sbm::State &s) {
