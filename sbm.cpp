@@ -420,8 +420,12 @@ void M3(sbm::State &s) {
 	assert(VERYCLOSE(pmfOfTheNewProposal, s.pmf()));
 
 	cout << "Accept or Reject? Not yet implemented." << endl;
+	long double acceptanceLog2 = pmfOfTheNewProposal - preM3 - log2ProductOfProposalProbabilitiesForNewProposal + log2ProductOfProposalProbabilitiesForStatusQuo;
+	if(VERYCLOSE(acceptanceLog2, 0.0L))
+		acceptanceLog2 = 0.0L;
 	PP2(log2ProductOfProposalProbabilitiesForStatusQuo, log2ProductOfProposalProbabilitiesForNewProposal);
 	PP2(preM3, pmfOfTheNewProposal);
+	PP(acceptanceLog2);
 	// assert(VERYCLOSE(log2ProductOfProposalProbabilitiesForStatusQuo , log2ProductOfProposalProbabilitiesForNewProposal)); // only true if the proposal is for no change
 
 	// let's put them all back
