@@ -524,7 +524,7 @@ void runSBM(const sbm::GraphType *g) {
 
 	for(int i=1; i<=20000000; i++) {
 		// PP(i);
-		MoneNode(s);
+		// MoneNode(s);
 		// PP(s.pmf());
 		// cout << endl;
 		s.internalCheck();
@@ -532,9 +532,9 @@ void runSBM(const sbm::GraphType *g) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
-			M3(s);
 		}
 		MetropolisOnK(s);
+		M3(s);
 	}
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
