@@ -539,19 +539,21 @@ void runSBM(const sbm::GraphType *g) {
 	*/
 	PP(s.pmf());
 
-	for(int i=1; i<=2000000; i++) {
+	for(int i=1; i<=200000000; i++) {
+		MetropolisOnK(s);
 		// PP(i);
 		MoneNode(s);
+		// M3(s);
+	
 		// PP(s.pmf());
 		// cout << endl;
 		s.internalCheck();
-		if(i%100 == 0) {
+		if(i%1000 == 0) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+			cout << " end of check at i==" << i << endl;
 		}
-		MetropolisOnK(s);
-		// M3(s);
 	}
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();

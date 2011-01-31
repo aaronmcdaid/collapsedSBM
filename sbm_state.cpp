@@ -430,15 +430,18 @@ namespace sbm {
 	}
 	long double State:: P_edges_given_z_correction() const {
 		long double correction = 0.0L;
-		// for(EdgeCounts::map_type::const_iterator outer = this->_edgeCounts.counts.begin(); outer != this->_edgeCounts.counts.end(); outer++) {
-		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
-			assert(outer.first >= 0 && outer.first < this->_k);
-			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
-				if(inner.first <= outer.first) {
-					const int edges = inner.second;
-					const int order1 = this->clusters.at(outer.first)->order();
-					const int order2 = this->clusters.at(inner.first)->order();
-					const int pairs = (inner.first == outer.first) ? ((order1 * (order1-1))/2) : (order1 * order2);
+		for(EdgeCounts::map_type::const_iterator outer = this->_edgeCounts.counts.begin(); outer != this->_edgeCounts.counts.end(); outer++)
+		//forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts))
+		{
+			assert(outer->first >= 0 && outer->first < this->_k);
+			//forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer->second))
+			for (EdgeCounts::map_type::mapped_type::const_iterator inner = outer->second.begin(); inner != outer->second.end(); inner++)
+			{
+				if(inner->first <= outer->first) {
+					const int edges = inner->second;
+					const int order1 = this->clusters.at(outer->first)->order();
+					const int order2 = this->clusters.at(inner->first)->order();
+					const int pairs = (inner->first == outer->first) ? ((order1 * (order1-1))/2) : (order1 * order2);
 					correction -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
 					// PP2(order1,order2);
 					// PP2(pairs,edges);
