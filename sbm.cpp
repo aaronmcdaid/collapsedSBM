@@ -366,7 +366,7 @@ void M3(sbm::State &s) {
 		// cout << endl << "  random proposals for M3" << endl << endl;
 		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
 			// cout << endl << "  random proposal for M3" << endl << endl;
-			const long double preM3OneRandom = s.pmf();
+			// const long double preM3OneRandom = s.pmf();
 			const int node_to_Add = *adder;
 			// PP(node_to_Add);
 			const int clID = s.cluster_id.at(node_to_Add);
@@ -395,7 +395,7 @@ void M3(sbm::State &s) {
 				s.moveNodeAndInformOfEdges(node_to_Add, cl2);
 				if(statusQuoClustering.at(node_to_Add)!=cl2)
 					IsRandomProposalIdenticalToStatusQuo = false;
-				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right.deltaSum()));
+				// assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.right_deltaSum));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
 				prpsl = two_choices.Pright;
@@ -405,7 +405,7 @@ void M3(sbm::State &s) {
 				s.moveNodeAndInformOfEdges(node_to_Add, cl1);
 				if(statusQuoClustering.at(node_to_Add)!=cl1)
 					IsRandomProposalIdenticalToStatusQuo = false;
-				assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.left.deltaSum()));
+				// assert(VERYCLOSE(s.pmf() , preM3OneRandom + two_choices.left_deltaSum));
 				// the above assert is (correctly) using an 'out-of-date' value of _k. Hence we don't delete this temporary (now empty) cluster until the next line
 				s.deleteClusterFromTheEnd();
 				prpsl = two_choices.Pleft;
