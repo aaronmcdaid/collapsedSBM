@@ -1,3 +1,3 @@
 " "
-"SBM: Bugfix testing for slightly positive baseline(). Annoying fixed seeding of M3, because M3 wasted randomness. null M3() to be paranoid about deltaSumOfTheStatusQuo"
+"SBM: null M3() to be paranoid about deltaSumOfTheStatusQuo"
 "\n"
