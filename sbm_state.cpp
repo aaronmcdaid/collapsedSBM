@@ -216,7 +216,7 @@ namespace sbm {
 
 	}
 
-	void State::shortSummary() const {
+	void State:: shortSummary() const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		PP(this->pmf());
@@ -279,7 +279,7 @@ namespace sbm {
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
 	}
-	long double assertNonPositiveFinite(const long double x) {
+	static long double assertNonPositiveFinite(const long double x) {
 		assert(isfinite(x));
 		assert(x<=0.0L);
 		return x;
@@ -397,7 +397,17 @@ namespace sbm {
 			PP(this->SumOfLog2LOrders * (this->NonEmptyClusters-1) - offDiagonal);
 		}
 		// cout << "    ~P_edges_given_z_baseline()" << endl;
-		return assertNonPositiveFinite( -(this->SumOfLog2LOrders*(this->NonEmptyClusters-1)) -onDiagonal);
+		
+		long double answer = -(this->SumOfLog2LOrders*(this->NonEmptyClusters-1)) -onDiagonal;
+		if(VERYCLOSE(answer,0.0L))
+			answer = 0.0L; // for large k, this might go slightly positive. Hence, I'll bring it back down again.
+		DYINGWORDS(answer<=0.0L) {
+			this->summarizeEdgeCounts(); this->blockDetail();
+			PP(answer);
+			PP(this->_k);
+			// this->shortSummary(); // this'd lead to a recursive assert failure I think
+		}
+		return assertNonPositiveFinite( answer );
 	}
 	long double State:: P_edges_given_z_correction() const {
 		long double correction = 0.0L;
