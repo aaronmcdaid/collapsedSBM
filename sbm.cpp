@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
 	assert(s._k <= K);
-	for(int i=0; i<10000 || s._k < K; i++) {
+	for(int i=0; i<1000 || s._k < K; i++) {
 		int n;
 		do {
 			n = drand48() * s._N;
@@ -81,7 +81,6 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 		} while (s._k <= K);
 		const int newClusterID = drand48() * (s._k-1); // -1 because we must move the node from the "temporary" community
 		// s.shortSummary(); s.summarizeEdgeCounts();
-		s.internalCheck();
 
 		s.unIsolateTempNode(n, newClusterID);
 		assert(s._k <= K);
@@ -89,6 +88,7 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 		s.internalCheck();
 	}
 	assert(s._k == K);
+	s.internalCheck();
 }
 
 bool fiftyfifty() {
@@ -546,9 +546,10 @@ void runSBM(const sbm::GraphType *g) {
 	s.internalCheck();
 	PP(s.pmf());
 
-	randomize(s, 3);
-	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	*/
+	// randomize(s, 3);
+	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+
 	PP(s.pmf());
 
 	for(int i=1; i<=400000000; i++) {
