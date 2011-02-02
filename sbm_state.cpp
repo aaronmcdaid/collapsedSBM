@@ -202,7 +202,8 @@ namespace sbm {
 		assert(NonEmptyVerify == this->NonEmptyClusters);
 		assert(VERYCLOSE(sumVerify , this->SumOfLog2LOrders));
 		assert(VERYCLOSE(sumVerifyInternal , this->SumOfLog2LOrderForInternal));
-		// this->SumOfLog2LOrders = sumVerify;
+		this->SumOfLog2LOrders = sumVerify;
+		this->SumOfLog2LOrderForInternal = sumVerifyInternal;
 		assert((int)alreadyConsidered.size() == this->_N);
 
 		EdgeCounts edgeCountsVerification;
