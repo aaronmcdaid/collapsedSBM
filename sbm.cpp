@@ -456,7 +456,8 @@ void M3(sbm::State &s) {
 
 	if(log2(drand48()) < acceptanceLog2 /*|| IsRandomProposalIdenticalToStatusQuo*/) {
 		// accepting.
-		if(verbose) cout << "!! ACCEPT !!" << endl;
+		// if(verbose)
+			cout << "M3 ACCEPT: " << acceptanceLog2 << endl;
 	} else {
 		// reject. let's put them all back
 		for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
@@ -556,7 +557,8 @@ void runSBM(const sbm::GraphType *g) {
 		MetropolisOnK(s);
 		// PP(i);
 		MoneNode(s);
-		// M3(s);
+		if(i%50 == 0)
+			M3(s);
 	
 		// PP(s.pmf());
 		// cout << endl;
