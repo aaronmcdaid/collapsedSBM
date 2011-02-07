@@ -22,9 +22,10 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g);
+void runSBM(const sbm::GraphType *g, const int commandLineK);
 
 int main(int argc, char **argv) {
+	int commandLineK = -1; // be default, sample K. But the command line arg -k can be used to fix it.
 	PP(gitstatus);
 	for (int i=0; i<argc; i++) {
 		PP(argv[i]);
@@ -36,13 +37,13 @@ int main(int argc, char **argv) {
         {0, 0, 0, 0}
       };
       /* getopt_long stores the option index here. */
-      c = getopt_long (argc, argv, "t:T:k:", long_options, &option_index);
+      c = getopt_long (argc, argv, "k:", long_options, &option_index);
       if (c == -1) break; /* Detect the end of the options. */
      
       switch (c) {
-        case '?': /* getopt_long already printed an error message. */ break;
-        default: abort (); break;
-        case 0:
+        break; case '?': /* getopt_long already printed an error message. */
+	break; default: abort ();
+	break; case 0:
           /* If this option set a flag, do nothing else now. */
           if (long_options[option_index].flag != 0)
             break;
@@ -50,8 +51,8 @@ int main(int argc, char **argv) {
           if (optarg) printf (" with arg %s", optarg);
           printf ("\n");
           break;
-        // case 'T':
-					// option_inclusiveThreshold = true;
+        break; case 'k':
+		commandLineK = atoi(optarg);
       }
     }
 	}
@@ -67,11 +68,12 @@ int main(int argc, char **argv) {
 	PP(directoryForOutput);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
-	runSBM(g.get());
+	runSBM(g.get(), commandLineK);
 }
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
 	assert(s._k <= K);
+	assert(K >= 1);
 	for(int i=0; i<1000 || s._k < K; i++) {
 		int n;
 		do {
@@ -533,7 +535,7 @@ void MetropolisOnK(sbm::State &s) {
 	}
 }
 
-void runSBM(const sbm::GraphType *g) {
+void runSBM(const sbm::GraphType *g, const int commandLineK) {
 	sbm::State s(g);
 
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
@@ -548,13 +550,15 @@ void runSBM(const sbm::GraphType *g) {
 	PP(s.pmf());
 
 	*/
-	// randomize(s, 3);
+	if(commandLineK != -1)
+		randomize(s, commandLineK);
 	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 
 	PP(s.pmf());
 
 	for(int i=1; i<=400000000; i++) {
-		MetropolisOnK(s);
+		if(commandLineK == -1)
+			MetropolisOnK(s);
 		// PP(i);
 		MoneNode(s);
 		if(i%50 == 0)
