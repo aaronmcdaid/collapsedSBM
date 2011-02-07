@@ -313,6 +313,7 @@ namespace sbm {
 	}
 
 	long double State:: P_z_K() const { // 1 and 2
+		// const long double priorOnK = -this->_k; // Exponential prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
 		return assertNonPositiveFinite(K_dependant_bits);
@@ -329,11 +330,7 @@ namespace sbm {
 	}
 
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
-		// const long double priorOnK = -this->_k; // Exponential prior on K
-		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
-		if(this->_k == 1)
-			return priorOnK; // P(z|K) is obviously 1 if K==1
-		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
+		const long double K_dependant_bits = this->P_z_K();
 		long double perCluster_bits = 0.0L;
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->clusters.at(CL);
