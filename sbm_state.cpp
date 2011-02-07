@@ -7,6 +7,7 @@ namespace sbm {
 	};
 	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
 		this->labelling.SumOfLog2LOrders = log2l(this->_N);
+		this->labelling.SumOfLog2Facts   = LOG2FACT(this->_N);
 		this->labelling.NonEmptyClusters = 1;
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
@@ -100,6 +101,10 @@ namespace sbm {
 					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
 					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
 					;
+		this->labelling.SumOfLog2Facts +=
+					+ (oldcl->order()<2?0.0L:LOG2FACT(oldcl->order()))
+					- (oldcl->order()<1?0.0L:LOG2FACT(oldcl->order()+1))
+					;
 		this->labelling.SumOfLog2LOrderForInternal +=
 					+ (oldcl->order()<2?0.0L:log2l( (from_order  )*(from_order  -1)/2 ))
 					- (oldcl->order()<1?0.0L:log2l( (from_order+1)*(from_order+1-1)/2 ))
@@ -107,6 +112,10 @@ namespace sbm {
 		this->labelling.SumOfLog2LOrders +=
 					+ (cl->order()<2   ?0.0L:log2l(cl->order()))
 					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
+					;
+		this->labelling.SumOfLog2Facts +=
+					+ (cl->order()<2   ?0.0L:LOG2FACT(cl->order()))
+					- (cl->order()<3   ?0.0L:LOG2FACT(cl->order()-1))
 					;
 		this->labelling.SumOfLog2LOrderForInternal +=
 					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
@@ -180,6 +189,7 @@ namespace sbm {
 		assert(this->_N == (int)this->labelling.its.size());
 		boost::unordered_set<int> alreadyConsidered;
 		long double sumVerify = 0.0L;
+		long double sumVerifyFacts = 0.0L;
 		long double sumVerifyInternal = 0.0L;
 		int NonEmptyVerify = 0;
 		for(int CL = 0; CL < this->_k; CL++) {
@@ -198,13 +208,16 @@ namespace sbm {
 				NonEmptyVerify++;
 			if(cl->order() >=2) {
 				sumVerify += log2l(cl->order());
+				sumVerifyFacts += LOG2FACT(cl->order());
 				sumVerifyInternal += log2l(cl->order()*(cl->order()-1)/2);
 			}
 		}
 		assert(NonEmptyVerify == this->labelling.NonEmptyClusters);
 		assert(VERYCLOSE(sumVerify , this->labelling.SumOfLog2LOrders));
+		assert(VERYCLOSE(sumVerifyFacts , this->labelling.SumOfLog2Facts));
 		assert(VERYCLOSE(sumVerifyInternal , this->labelling.SumOfLog2LOrderForInternal));
 		this->labelling.SumOfLog2LOrders = sumVerify;
+		this->labelling.SumOfLog2Facts = sumVerifyFacts;
 		this->labelling.SumOfLog2LOrderForInternal = sumVerifyInternal;
 		assert((int)alreadyConsidered.size() == this->_N);
 
@@ -320,21 +333,11 @@ namespace sbm {
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
 		return assertNonPositiveFinite(K_dependant_bits);
 	}
-	long double State:: P_z_orders_slow() const { // given our current this->_k, what's P(z | k)
-		long double perCluster_bits = 0.0L;
-		for(int CL=0; CL < this->_k; CL++) {
-			const Cluster *cl = this->labelling.clusters.at(CL);
-			assert(cl);
-			perCluster_bits += LOG2FACT(cl->order());
-		}
-		assertNonPositiveFinite(-perCluster_bits);
-		return perCluster_bits;
-	}
 	long double State:: P_z_orders() const { // given our current this->_k, what's P(z | k)
-		return this->P_z_orders_slow();
+		return this->labelling.SumOfLog2Facts;
 	}
 
-	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
+	long double State:: P_z_slow() const { // given our current this->_k, what's P(z | k)
 		const long double K_dependant_bits = this->P_z_K();
 		long double perCluster_bits = 0.0L;
 		for(int CL=0; CL < this->_k; CL++) {
@@ -483,7 +486,7 @@ namespace sbm {
 		return assertNonPositiveFinite(correction);
 	}
 	long double State:: pmf_slow() const {
-		return this->P_edges_given_z_slow() + this->P_z();
+		return this->P_edges_given_z_slow() + this->P_z_slow();
 	}
 	long double State:: pmf() const {
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();

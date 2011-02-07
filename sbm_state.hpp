@@ -19,19 +19,22 @@ struct Cluster {
 		std::list<int>::iterator newMember(const int n);
 }; // each cluster to know which nodes are in it
 
+struct Labelling {
+	std::vector< Cluster* > clusters; // numbered 0 to k-1
+	std::vector< int > cluster_id; // the cluster that each node is in
+	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
+	int NonEmptyClusters;
+	mutable long double SumOfLog2LOrders;
+	mutable long double SumOfLog2Facts;
+	mutable long double SumOfLog2LOrderForInternal;
+};
+
 struct State {
 	const GraphType * const _g; // the graph
 	const int _N; // the number of nodes in the graph
 	explicit State(const GraphType * const g);
 
-	struct Labelling {
-		std::vector< Cluster* > clusters; // numbered 0 to k-1
-		std::vector< int > cluster_id; // the cluster that each node is in
-		std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
-		int NonEmptyClusters;
-		mutable long double SumOfLog2LOrders;
-		mutable long double SumOfLog2LOrderForInternal;
-	} labelling;
+	Labelling	labelling;
 	// the clustering
 	int _k; // the number of clusters (including empty ones)
 	std::set<int> nodeNamesInOrder;
@@ -73,9 +76,8 @@ struct State {
 	// 3. The edges "baseline", where there are assumed to be no edges
 	// 4. The edges correction over the baseline.
 	long double P_z_K() const; // 1.
-	long double P_z_orders_slow() const; // 2.
 	long double P_z_orders() const; // 2.
-	long double P_z() const;
+	long double P_z_slow() const;
 	long double P_edges_given_z_slow() const;
 	long double P_edges_given_z() const;
 	long double P_edges_given_z_baseline() const; // 3.
