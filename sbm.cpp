@@ -112,7 +112,7 @@ long double MoneNode(sbm::State &s) {
 	assert(s._k > 1); // can't move a node unless there exist other clusters
 	const long double pre = s.pmf();
 	const int n = drand48() * s._N;
-	const int oldClusterID = s.cluster_id.at(n);
+	const int oldClusterID = s.labelling.cluster_id.at(n);
 	int newClusterID;
 	do {
 		newClusterID = drand48() * s._k;
@@ -179,16 +179,16 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 	// const long double pre = s.pmf(); // TODO remove this, and the corresponding check at the end
 	// given an isolated node, and a candidate cluster to join, what's the delta in the fitness?
 	
-	const int isolatedClusterID = s.cluster_id.at(n);
-	const sbm::State:: Cluster * isoCl = s.clusters.at(isolatedClusterID);
+	const int isolatedClusterID = s.labelling.cluster_id.at(n);
+	const sbm:: Cluster * isoCl = s.labelling.clusters.at(isolatedClusterID);
 	assert(isoCl->order() == 1);
-	const sbm::State:: Cluster * candCl = s.clusters.at(candCluster);
+	const sbm:: Cluster * candCl = s.labelling.clusters.at(candCluster);
 	assert(isolatedClusterID != candCluster);
 	const int old_order = candCl->order();
 	const int new_order = old_order+1;
-	const int old_NonEmpty = s.NonEmptyClusters;
-	const int new_NonEmpty = old_order==0 ? s.NonEmptyClusters : (s.NonEmptyClusters-1);
-	const long double preSumOfLog2l = s.SumOfLog2LOrders;
+	const int old_NonEmpty = s.labelling.NonEmptyClusters;
+	const int new_NonEmpty = old_order==0 ? s.labelling.NonEmptyClusters : (s.labelling.NonEmptyClusters-1);
+	const long double preSumOfLog2l = s.labelling.SumOfLog2LOrders;
 	const long double postReMergeSumOfLog2l = preSumOfLog2l + log2l(new_order) - ( old_order>1 ? log2l(old_order) : 0.0L);
 	// PP(postReMergeSumOfLog2l);
 
@@ -254,8 +254,8 @@ void M3(sbm::State &s) {
 	if(cl1 == cl2)
 		return;
 	if(verbose) cout << endl << "     ========== M3 (found two clusters) =========" << endl;
-	const sbm::State::Cluster * CL1 = s.clusters.at(cl1);
-	const sbm::State::Cluster * CL2 = s.clusters.at(cl2);
+	const sbm:: Cluster * CL1 = s.labelling.clusters.at(cl1);
+	const sbm:: Cluster * CL2 = s.labelling.clusters.at(cl2);
 	vector<int> allNodes;
 	boost::unordered_map<int, int> statusQuoClustering;
 	allNodes.insert(allNodes.end(), CL1->members.begin(), CL1->members.end());
@@ -281,13 +281,13 @@ void M3(sbm::State &s) {
 		const long double pre3 = s.P_edges_given_z_baseline();
 		// const long double pre4 = s.P_edges_given_z_correction();
 		// assert(pre == pre1+pre2+pre3+pre4);
-		const long double preSumOfLog2l = s.SumOfLog2LOrders;
+		const long double preSumOfLog2l = s.labelling.SumOfLog2LOrders;
 		// PP(preSumOfLog2l);
-		const long double preNonEmpty = s.NonEmptyClusters;
+		const long double preNonEmpty = s.labelling.NonEmptyClusters;
 		// assert(pre == pre1 + pre2 + pre3 + pre4);
 
-		const int old_clusterID = s.cluster_id.at(node_to_remove);
-		const sbm::State:: Cluster * old_cluster = s.clusters.at(old_clusterID);
+		const int old_clusterID = s.labelling.cluster_id.at(node_to_remove);
+		const sbm:: Cluster * old_cluster = s.labelling.clusters.at(old_clusterID);
 		const int old_order = old_cluster->order();
 		assert(old_order>=1);
 		long double delta2 = -LOG2FACT(old_order);
@@ -295,8 +295,8 @@ void M3(sbm::State &s) {
 
 		const int tempClusterID = s.isolateNode(node_to_remove);
 
-		const long double postSumOfLog2l = s.SumOfLog2LOrders;
-		const long double postNonEmpty = s.NonEmptyClusters;
+		const long double postSumOfLog2l = s.labelling.SumOfLog2LOrders;
+		const long double postNonEmpty = s.labelling.NonEmptyClusters;
 		const int new_order = old_order-1;
 		if(new_order>1)
 			delta2 += LOG2FACT(new_order);
@@ -387,9 +387,9 @@ void M3(sbm::State &s) {
 			// const long double preM3OneRandom = s.pmf();
 			const int node_to_Add = *adder;
 			// PP(node_to_Add);
-			const int clID = s.cluster_id.at(node_to_Add);
+			const int clID = s.labelling.cluster_id.at(node_to_Add);
 			assert(clID + 1 == s._k);
-			const sbm::State:: Cluster * clIsolated = s.clusters.at(clID);
+			const sbm:: Cluster * clIsolated = s.labelling.clusters.at(clID);
 			assert(clIsolated->order()==1);
 			assert(clIsolated->members.front()==node_to_Add);
 			// which of the two to add to?
@@ -510,7 +510,7 @@ void MetropolisOnK(sbm::State &s) {
 			assert(s._k==preK);
 		}
 	} else { // propose decrease
-		if(s._k >= 1 && s.clusters.back()->order()==0) {
+		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
 			s.deleteClusterFromTheEnd();
 			const long double postPMF12 = s.P_z_K();
 			// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
