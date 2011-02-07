@@ -5,28 +5,31 @@ using namespace shmGraphRaw;
 namespace sbm {
 	struct SelfLoopsNotSupported : public std::exception {
 	};
-	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()) {
-		this->labelling.SumOfLog2LOrders = log2l(this->_N);
-		this->labelling.SumOfLog2Facts   = LOG2FACT(this->_N);
-		this->labelling.NonEmptyClusters = 1;
-		// initialize it with every node in one giant cluster
-		this->_k = 1;
-		this->labelling.clusters.push_back(new Cluster());
-		assert(this->labelling.clusters.size()==1);
+	Labelling::Labelling(const int _N) : _N(_N) {
+		this->SumOfLog2LOrders = log2l(this->_N);
+		this->SumOfLog2Facts   = LOG2FACT(this->_N);
+		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
+		this->NonEmptyClusters = 1;
+		this->clusters.push_back(new Cluster());
+		assert(this->clusters.size()==1);
+		assert(this->cluster_id.size()==0);
+		assert(this->its.size()==0);
 
-		assert(this->labelling.cluster_id.size()==0);
-		assert(this->labelling.its.size()==0);
 		for(int i=0; i<this->_N; i++) {
-			this->labelling.cluster_id.push_back(0);
-			Cluster *cl = this->labelling.clusters.back();
+			this->cluster_id.push_back(0);
+			Cluster *cl = this->clusters.back();
 			assert(cl);
-			this->labelling.its.push_back( cl->newMember(i) );
-			assert(*this->labelling.its.at(i) == i);
+			this->its.push_back( cl->newMember(i) );
+			assert(*this->its.at(i) == i);
 		}
 
-		assert((int)this->labelling.cluster_id.size()==this->_N);
-		assert((int)this->labelling.its.size()==this->_N);
-		assert((int)this->labelling.clusters.back()->members.size()==this->_N);
+		assert((int)this->cluster_id.size()==this->_N);
+		assert((int)this->its.size()==this->_N);
+		assert((int)this->clusters.back()->members.size()==this->_N);
+	}
+	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()), labelling(this->_N) {
+		// initialize it with every node in one giant cluster
+		this->_k = 1;
 
 		// inform EdgeCounts of all the edges
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
@@ -37,7 +40,6 @@ namespace sbm {
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			this->_edgeCounts.inform(cl1,cl2);
 		}
-		this->labelling.SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
 
 		// to ensure the nodes are dealt with in the order of their integer node name
 		for(int n=0; n<this->_N;n++) {

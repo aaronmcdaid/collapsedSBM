@@ -20,6 +20,7 @@ struct Cluster {
 }; // each cluster to know which nodes are in it
 
 struct Labelling {
+	const int _N;
 	std::vector< Cluster* > clusters; // numbered 0 to k-1
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
@@ -27,6 +28,9 @@ struct Labelling {
 	mutable long double SumOfLog2LOrders;
 	mutable long double SumOfLog2Facts;
 	mutable long double SumOfLog2LOrderForInternal;
+	Labelling(const int _N);
+
+
 	void appendEmptyCluster();
 	void deleteClusterFromTheEnd();
 	void moveNode(const int n, const int newClusterID);
