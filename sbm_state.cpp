@@ -1,4 +1,3 @@
-#include <gsl/gsl_sf.h>
 #include "sbm_state.hpp"
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;

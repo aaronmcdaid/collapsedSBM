@@ -1,6 +1,10 @@
+#ifndef _SBM_STATE_HPP_
+#define _SBM_STATE_HPP_
+
 #include <list>
 #include <vector>
 #include <set>
+#include <gsl/gsl_sf.h>
 #include "shmGraphRaw.hpp"
 
 static inline double LOG2GAMMA(double x) {
@@ -96,3 +100,4 @@ struct State {
 
 } // namespace sbm
 
+#endif
