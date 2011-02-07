@@ -53,74 +53,85 @@ namespace sbm {
 		return this->members.begin();
 	}
 
+	void Labelling:: appendEmptyCluster() {
+		Cluster * newCluster = new Cluster();
+		this->clusters.push_back(newCluster);
+	}
 	int State:: appendEmptyCluster() {
+		this->labelling.appendEmptyCluster();
 		const int newClusterID = this->_k;
 		this->_k ++;
-		Cluster * newCluster = new Cluster();
-		this->labelling.clusters.push_back(newCluster);
-		assert(newCluster->members.size()==0);
 		return newClusterID;
+	}
+	void Labelling:: deleteClusterFromTheEnd() {
+		const int _k = this->clusters.size();
+		assert(_k >= 1);
+		Cluster * clusterToDelete = this->clusters.at(_k - 1);
+		assert(clusterToDelete->order() == 0);
+		this->clusters.pop_back();
+		delete clusterToDelete;
 	}
 	void State:: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
 		this->_k --;
-		Cluster * clusterToDelete = this->labelling.clusters.at(this->_k);
-		assert(clusterToDelete->order() == 0);
-		this->labelling.clusters.pop_back();
-		delete clusterToDelete;
+		this->labelling.deleteClusterFromTheEnd();
 	}
-	void State::moveNode(const int n, const int newClusterID) {
-		const int oldClusterID = this->labelling.cluster_id.at(n);
-		const int oldClusterSize = this->labelling.clusters.at(oldClusterID)->order();
-		assert(newClusterID >= 0 && newClusterID < this->_k);
-		assert(oldClusterID >= 0 && oldClusterID < this->_k);
+	void Labelling:: moveNode(const int n, const int newClusterID) {
+		const int _k = this->clusters.size();
+		const int oldClusterID = this->cluster_id.at(n);
+		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
+		assert(newClusterID >= 0 && newClusterID < _k);
+		assert(oldClusterID >= 0 && oldClusterID < _k);
 		assert(newClusterID != oldClusterID);
 
-		Cluster *cl = this->labelling.clusters.at(newClusterID);
-		Cluster *oldcl = this->labelling.clusters.at(oldClusterID);
+		Cluster *cl = this->clusters.at(newClusterID);
+		Cluster *oldcl = this->clusters.at(oldClusterID);
 		assert(cl);
 
-		const list<int>::iterator it = this->labelling.its.at(n);
+		const list<int>::iterator it = this->its.at(n);
 		assert(*it == n);
 		oldcl->members.erase(it); // fix up this->clusters.members
 		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
-		this->labelling.its.at(n) = newit; // fix up this->its
+		this->its.at(n) = newit; // fix up this->its
 
-		this->labelling.cluster_id.at(n) = newClusterID; // fix up this->cluster_id
+		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
 
 		assert(oldClusterSize-1 == oldcl->order());
 		if(oldcl->order() == 0) {
-			this->labelling.NonEmptyClusters--;
+			this->NonEmptyClusters--;
 		}
 		if(cl->order() == 1) {
-			this->labelling.NonEmptyClusters++;
+			this->NonEmptyClusters++;
 		}
 		const int from_order = oldcl->order();
 		const int   to_order =    cl->order();
-		this->labelling.SumOfLog2LOrders +=
+		this->SumOfLog2LOrders +=
 					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
 					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
 					;
-		this->labelling.SumOfLog2Facts +=
+		this->SumOfLog2Facts +=
 					+ (oldcl->order()<2?0.0L:LOG2FACT(oldcl->order()))
 					- (oldcl->order()<1?0.0L:LOG2FACT(oldcl->order()+1))
 					;
-		this->labelling.SumOfLog2LOrderForInternal +=
+		this->SumOfLog2LOrderForInternal +=
 					+ (oldcl->order()<2?0.0L:log2l( (from_order  )*(from_order  -1)/2 ))
 					- (oldcl->order()<1?0.0L:log2l( (from_order+1)*(from_order+1-1)/2 ))
 					;
-		this->labelling.SumOfLog2LOrders +=
+		this->SumOfLog2LOrders +=
 					+ (cl->order()<2   ?0.0L:log2l(cl->order()))
 					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
 					;
-		this->labelling.SumOfLog2Facts +=
+		this->SumOfLog2Facts +=
 					+ (cl->order()<2   ?0.0L:LOG2FACT(cl->order()))
 					- (cl->order()<3   ?0.0L:LOG2FACT(cl->order()-1))
 					;
-		this->labelling.SumOfLog2LOrderForInternal +=
+		this->SumOfLog2LOrderForInternal +=
 					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
 					- (cl->order()<3   ?0.0L:log2l( (to_order-1)*(to_order-1-1)/2 ))
 					;
+	}
+	void State::moveNode(const int n, const int newClusterID) {
+		this->labelling.moveNode(n, newClusterID);
 	}
 	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);

@@ -27,6 +27,9 @@ struct Labelling {
 	mutable long double SumOfLog2LOrders;
 	mutable long double SumOfLog2Facts;
 	mutable long double SumOfLog2LOrderForInternal;
+	void appendEmptyCluster();
+	void deleteClusterFromTheEnd();
+	void moveNode(const int n, const int newClusterID);
 };
 
 struct State {
