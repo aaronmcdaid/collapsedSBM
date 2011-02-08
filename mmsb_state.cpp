@@ -5,6 +5,8 @@ namespace sbm {
 			return (*this)[std::make_pair(i,j)];
 	}
 	int   PairCounts:: get(const int i, const int j) const {
+			if (this->count(std::make_pair(i,j))==0)
+				return 0;
 			return this-> at(std::make_pair(i,j));
 	}
 	MMSBstate:: MMSBstate (const GraphType * const g): _N(g->numNodes()), _k(1) {
