@@ -11,6 +11,7 @@ using namespace std;
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
 #include "sbm_state.hpp"
+#include "mmsb_state.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"
@@ -23,9 +24,11 @@ struct UsageMessage {
 };
 
 void runSBM(const sbm::GraphType *g, const int commandLineK);
+void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 int main(int argc, char **argv) {
 	int commandLineK = -1; // be default, sample K. But the command line arg -k can be used to fix it.
+	bool runMMSBinstead = false;
 	PP(gitstatus);
 	for (int i=0; i<argc; i++) {
 		PP(argv[i]);
@@ -37,7 +40,7 @@ int main(int argc, char **argv) {
         {0, 0, 0, 0}
       };
       /* getopt_long stores the option index here. */
-      c = getopt_long (argc, argv, "k:", long_options, &option_index);
+      c = getopt_long (argc, argv, "k:m", long_options, &option_index);
       if (c == -1) break; /* Detect the end of the options. */
      
       switch (c) {
@@ -53,6 +56,8 @@ int main(int argc, char **argv) {
           break;
         break; case 'k':
 		commandLineK = atoi(optarg);
+        break; case 'm':
+		runMMSBinstead = true;
       }
     }
 	}
@@ -68,7 +73,10 @@ int main(int argc, char **argv) {
 	PP(directoryForOutput);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
-	runSBM(g.get(), commandLineK);
+	if(runMMSBinstead)
+		runMMSB(g.get(), commandLineK);
+	else
+		runSBM(g.get(), commandLineK);
 }
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
@@ -576,4 +584,20 @@ void runSBM(const sbm::GraphType *g, const int commandLineK) {
 	}
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
+}
+
+void runMMSB(const sbm::GraphType *g, const int commandLineK) {
+	assert(commandLineK > 1);
+	sbm:: MMSBstate s(g);
+	PP(s._N);
+	// s.P_zs_given_K();
+	// cout << endl;
+
+	while(s._k < commandLineK)
+		s.appendEmptyCluster();
+	PP(s._k);
+
+	s.P_zs_given_K();
+	cout << endl;
+
 }

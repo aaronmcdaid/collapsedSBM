@@ -25,6 +25,7 @@ struct Cluster {
 
 struct Labelling {
 	const int _N;
+	int _k;
 	std::vector< Cluster* > clusters; // numbered 0 to k-1
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
@@ -97,6 +98,7 @@ struct State {
 	long double pmf_slow() const;
 	long double pmf() const;
 };
+	long double assertNonPositiveFinite(const long double x);
 
 } // namespace sbm
 

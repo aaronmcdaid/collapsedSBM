@@ -4,7 +4,7 @@ using namespace shmGraphRaw;
 namespace sbm {
 	struct SelfLoopsNotSupported : public std::exception {
 	};
-	Labelling::Labelling(const int _N) : _N(_N) {
+	Labelling::Labelling(const int _N) : _N(_N), _k(1) {
 		this->SumOfLog2LOrders = log2l(this->_N);
 		this->SumOfLog2Facts   = LOG2FACT(this->_N);
 		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
@@ -57,6 +57,7 @@ namespace sbm {
 	void Labelling:: appendEmptyCluster() {
 		Cluster * newCluster = new Cluster();
 		this->clusters.push_back(newCluster);
+		this->_k ++;
 	}
 	int State:: appendEmptyCluster() {
 		this->labelling.appendEmptyCluster();
@@ -65,12 +66,12 @@ namespace sbm {
 		return newClusterID;
 	}
 	void Labelling:: deleteClusterFromTheEnd() {
-		const int _k = this->clusters.size();
-		assert(_k >= 1);
-		Cluster * clusterToDelete = this->clusters.at(_k - 1);
+		assert(this->_k >= 1);
+		Cluster * clusterToDelete = this->clusters.at(this->_k - 1);
 		assert(clusterToDelete->order() == 0);
 		this->clusters.pop_back();
 		delete clusterToDelete;
+		this->_k --;
 	}
 	void State:: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
@@ -333,7 +334,7 @@ namespace sbm {
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
 	}
-	static long double assertNonPositiveFinite(const long double x) {
+	long double assertNonPositiveFinite(const long double x) {
 		assert(isfinite(x));
 		assert(x<=0.0L);
 		return x;
