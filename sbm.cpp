@@ -569,8 +569,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK) {
 			MetropolisOnK(s);
 		// PP(i);
 		MoneNode(s);
-		if(i%50 == 0)
-			M3(s);
+		// if(i%50 == 0)
+			// M3(s);
 	
 		// PP(s.pmf());
 		// cout << endl;

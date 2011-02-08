@@ -390,14 +390,15 @@ namespace sbm {
 				// PP2(pairs,edges);
 				if(pairs > 0) {
 					pairsEncountered += pairs;
-					edges_bits -= log2l(pairs);
-					edges_bits_no_edges -= log2l(pairs);
+					edges_bits -= log2l(pairs + 1);
+					edges_bits_no_edges -= log2l(pairs + 1);
 					edges_bits -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
 				}
 				// PP(edges_bits);
 			}
 		}
 		assert(pairsEncountered == this->_N * (this->_N-1) / 2);
+		/*
 		DYINGWORDS(VERYCLOSE(edges_bits, this->P_edges_given_z_baseline() + this->P_edges_given_z_correction())) {
 			cout << endl << "DYINGWORDS:" << __LINE__ << endl;
 			PP(this->P_edges_given_z_baseline() + this->P_edges_given_z_correction() - edges_bits);
@@ -407,15 +408,20 @@ namespace sbm {
 			PP(this->P_edges_given_z_correction());
 			PP(- edges_bits);
 		}
+		*/
 		return assertNonPositiveFinite(edges_bits);
 	}
 	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow();
 		const long double fast = this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
 		DYINGWORDS(VERYCLOSE(slow,fast));
-		return assertNonPositiveFinite(fast);
+		return assertNonPositiveFinite(slow);
 	}
+	struct BaseLineNotCorrectException {
+	};
 	long double State:: P_edges_given_z_baseline() const {
+		return this->P_edges_given_z_slow() - this->P_edges_given_z_correction();
+		throw BaseLineNotCorrectException();
 		// cout << "     P_edges_given_z_baseline()" << endl;
 		//
 		// offDiagonal isn't really used here, it's just to check again SumOfLog2LOrders (which is meant to be a 'cached' version thereof
@@ -499,12 +505,15 @@ namespace sbm {
 		return assertNonPositiveFinite(correction);
 	}
 	long double State:: pmf_slow() const {
-		return this->P_edges_given_z_slow() + this->P_z_slow();
+		return assertNonPositiveFinite( this->P_edges_given_z_slow() + this->P_z_slow() );
 	}
 	long double State:: pmf() const {
+		return this->pmf_slow();
+		/*
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
 		// const long double slow = this->P_z() + this->P_edges_given_z();
 		// assert(VERYCLOSE(fast, slow));
 		return assertNonPositiveFinite(fast);
+		*/
 	}
 } // namespace sbm
