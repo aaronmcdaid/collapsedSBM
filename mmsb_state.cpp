@@ -76,22 +76,26 @@ namespace sbm {
 		if(n==0)
 			return 0.0L;
 		long double x = - log2l(n+1);
-		PP(x);
+		// PP(x);
 		x -= M_LOG2E * gsl_sf_lnchoose(n, k);
-		PP(x);
+		// PP(x);
 		return sbm:: assertNonPositiveFinite(x);
 	}
 	void MMSBstate:: moveOnePair(const int w,const int v,const int clid) { // node w, when interacting with v, should take identity clid
+		const bool verbose = false;
 		assert(w!=v);
 		assert(clid >= 0 && clid < this->_k);
-		const bool areConnected = this->_g->are_connected(w,v);
-		PP2(w,v);
-		PP(areConnected);
 		Labelling * l = ls.at(w);
-		assert(l);
 		const int old_clid = l->cluster_id.at(v);
+		if(clid == old_clid)
+			return;
+		if(verbose) cout << endl << "   moveOnePair()" << endl;
 		assert(clid != old_clid);
-		PP2(w,v);
+		const bool areConnected = this->_g->are_connected(w,v);
+		if(verbose) PP2(w,v);
+		if(verbose) PP(areConnected);
+		assert(l);
+		if(verbose) PP2(w,v);
 		// PP2(old_clid, clid);
 		// moving the node is easy enough. It's updating the pair- and edge- counts that's interesting
 		
@@ -99,30 +103,30 @@ namespace sbm {
 		Labelling * l2 = ls.at(v);
 		assert(l2);
 		const int fixed_id = l2->cluster_id.at(w);
-		PP2(fixed_id, old_clid);
+		if(verbose) PP2(fixed_id, old_clid);
 		const int OrigWasPairs = this->numPairs.get(fixed_id, old_clid);
 		const int OrigWasEdges = this->numEdges.get(fixed_id, old_clid);
-		PP2(OrigWasPairs, OrigWasEdges);
+		if(verbose) PP2(OrigWasPairs, OrigWasEdges);
 		const long double origWasBits = P_beta_binomial(OrigWasPairs, OrigWasEdges);
 		const int OrigWillPairs = OrigWasPairs - 1;
 		const int OrigWillEdges = OrigWasEdges - (areConnected ? 1 : 0);
-		PP2(OrigWillPairs, OrigWillEdges);
+		if(verbose) PP2(OrigWillPairs, OrigWillEdges);
 		const long double origWillBits = P_beta_binomial(OrigWillPairs, OrigWillEdges);
-		PP (origWillBits - origWasBits);
+		if(verbose) PP (origWillBits - origWasBits);
 
-		PP2(fixed_id, clid);
+		if(verbose) PP2(fixed_id, clid);
 		const int NewWasPairs = this->numPairs.get(fixed_id, clid);
 		const int NewWasEdges = this->numEdges.get(fixed_id, clid);
-		PP2(NewWasPairs, NewWasEdges);
+		if(verbose) PP2(NewWasPairs, NewWasEdges);
 		const long double newWasBits = P_beta_binomial(NewWasPairs, NewWasEdges);
 		const int NewWillPairs = NewWasPairs + 1;
 		const int NewWillEdges = NewWasEdges + (areConnected ? 1 : 0);
-		PP2(NewWillPairs, NewWillEdges);
+		if(verbose) PP2(NewWillPairs, NewWillEdges);
 		const long double newWillBits = P_beta_binomial(NewWillPairs, NewWillEdges);
-		PP(newWillBits - newWasBits);
+		if(verbose) PP(newWillBits - newWasBits);
 		const long double delta_g_given_z = origWillBits - origWasBits + newWillBits - newWasBits;
 		assert(isfinite(delta_g_given_z));
-		PP(delta_g_given_z);
+		if(verbose) PP(delta_g_given_z);
 
 		const long double wasOrdersBits = l->SumOfLog2Facts;
 		l->moveNode(v, clid);
@@ -130,18 +134,26 @@ namespace sbm {
 		l->moveNode(v, old_clid);
 		const long double verifywasOrdersBits = l->SumOfLog2Facts;
 		assert(verifywasOrdersBits == wasOrdersBits);
-		PP2(wasOrdersBits , willOrdersBits);
+		if(verbose) PP2(wasOrdersBits , willOrdersBits);
 		const long delta_P_z = willOrdersBits-wasOrdersBits;
-		PP (delta_P_z);
+		if(verbose) PP (delta_P_z);
 		assert(isfinite(delta_P_z));
 		const long double delta = delta_P_z + delta_g_given_z;
-		PP(delta);
-		assert(delta < 0.0L);
+		if(verbose) PP(delta);
 
-		if(areConnected) {
-			assert(delta_g_given_z > 0.0L); // this isn't a serious assert, but it does work in this initialization
+		if(log2(drand48()) < delta) { // accept
+			l->moveNode(v, clid);
+			const long double verifywillOrdersBits = l->SumOfLog2Facts;
+			assert(verifywillOrdersBits == willOrdersBits);
+			this->numPairs.set(fixed_id, old_clid) = OrigWillPairs;
+			this->numEdges.set(fixed_id, old_clid) = OrigWillEdges;
+			this->numPairs.set(old_clid, fixed_id) = OrigWillPairs;
+			this->numEdges.set(old_clid, fixed_id) = OrigWillEdges;
+			this->numPairs.set(fixed_id, clid) = NewWillPairs;
+			this->numEdges.set(fixed_id, clid) = NewWillEdges;
+			this->numPairs.set(clid, fixed_id) = NewWillPairs;
+			this->numEdges.set(clid, fixed_id) = NewWillEdges;
 		} else {
-			assert(delta_g_given_z < 0.0L);
 		}
 
 	}
