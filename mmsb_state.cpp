@@ -104,6 +104,20 @@ namespace sbm {
 		assert(isfinite(delta_g_given_z));
 		PP(delta_g_given_z);
 
+		const long double wasOrdersBits = l->SumOfLog2Facts;
+		l->moveNode(v, clid);
+		const long double willOrdersBits = l->SumOfLog2Facts;
+		l->moveNode(v, old_clid);
+		const long double verifywasOrdersBits = l->SumOfLog2Facts;
+		assert(verifywasOrdersBits == wasOrdersBits);
+		PP2(wasOrdersBits , willOrdersBits);
+		const long delta_P_z = willOrdersBits-wasOrdersBits;
+		PP (delta_P_z);
+		assert(isfinite(delta_P_z));
+		const long double delta = delta_P_z + delta_g_given_z;
+		PP(delta);
+		assert(delta < 0.0L);
+
 		if(areConnected) {
 			assert(delta_g_given_z > 0.0L); // this isn't a serious assert, but it does work in this initialization
 		} else {
