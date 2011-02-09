@@ -21,6 +21,11 @@ namespace sbm {
 		PP(this->numPairs.get(0,0));
 		this->numEdges.set(0,0) = g->numRels();
 		PP(this->numEdges.get(0,0));
+
+		for(int i=0; i<this->_N; i++) {
+			const bool wasInserted = this->nodeNames.insert(atoi(this->_g->NodeAsString(i))).second;
+			assert(wasInserted);
+		}
 	};
 	void MMSBstate:: appendEmptyCluster() {
 		for(int i=0; i< this->_N; i++) {
@@ -38,7 +43,11 @@ namespace sbm {
 		return sbm:: assertNonPositiveFinite(K_dependant_bits);
 	}
 	void MMSBstate:: P_zs_given_K() const {
-		for(int i=0; i< this->_N; i++) {
+		forEach(int nodeName, amd::mk_range(this->nodeNames))
+		// for(int i=0; i< this->_N; i++)
+		{
+			const int i = this->_g->StringToNodeId(printfstring("%d", nodeName).c_str());
+			cout << this->_g->NodeAsString(i) << '\t';
 			Labelling * l = ls.at(i);
 			assert(l);
 			assert((int)l->clusters.size() == this->_k);
@@ -46,7 +55,18 @@ namespace sbm {
 				const int clid = l->cluster_id.at(j);
 				cout << ' ' << clid;
 			}
-			cout << '\t' << this->P_z_K() + l->SumOfLog2LOrders;
+			cout << '\t' << this->P_z_K() + l->SumOfLog2Facts;
+			const int sz0 = l->clusters.at(0)->order();
+			cout << '\t';
+			if(sz0*2 > this->_N)
+				cout << "1 ";
+			else
+				cout << " 2";
+			cout << "\t" << this->_g->degree(i);
+			cout << "\t(";
+			for(int k=0; k<this->_k; k++)
+				cout << ',' << l->clusters.at(k)->order();
+			cout << ")";
 			cout << endl;
 		}
 	}

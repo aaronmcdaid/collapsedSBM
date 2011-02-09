@@ -7,6 +7,7 @@ namespace sbm {
 	struct MMSBstate {
 		const GraphType * const _g;
 		const int _N;
+		std::set<int> nodeNames; // an int because we want the ints in numerical order. This won't work with string ids though. TODO
 		int _k;
 		std::vector<Labelling*> ls; // one labelling for each node
 		PairCounts numPairs;
