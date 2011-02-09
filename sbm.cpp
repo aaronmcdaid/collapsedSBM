@@ -600,4 +600,13 @@ void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 	s.P_zs_given_K();
 	cout << endl;
 
+	for(int i=0; i<100000; i++) {
+		const int w=g->numNodes() * drand48();
+		const int v=g->numNodes() * drand48();
+		if(w!=v)
+			s.moveOnePair(w,v,1);
+	}
+
+	s.P_zs_given_K();
+	cout << endl;
 }

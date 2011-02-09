@@ -5,6 +5,7 @@ namespace sbm {
 		int   get(const int i, const int j) const;
 	};
 	struct MMSBstate {
+		const GraphType * const _g;
 		const int _N;
 		int _k;
 		std::vector<Labelling*> ls; // one labelling for each node
@@ -15,5 +16,6 @@ namespace sbm {
 		void appendEmptyCluster();
 		long double P_z_K() const;
 		void P_zs_given_K() const;
+		void moveOnePair(int,int,int);
 	};
 } // namespace sbm
