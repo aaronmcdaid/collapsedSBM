@@ -588,6 +588,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK) {
 
 void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 	assert(commandLineK > 1);
+	PP2(g->numNodes(), g->numRels());
 	sbm:: MMSBstate s(g);
 	PP(s._N);
 	// s.P_zs_given_K();

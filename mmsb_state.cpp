@@ -69,6 +69,16 @@ namespace sbm {
 			cout << ")";
 			cout << endl;
 		}
+		for(int k=0; k<this->_k; k++) {
+			for(int l=0; l<this->_k; l++) {
+				const int pairs = this->numPairs.get(k,l);
+				const int edges = this->numEdges.get(k,l);
+				cout << k << ',' << l
+					<< ":\t" << edges << "/" << pairs
+					<< "\t" << double(edges)/double(pairs)
+					<< endl;
+			}
+		}
 	}
 	long double P_beta_binomial(const int n, const int k) {
 		assert(k >= 0);
