@@ -42,5 +42,5 @@ ${MAIN}: gitstatus.o shmGraphRaw.o Range.o aaron_utils.o graph_utils.o sbm_state
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 
-	{ git log | head -n 1 ; git status ; } | head -n 10 | sed -re 's/"/\\"/g ; s/^/"/g; s/$$/\\n"/g; ' > gitstatus.txt
+	{ git log | head -n 1 ; git status ; } | head -n 20 | sed -re 's/"/\\"/g ; s/^/"/g; s/$$/\\n"/g; ' > gitstatus.txt
 gitstatus.o: comment.txt  gitstatus.txt
