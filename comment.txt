@@ -1,3 +1,3 @@
 " "
-"SBM: MMSB. Simplest Metropolis move with K fixed at 2. Mightn't be right though."
+"SBM: with 4 5-cliques. Seed with correct result. It is dissappointing"
 "\n"

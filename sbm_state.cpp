@@ -78,7 +78,7 @@ namespace sbm {
 		this->_k --;
 		this->labelling.deleteClusterFromTheEnd();
 	}
-	void Labelling:: moveNode(const int n, const int newClusterID) {
+	int Labelling:: moveNode(const int n, const int newClusterID) {
 		const int _k = this->clusters.size();
 		const int oldClusterID = this->cluster_id.at(n);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
@@ -131,6 +131,7 @@ namespace sbm {
 					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
 					- (cl->order()<3   ?0.0L:log2l( (to_order-1)*(to_order-1-1)/2 ))
 					;
+		return oldClusterID;
 	}
 	void State::moveNode(const int n, const int newClusterID) {
 		this->labelling.moveNode(n, newClusterID);

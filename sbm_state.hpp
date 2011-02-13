@@ -38,7 +38,7 @@ struct Labelling {
 
 	void appendEmptyCluster();
 	void deleteClusterFromTheEnd();
-	void moveNode(const int n, const int newClusterID);
+	int moveNode(const int n, const int newClusterID);
 };
 
 struct State {

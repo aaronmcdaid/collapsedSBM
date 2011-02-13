@@ -601,18 +601,57 @@ void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 	s.P_zs_given_K();
 	cout << endl;
 
-	for(int i=0; i<=10000000; i++) {
+	{
+		/* 18 3 4 5 7
+		 * 10 12 17 2 8
+		 * 1 11 13 14 6
+		 * 15 16 19 20 9
+		 */
+		const int comm1[] = {18,3,4,5,7,-1};
+		const int comm2[] = {10,12,17,2,8,-1};
+		const int comm3[] = {1,11,13,14,6,-1};
+		const int comm4[] = {15,16,19,20,9,-1};
+		const int * comms[] = {comm1,comm2,comm3,comm4,NULL};
+		for(int commid=1; commid<4;commid++) {
+			const int * comm = comms[commid];
+			for(const int *commW = comm; *commW != -1; commW++) {
+				const int W = *commW;
+				PP(W);
+				const int w = g->StringToNodeId(printfstring("%d", W).c_str());
+				for(int v = 0; v<s._N;v++) {
+					if(w!=v)
+						s.performMoveAndUpdateEdges(w,v,commid);
+				}
+			}
+		}
+	}
+
+	s.P_zs_given_K();
+	cout << endl;
+
+	long double deltas = 0.0L;
+
+	for(int i=0; i<=100000000; i++) {
 		const int w=g->numNodes() * drand48();
 		const int v=g->numNodes() * drand48();
-		if(w!=v)
-			s.moveOnePair(w,v,2*drand48());
-		if(i%1000000==0) {
+		if(w!=v) {
+			const long double pre = s.pmf_slow();
+			const long double delta = s.MetropolisMoveOnePair(w,v,4*drand48());
+			const long double post = s.pmf_slow();
+			PP3(pre,delta,post);
+			PP(pre+delta - post);
+			assert(VERYCLOSE(pre+delta , post));
+			deltas += delta;
+		}
+		if(i%10000==0) {
 			PP(i);
 			s.P_zs_given_K();
+			PP(deltas);
 			cout << endl;
 		}
 	}
 
 	s.P_zs_given_K();
+	PP(deltas);
 	cout << endl;
 }

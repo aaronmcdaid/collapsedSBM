@@ -1,7 +1,9 @@
 #include "sbm_state.hpp"
 namespace sbm {
 	struct PairCounts : public boost::unordered_map< std::pair<int,int>, int > {
-		int & set(const int i, const int j);
+		void  set(const int i, const int j, const int to);
+		void  inc(const int i, const int j);
+		void  dec(const int i, const int j);
 		int   get(const int i, const int j) const;
 	};
 	struct MMSBstate {
@@ -17,6 +19,9 @@ namespace sbm {
 		void appendEmptyCluster();
 		long double P_z_K() const;
 		void P_zs_given_K() const;
-		void moveOnePair(int,int,int);
+		long double pmf_slow() const;
+		long double moveOnePair(int,int,int) const;
+		int performMoveAndUpdateEdges(const int w, const int v, const int clid);
+		long double MetropolisMoveOnePair(const int w,const int v,const int clid);
 	};
 } // namespace sbm
