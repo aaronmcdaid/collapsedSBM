@@ -29,6 +29,7 @@ enum {FALSE=0, TRUE=1};
 #define PPt(x) cout << #x << ":" << x << '\t'
 #define PPnn(x) cout << #x << ":" << x
 #define PP2(x,y) cout << #x << ',' << #y << ":\t" << x << ',' << y << endl
+#define PP3(x,y,z) cout << #x << ',' << #y << ',' << #z << ":\t" << x << ',' << y << ',' << z << endl
 #define PPLg(x) Pn("%s:%20.11Lg", #x, x)
 std::string thousandsSeparated(uint64 x);
 #define PPdec(x) cout << #x << ":" << thousandsSeparated(x) << endl
