@@ -27,6 +27,20 @@ struct UsageMessage {
 void runSBM(const sbm::GraphType *g, const int commandLineK);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
+static
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std::pair<int,int> eps = g->EndPoints(rel);
+		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< endl;
+	}
+}
+
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
 	if (cmdline_parser (argc, argv, &args_info) != 0)
@@ -53,9 +67,9 @@ int main(int argc, char **argv) {
 	PP(args_info.mmsb_flag);
 	PP(args_info.K_arg);
 
-	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
-	PP(g->numNodes());
-	PP(g->numRels());
+	shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
+	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
+	dumpGraph(g.get());
 	exit(0);
 	if(args_info.mmsb_flag)
 		runMMSB(g.get(), commandLineK);

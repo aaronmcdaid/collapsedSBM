@@ -449,8 +449,8 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
  * The funcs to read the text and load the object ...
  */
 
-template <class T>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const char *directory = 0) {
+template <class T, class W>
+ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, EdgeDetails<W> &edge_details, const char *directory = 0) {
 	DumbGraphRaw<T> *nodes_and_rels_wrap = NULL;
 	if(T::isMapMem) {
 		assert(directory && strlen(directory)>0);
@@ -504,8 +504,8 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const 
 }
 
 template 
-ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const char * directory = 0);
+ReadableShmGraphTemplate<MapMem>   * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const char * directory = 0);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
 
 } // namespace shmGraphRaw {

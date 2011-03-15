@@ -136,8 +136,14 @@ public:
 	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
 };
 
-template<class T>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char * graphTextFileName, const char * directory = NULL);
+template <class W>
+struct EdgeDetails {
+};
+struct NoDetails { // unweighted, undirected
+};
+
+template<class T, class W>
+ReadableShmGraphTemplate<T> * loadEdgeList(const char * graphTextFileName, EdgeDetails<W> &edge_details, const char * directory = NULL);
 
 //typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
 
