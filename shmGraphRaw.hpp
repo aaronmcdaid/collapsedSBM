@@ -163,15 +163,21 @@ struct DirectedIntegerWeights {
 		IntPair() {
 			this->first = this->second = 0;
 		}
-		void inform(const bool highToLow, const std::string weight) {
+		struct DuplicateWeightedEdge : public std::exception {
+		};
+		void inform(const bool highToLow, const std::string weight) { // the weight string might be empty. I suppose we let that default to 0
+			if( highToLow ? this->second : this->first != 0) {
+				throw DuplicateWeightedEdge();
+			}
 			std:: istringstream oss(weight);
 			int w = 0;
 			oss >> w;
 			assert(oss.peek() == EOF);
-			if(highToLow)
+			if(highToLow) {
 				this->second = w;
-			else
+			} else {
 				this->first = w;
+			}
 		}
 	} datumT; // the type needed to store the weights in each direction.
 };
