@@ -17,6 +17,7 @@ const char gitstatus[] =
 #include "comment.txt"
 #include "gitstatus.txt"
 ;
+#include "cmdline.h"
 
 
 
@@ -27,53 +28,35 @@ void runSBM(const sbm::GraphType *g, const int commandLineK);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 int main(int argc, char **argv) {
-	int commandLineK = -1; // be default, sample K. But the command line arg -k can be used to fix it.
-	bool runMMSBinstead = false;
-	PP(gitstatus);
-	for (int i=0; i<argc; i++) {
-		PP(argv[i]);
+	gengetopt_args_info args_info;
+	if (cmdline_parser (argc, argv, &args_info) != 0)
+		exit(1) ;
+	if(args_info.git_version_flag) {
+		PP(gitstatus);
+		for (int i=0; i<argc; i++) {
+			PP(argv[i]);
+		}
 	}
-	{ int c, option_index; while (1)
-		{
-      static const struct option long_options[] = {
-        // {"seed", required_argument,       0, 22},
-        {0, 0, 0, 0}
-      };
-      /* getopt_long stores the option index here. */
-      c = getopt_long (argc, argv, "k:m", long_options, &option_index);
-      if (c == -1) break; /* Detect the end of the options. */
-     
-      switch (c) {
-        break; case '?': /* getopt_long already printed an error message. */
-	break; default: abort ();
-	break; case 0:
-          /* If this option set a flag, do nothing else now. */
-          if (long_options[option_index].flag != 0)
-            break;
-          printf ("option %s", long_options[option_index].name);
-          if (optarg) printf (" with arg %s", optarg);
-          printf ("\n");
-          break;
-        break; case 'k':
-		commandLineK = atoi(optarg);
-        break; case 'm':
-		runMMSBinstead = true;
-      }
-    }
+	if(args_info.inputs_num != 1) {
+		cmdline_parser_print_help();
+		exit(1);
 	}
 
-	unless (argc - optind == 2) {
-		throw UsageMessage();
-		// cout << "Usage: edge_list directory_for_output" << endl;
-		// exit(1);
-	}
-	const char * edgeListFileName = argv[optind];
-	const char * directoryForOutput = argv[optind+1];
+	int commandLineK = -1; // be default, sample K. But the command line arg -k can be used to fix it.
+        // break; case 'k':
+		// commandLineK = atoi(optarg);
+
+	const char * edgeListFileName   = args_info.inputs[0];
+	// const char * directoryForOutput = args_info.inputs[1];
 	PP(edgeListFileName);
-	PP(directoryForOutput);
+	// PP(directoryForOutput);
+	PP(args_info.mmsb_flag);
+	PP(args_info.K_arg);
+	exit(0);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
-	if(runMMSBinstead)
+	exit(0);
+	if(args_info.mmsb_flag)
 		runMMSB(g.get(), commandLineK);
 	else
 		runSBM(g.get(), commandLineK);
