@@ -28,7 +28,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g) {
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	for(int rel=0; rel<g->numRels(); rel++) {
@@ -37,6 +37,7 @@ void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g) 
 		cout << rel
 			<< '\t' << eps.first << '"' << epsNames.first << '"'
 			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
 			<< endl;
 	}
 }
@@ -67,9 +68,9 @@ int main(int argc, char **argv) {
 	PP(args_info.mmsb_flag);
 	PP(args_info.K_arg);
 
-	shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
+	shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > edge_details;
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
-	dumpGraph(g.get());
+	dumpGraph(g.get(), edge_details);
 	exit(0);
 	if(args_info.mmsb_flag)
 		runMMSB(g.get(), commandLineK);

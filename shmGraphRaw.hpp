@@ -3,6 +3,8 @@
 
 #include <set> 
 #include <map> 
+#include <vector> 
+#include <sstream> 
 
 
 #include <boost/interprocess/managed_mapped_file.hpp>
@@ -138,8 +140,40 @@ public:
 
 template <class W>
 struct EdgeDetails {
+	std:: vector < typename W::datumT > dw; // the directions and weights of all the edges
+	int size() const {
+		return this->dw.size();
+	}
+	void new_rel(int relId, std::pair<int,int> nodeIds, std::string &weight) {
+		if(relId == (int)this->dw.size())
+			this->dw.push_back( typename W::datumT() );
+		assert(relId+1 == (int)this->dw.size());
+		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
+		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
+	}
 };
 struct NoDetails { // unweighted, undirected
+	typedef struct nil {
+		void inform(const bool, const std::string) const {
+		}
+	} datumT;
+};
+struct DirectedIntegerWeights {
+	typedef struct IntPair : public std:: pair<int,int> {
+		IntPair() {
+			this->first = this->second = 0;
+		}
+		void inform(const bool highToLow, const std::string weight) {
+			std:: istringstream oss(weight);
+			int w = 0;
+			oss >> w;
+			assert(oss.peek() == EOF);
+			if(highToLow)
+				this->second = w;
+			else
+				this->first = w;
+		}
+	} datumT; // the type needed to store the weights in each direction.
 };
 
 template<class T, class W>

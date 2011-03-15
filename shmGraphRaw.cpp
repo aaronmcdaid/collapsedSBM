@@ -492,12 +492,24 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, EdgeDe
 			fields.popFront();
 			!fields.empty() || ({ throw invalideGraphFileFormatException(); 0; });
 			std::string r = fields.front();
-			// cout << l << '\t' << r << endl;
+			
+			fields.popFront();
+			std::string weight = fields.front();
+
 			pair<int,int> edgeAsIds = make_pair(
 					nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(l))
 					,nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(r))
 				);
-			nodes_and_rels_wrap->insertRel(edgeAsIds);
+			int relId = nodes_and_rels_wrap->insertRel(edgeAsIds);
+
+			edge_details.new_rel(relId, edgeAsIds, weight);
+
+			cout << "line:"
+				<< "\t" << relId
+				<< "\t" << edgeAsIds.first << '"' << l << '"'
+				<< '\t' << edgeAsIds.second << '"' << r << '"'
+				<< '\t' << '"' << weight << '"'
+				<< endl;
 		}
 
 	return nodes_and_rels_wrap;
@@ -507,5 +519,9 @@ template
 ReadableShmGraphTemplate<MapMem>   * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
 template 
 ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedIntegerWeights > &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedIntegerWeights > &, const char * directory = 0);
 
 } // namespace shmGraphRaw {
