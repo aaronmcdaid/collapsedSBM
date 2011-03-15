@@ -52,9 +52,10 @@ int main(int argc, char **argv) {
 	// PP(directoryForOutput);
 	PP(args_info.mmsb_flag);
 	PP(args_info.K_arg);
-	exit(0);
 
 	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName));
+	PP(g->numNodes());
+	PP(g->numRels());
 	exit(0);
 	if(args_info.mmsb_flag)
 		runMMSB(g.get(), commandLineK);
