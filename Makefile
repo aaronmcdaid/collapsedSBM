@@ -1,4 +1,4 @@
-.PHONY: gitstatus.txt help clean cmdline.c
+.PHONY: gitstatus.txt help clean
 BITS=
 #BITS=-m32
 #BITS=-m64
