@@ -43,6 +43,10 @@ struct gengetopt_args_info
   int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
   char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
   const char *K_help; /**< @brief Number of clusters, K help description.  */
+  int directed_flag;	/**< @brief directed (default=off).  */
+  const char *directed_help; /**< @brief directed help description.  */
+  int weighted_flag;	/**< @brief weighted (default=off).  */
+  const char *weighted_help; /**< @brief weighted help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -50,6 +54,8 @@ struct gengetopt_args_info
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
   unsigned int mmsb_given ;	/**< @brief Whether mmsb was given.  */
   unsigned int K_given ;	/**< @brief Whether K was given.  */
+  unsigned int directed_given ;	/**< @brief Whether directed was given.  */
+  unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

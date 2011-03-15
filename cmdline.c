@@ -34,6 +34,8 @@ const char *gengetopt_args_info_help[] = {
   "  -v, --verbose      detailed debugging  (default=off)",
   "  -m, --mmsb         Airoldi's MMSB  (default=off)",
   "  -K, --K=INT        Number of clusters, K  (default=`-1')",
+  "  -d, --directed     directed  (default=off)",
+  "  -w, --weighted     weighted  (default=off)",
     0
 };
 
@@ -64,6 +66,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->verbose_given = 0 ;
   args_info->mmsb_given = 0 ;
   args_info->K_given = 0 ;
+  args_info->directed_given = 0 ;
+  args_info->weighted_given = 0 ;
 }
 
 static
@@ -74,6 +78,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->mmsb_flag = 0;
   args_info->K_arg = -1;
   args_info->K_orig = NULL;
+  args_info->directed_flag = 0;
+  args_info->weighted_flag = 0;
   
 }
 
@@ -88,6 +94,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->verbose_help = gengetopt_args_info_help[3] ;
   args_info->mmsb_help = gengetopt_args_info_help[4] ;
   args_info->K_help = gengetopt_args_info_help[5] ;
+  args_info->directed_help = gengetopt_args_info_help[6] ;
+  args_info->weighted_help = gengetopt_args_info_help[7] ;
   
 }
 
@@ -216,6 +224,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "mmsb", 0, 0 );
   if (args_info->K_given)
     write_into_file(outfile, "K", args_info->K_orig, 0);
+  if (args_info->directed_given)
+    write_into_file(outfile, "directed", 0, 0 );
+  if (args_info->weighted_given)
+    write_into_file(outfile, "weighted", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -461,10 +473,12 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "verbose",	0, NULL, 'v' },
         { "mmsb",	0, NULL, 'm' },
         { "K",	1, NULL, 'K' },
+        { "directed",	0, NULL, 'd' },
+        { "weighted",	0, NULL, 'w' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvmK:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvmK:dw", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -508,6 +522,26 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
               &(local_args_info.K_given), optarg, 0, "-1", ARG_INT,
               check_ambiguity, override, 0, 0,
               "K", 'K',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'd':	/* directed.  */
+        
+        
+          if (update_arg((void *)&(args_info->directed_flag), 0, &(args_info->directed_given),
+              &(local_args_info.directed_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "directed", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'w':	/* weighted.  */
+        
+        
+          if (update_arg((void *)&(args_info->weighted_flag), 0, &(args_info->weighted_given),
+              &(local_args_info.weighted_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "weighted", 'w',
               additional_error))
             goto failure;
         

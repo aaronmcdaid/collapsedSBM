@@ -28,6 +28,19 @@ void runSBM(const sbm::GraphType *g, const int commandLineK);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 static
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > & edge_details) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std::pair<int,int> eps = g->EndPoints(rel);
+		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< endl;
+	}
+}
+static
 void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
@@ -57,25 +70,30 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	int commandLineK = -1; // be default, sample K. But the command line arg -k can be used to fix it.
-        // break; case 'k':
-		// commandLineK = atoi(optarg);
-
 	const char * edgeListFileName   = args_info.inputs[0];
 	// const char * directoryForOutput = args_info.inputs[1];
 	PP(edgeListFileName);
 	// PP(directoryForOutput);
 	PP(args_info.mmsb_flag);
 	PP(args_info.K_arg);
+	PP(args_info.directed_flag);
+	PP(args_info.weighted_flag);
 
-	shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > edge_details;
-	auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
-	dumpGraph(g.get(), edge_details);
+	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
+		dumpGraph(g.get(), edge_details);
+	}
+	if( args_info.directed_flag &&  args_info.weighted_flag) { // UNdir UNwei
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > edge_details;
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
+		dumpGraph(g.get(), edge_details);
+	}
 	exit(0);
-	if(args_info.mmsb_flag)
-		runMMSB(g.get(), commandLineK);
-	else
-		runSBM(g.get(), commandLineK);
+	// if(args_info.mmsb_flag)
+		// runMMSB(g.get(), commandLineK);
+	// else
+		// runSBM(g.get(), commandLineK);
 }
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
