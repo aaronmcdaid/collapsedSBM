@@ -601,7 +601,7 @@ void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 	s.P_zs_given_K();
 	cout << endl;
 
-	{
+	if(0) {
 		/* 18 3 4 5 7
 		 * 10 12 17 2 8
 		 * 1 11 13 14 6
@@ -625,6 +625,19 @@ void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 			}
 		}
 	}
+	// with SIMPLER_Z==0.5, pmf(GT) == 2271.4
+	// with SIMPLER_Z==2.0, pmf(GT) ==  536.319
+	if(1) { // random initialization
+		for(int w=0; w<s._N; w++) {
+			for(int v=0; v<s._N; v++) {
+				if(w!=v) {
+					const int randomID = drand48()*s._k;
+					if(randomID>0)
+						s.performMoveAndUpdateEdges(w,v,randomID);
+				}
+			}
+		}
+	}
 
 	s.P_zs_given_K();
 	cout << endl;
@@ -643,7 +656,7 @@ void runMMSB(const sbm::GraphType *g, const int commandLineK) {
 			assert(VERYCLOSE(pre+delta , post));
 			deltas += delta;
 		}
-		if(i%10000==0) {
+		if(i%1==0) {
 			PP(i);
 			s.P_zs_given_K();
 			PP(deltas);

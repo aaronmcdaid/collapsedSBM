@@ -1,5 +1,8 @@
 #include "aaron_utils.hpp"
 #include "mmsb_state.hpp"
+
+#define SIMPLER_Z 2
+#define SIMPLER_EDGES 2
 namespace sbm {
 	void PairCounts:: set(const int i, const int j, const int to) {
 		assert(to >= 0);
@@ -202,8 +205,9 @@ namespace sbm {
 				edges_bits += P_beta_binomial(pairs,edges);
 			}
 		}
-		PP3(log2facts , edges_bits, log2facts+edges_bits);
-		return log2facts + edges_bits;
+		PP3(          log2facts , edges_bits, log2facts+edges_bits);
+		PP3(SIMPLER_Z*log2facts , edges_bits, SIMPLER_Z*log2facts+SIMPLER_EDGES*edges_bits);
+		return SIMPLER_Z*log2facts + SIMPLER_EDGES*edges_bits;
 	}
 	long double MMSBstate:: moveOnePair(const int w,const int v,const int clid) const { // node w, when interacting with v, should take identity clid
 		const bool verbose = false;
@@ -269,7 +273,7 @@ namespace sbm {
 		// if(verbose)
 			PP (delta_P_z);
 		assert(isfinite(delta_P_z));
-		const long double delta = delta_P_z + delta_g_given_z;
+		const long double delta = SIMPLER_Z*delta_P_z + SIMPLER_EDGES*delta_g_given_z;
 		if(verbose) PP(delta);
 
 		return delta;
