@@ -31,8 +31,7 @@ namespace sbm {
 		// inform EdgeCounts of all the edges
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
 			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
-			if(eps.first == eps.second)
-				throw SelfLoopsNotSupported();
+			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			this->_edgeCounts.inform(cl1,cl2);
