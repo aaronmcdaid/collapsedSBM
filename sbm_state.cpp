@@ -308,16 +308,21 @@ namespace sbm {
 		assert(oldcl != newcl);
 		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
 		forEach(const int relId, amd::mk_range(rels)) {
-			const int otherEnd = this->_g->oppositeEndPoint(relId, n);
-			const int otherCl = this->labelling.cluster_id.at(otherEnd);
-			const bool lowToHigh = n == this->_g->EndPoints(relId).first;
-			if(lowToHigh) {
-				this->_edgeCounts.  inform(newcl, otherCl);
-				this->_edgeCounts.uninform(oldcl, otherCl);
-			} else {
-				this->_edgeCounts.  inform(otherCl, newcl);
-				this->_edgeCounts.uninform(otherCl, oldcl);
+			const pair<int,int> eps = this->_g->EndPoints(relId);
+			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);
+			const int sndClusterNew = this->labelling.cluster_id.at(eps.second);
+			int fstClusterOld = fstClusterNew;
+			if(n == eps.first) {
+				assert(fstClusterOld == newcl);
+				fstClusterOld = oldcl;
 			}
+			int sndClusterOld = sndClusterNew;
+			if(n == eps.second) {
+				assert(sndClusterOld == newcl);
+				sndClusterOld = oldcl;
+			}
+			this->_edgeCounts.uninform(fstClusterOld, sndClusterOld);
+			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew);
 		}
 	}
 	void State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
