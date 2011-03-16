@@ -450,7 +450,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
  */
 
 template <class T, class W>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, EdgeDetails<W> &edge_details, const char *directory = 0) {
+ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char *directory = 0) {
 	DumbGraphRaw<T> *nodes_and_rels_wrap = NULL;
 	if(T::isMapMem) {
 		assert(directory && strlen(directory)>0);
@@ -500,6 +500,9 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, EdgeDe
 					nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(l))
 					,nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(r))
 				);
+			if(! selfloops_allowed && edgeAsIds.first == edgeAsIds.second) {
+				throw shmGraphRaw:: SelfLoopsNotSupported();
+			}
 			int relId = nodes_and_rels_wrap->insertRel(edgeAsIds);
 
 			edge_details.new_rel(relId, edgeAsIds, weight);
@@ -516,12 +519,12 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, EdgeDe
 }
 
 template 
-ReadableShmGraphTemplate<MapMem>   * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
+ReadableShmGraphTemplate<MapMem>   * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<NoDetails> &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<NoDetails> &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
 
 } // namespace shmGraphRaw {

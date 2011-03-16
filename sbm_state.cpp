@@ -2,8 +2,6 @@
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;
 namespace sbm {
-	struct SelfLoopsNotSupported : public std::exception {
-	};
 	Labelling::Labelling(const int _N) : _N(_N), _k(1) {
 		this->SumOfLog2LOrders = log2l(this->_N);
 		this->SumOfLog2Facts   = LOG2FACT(this->_N);

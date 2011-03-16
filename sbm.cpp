@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
 			runSBM<true ,false,false>(g.get(), args_info.K_arg);
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { // UNdir UNwei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
 			runSBM<true ,true,true>(g.get(), args_info.K_arg);

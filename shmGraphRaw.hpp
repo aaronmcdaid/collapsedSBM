@@ -183,10 +183,12 @@ struct DirectedLDoubleWeights {
 };
 
 template<class T, class W>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char * graphTextFileName, EdgeDetails<W> &edge_details, const char * directory = NULL);
+ReadableShmGraphTemplate<T> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char * directory = NULL);
 
 //typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
 
+struct SelfLoopsNotSupported : public std::exception {
+};
 } // namespace shmGraphRaw 
 
 #endif 
