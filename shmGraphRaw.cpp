@@ -520,8 +520,8 @@ ReadableShmGraphTemplate<MapMem>   * loadEdgeList(const char *graphTextFileName,
 template 
 ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails<NoDetails> &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedIntegerWeights > &, const char * directory = 0);
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedIntegerWeights > &, const char * directory = 0);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
 
 } // namespace shmGraphRaw {

@@ -158,10 +158,10 @@ struct NoDetails { // unweighted, undirected
 		}
 	} datumT;
 };
-struct DirectedIntegerWeights {
-	typedef struct IntPair : public std:: pair<int,int> {
+struct DirectedLDoubleWeights {
+	typedef struct IntPair : public std:: pair<long double,long double> {
 		IntPair() {
-			this->first = this->second = 0;
+			this->first = this->second = 0.0L;
 		}
 		struct DuplicateWeightedEdge : public std::exception {
 		};
@@ -170,7 +170,7 @@ struct DirectedIntegerWeights {
 				throw DuplicateWeightedEdge();
 			}
 			std:: istringstream oss(weight);
-			int w = 0;
+			long double w = 0;
 			oss >> w;
 			assert(oss.peek() == EOF);
 			if(highToLow) {

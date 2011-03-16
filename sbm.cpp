@@ -41,7 +41,7 @@ void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, 
 	}
 }
 static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > & edge_details) {
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	for(int rel=0; rel<g->numRels(); rel++) {
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 		dumpGraph(g.get(), edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { // UNdir UNwei
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedIntegerWeights > edge_details;
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, edge_details));
 		dumpGraph(g.get(), edge_details);
 	}
