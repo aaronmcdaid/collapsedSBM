@@ -47,6 +47,8 @@ struct gengetopt_args_info
   const char *directed_help; /**< @brief directed help description.  */
   int weighted_flag;	/**< @brief weighted (default=off).  */
   const char *weighted_help; /**< @brief weighted help description.  */
+  int selfloop_flag;	/**< @brief selfloops allowed (default=off).  */
+  const char *selfloop_help; /**< @brief selfloops allowed help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -56,6 +58,7 @@ struct gengetopt_args_info
   unsigned int K_given ;	/**< @brief Whether K was given.  */
   unsigned int directed_given ;	/**< @brief Whether directed was given.  */
   unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
+  unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
