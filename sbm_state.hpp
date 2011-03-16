@@ -67,15 +67,14 @@ struct State {
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
-		typedef boost::unordered_map< int , boost::unordered_map<int,int> > map_type;
-		typedef boost::unordered_map< int , boost::unordered_map<int,int> >::value_type outer_value_type;
-		typedef                             boost::unordered_map<int,int>  ::value_type inner_value_type;
-		boost::unordered_map< int , boost::unordered_map<int,int> > counts;
+		typedef boost::unordered_map< std:: pair<int,int> , int > map_type;
 		void   inform(const int cl1, const int cl2) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2) ; // UNinform us of an edge between cl1 and cl2
 		int       get(const int cl1, const int cl2) const throw() ;
 		private:
-		void partialUnInform(const int cl1, const int cl2);
+		// friend void State:: summarizeEdgeCounts() const;
+		friend void State:: internalCheck() const;
+		map_type counts;
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 	void moveNodeAndInformOfEdges(const int n, const int newcl);

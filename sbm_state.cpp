@@ -157,6 +157,7 @@ namespace sbm {
 	}
 
 	void State:: summarizeEdgeCounts() const {
+#if 0
 		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
 			assert(outer.first >= 0 && outer.first < this->_k);
 			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
@@ -165,6 +166,7 @@ namespace sbm {
 				assert(inner.second >  0);
 			}
 		}
+#endif
 	}
 	void State:: blockDetail() const {
 			cout << "    | ";
@@ -239,27 +241,20 @@ namespace sbm {
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2);
 		}
-		DYINGWORDS(edgeCountsVerification.counts.size() == this->_edgeCounts.counts.size()) {
-			PP(edgeCountsVerification.counts.size());
-			PP(this->_edgeCounts.counts.size());
-		}
-		assert(edgeCountsVerification.counts.size() == this->_edgeCounts.counts.size());
-
-		int numEdgeEnds = 0; // should end up at twice g->numRels() // assuming no self-loops of course
-		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
-			assert(outer.first >= 0 && outer.first < this->_k);
-			const EdgeCounts::outer_value_type::second_type & outerVerification = edgeCountsVerification.counts.at(outer.first);
-			assert(outerVerification.size() == outer.second.size());
-			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
-				assert(inner.first >= 0 && inner.first < this->_k);
-				assert(inner.second > 0);
-				assert(inner.second == outerVerification.at(inner.first));
-				numEdgeEnds += inner.second;
-				if(outer.first == inner.first) // we should double count those inside a cluster during this verification process
-					numEdgeEnds += inner.second;
+		int numRelsVerification = 0; // should end up at twice g->numRels() // assuming no self-loops of course
+		forEach(const typeof(pair< pair<int,int> , int>) &x, amd::mk_range(this->_edgeCounts.counts)) {
+			numRelsVerification += x.second;
+			if(x.second == 0) {
+				// we can ignore this
+			} else {
+				assert(x.second > 0);
+				assert(edgeCountsVerification.counts.count(x.first)==1);
+				assert(edgeCountsVerification.counts.at(x.first)==x.second);
+				edgeCountsVerification.counts.erase(x.first);
 			}
 		}
-		assert(numEdgeEnds == 2*this->_g->numRels());
+		assert(edgeCountsVerification.counts.size()==0);
+		assert(numRelsVerification == this->_g->numRels());
 
 		assert(VERYCLOSE(this->pmf() , this->pmf_slow()));
 
@@ -289,42 +284,40 @@ namespace sbm {
 	void State::EdgeCounts::inform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
-		this->counts[cl1][cl2]++;
-		if(cl1 != cl2)
-			this->counts[cl2][cl1]++;
-	}
-	void State::EdgeCounts::partialUnInform(const int clA, const int clB) { // private to EdgeCounts
-		EdgeCounts::outer_value_type::second_type & edgeMapForOneCluster = this->counts.at(clA);
-		EdgeCounts::outer_value_type::second_type::iterator aSingleEntry = edgeMapForOneCluster.find(clB);
-		assert(edgeMapForOneCluster.at(clB) == aSingleEntry->second);
-		aSingleEntry->second --;
-		assert(edgeMapForOneCluster.at(clB) == aSingleEntry->second);
-		if(aSingleEntry->second == 0)
-			edgeMapForOneCluster.erase(aSingleEntry);
-		if(edgeMapForOneCluster.size()==0)
-			this->counts.erase(clA);
+		this->counts[make_pair(cl1,cl2)]++;
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
-		this->partialUnInform(cl1,cl2);
-		if(cl1 != cl2)
-			this->partialUnInform(cl2,cl1);
-	}
-	int  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
-		try {
-			return this->counts.at(cl1).at(cl2);
-		} catch (const std::out_of_range &e) {
-			return 0;
+		this->counts[make_pair(cl1,cl2)]--;
+		DYINGWORDS(this->counts[make_pair(cl1,cl2)] >= 0) {
+			PP2(cl1,cl2);
 		}
 	}
+	int  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
+		int lowToHigh;
+		int highToLow;
+		try { lowToHigh = this->counts.at(make_pair(cl1,cl2)); } catch (const std::out_of_range &e) { lowToHigh = 0; }
+		try { highToLow = this->counts.at(make_pair(cl2,cl1)); } catch (const std::out_of_range &e) { highToLow = 0; }
+		if(cl1==cl2)
+			return lowToHigh;
+		else
+			return lowToHigh + highToLow;
+	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+		assert(oldcl != newcl);
 		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
 		forEach(const int relId, amd::mk_range(rels)) {
 			const int otherEnd = this->_g->oppositeEndPoint(relId, n);
 			const int otherCl = this->labelling.cluster_id.at(otherEnd);
-			this->_edgeCounts.uninform(otherCl, oldcl);
-			this->_edgeCounts.  inform(otherCl, newcl);
+			const bool lowToHigh = n == this->_g->EndPoints(relId).first;
+			if(lowToHigh) {
+				this->_edgeCounts.  inform(newcl, otherCl);
+				this->_edgeCounts.uninform(oldcl, otherCl);
+			} else {
+				this->_edgeCounts.  inform(otherCl, newcl);
+				this->_edgeCounts.uninform(otherCl, oldcl);
+			}
 		}
 	}
 	void State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
