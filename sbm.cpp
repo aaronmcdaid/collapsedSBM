@@ -173,6 +173,7 @@ long double MoneNode(sbm::State &s) {
 		return 0.0L;
 	}
 }
+#if 0
 struct OneChoice {
 	const long double delta2;
 	const long double delta3;
@@ -521,6 +522,7 @@ void M3(sbm::State &s) {
 	}
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
+#endif
 void MetropolisOnK(sbm::State &s) {
 	// const long double prePMF = s.pmf();
 	const long double prePMF12 = s.P_z_K();

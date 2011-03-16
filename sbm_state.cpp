@@ -412,97 +412,10 @@ namespace sbm {
 	}
 	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow();
-		const long double fast = this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
-		DYINGWORDS(VERYCLOSE(slow,fast));
 		return assertNonPositiveFinite(slow);
 	}
 	struct BaseLineNotCorrectException {
 	};
-	long double State:: P_edges_given_z_baseline() const {
-		return this->P_edges_given_z_slow() - this->P_edges_given_z_correction();
-		throw BaseLineNotCorrectException();
-		// cout << "     P_edges_given_z_baseline()" << endl;
-		//
-		// offDiagonal isn't really used here, it's just to check again SumOfLog2LOrders (which is meant to be a 'cached' version thereof
-		// 
-		// By understanding SumOfLog2LOrders and onDiagonal, one can easily calculate the change in P_edges_given_z_baseline given a change in nodes
-		
-		long double offDiagonal = 0.0L;
-		long double  onDiagonal = 0.0L;
-		forEach(const Cluster * cl, amd::mk_range(this->labelling.clusters)) {
-			const int order = cl->order();
-			switch(order){
-				break;  case 0: // nothing to do, but rememember that empty clusters are weird in here
-				break;  case 1:
-				break;  default:
-					assert(order >= 2 );
-					offDiagonal += (this->labelling.NonEmptyClusters-1) * log2l(order);
-					onDiagonal +=  log2l((order * order - order)/2);
-					// PP(offDiagonal);
-			}
-		}
-		DYINGWORDS(VERYCLOSE( onDiagonal , this->labelling.SumOfLog2LOrderForInternal)) {
-			PP2(onDiagonal , this->labelling.SumOfLog2LOrderForInternal);
-		}
-		DYINGWORDS(VERYCLOSE(offDiagonal , this->labelling.SumOfLog2LOrders * (this->labelling.NonEmptyClusters-1))) {
-			PP(this->labelling.SumOfLog2LOrders);
-			PP(offDiagonal);
-			PP(this->labelling.NonEmptyClusters);
-			PP(this->labelling.SumOfLog2LOrders * (this->labelling.NonEmptyClusters-1) );
-			PP(this->labelling.SumOfLog2LOrders * (this->labelling.NonEmptyClusters-1) - offDiagonal);
-		}
-		// cout << "    ~P_edges_given_z_baseline()" << endl;
-		
-		long double answer = -(this->labelling.SumOfLog2LOrders*(this->labelling.NonEmptyClusters-1)) - this->labelling.SumOfLog2LOrderForInternal;
-		if(VERYCLOSE(answer,0.0L))
-			answer = 0.0L; // for large k, this might go slightly positive. Hence, I'll bring it back down again.
-		DYINGWORDS(answer<=0.0L) {
-			this->summarizeEdgeCounts(); this->blockDetail();
-			PP(answer);
-			PP(this->_k);
-			// this->shortSummary(); // this'd lead to a recursive assert failure I think
-		}
-		return assertNonPositiveFinite( answer );
-	}
-	long double State:: P_edges_given_z_correction() const {
-		long double correction = 0.0L;
-		for(EdgeCounts::map_type::const_iterator outer = this->_edgeCounts.counts.begin(); outer != this->_edgeCounts.counts.end(); outer++)
-		//forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts))
-		{
-			assert(outer->first >= 0 && outer->first < this->_k);
-			//forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer->second))
-			for (EdgeCounts::map_type::mapped_type::const_iterator inner = outer->second.begin(); inner != outer->second.end(); inner++)
-			{
-				if(inner->first <= outer->first) {
-					const int edges = inner->second;
-					const int order1 = this->labelling.clusters.at(outer->first)->order();
-					const int order2 = this->labelling.clusters.at(inner->first)->order();
-					const int pairs = (inner->first == outer->first) ? ((order1 * (order1-1))/2) : (order1 * order2);
-					correction -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
-					// PP2(order1,order2);
-					// PP2(pairs,edges);
-				}
-			}
-		}
-		return assertNonPositiveFinite(correction);
-	}
-	long double State:: P_edges_given_z_correction_JustOneCluster(const int clusterID) const {
-		long double correction = 0.0L;
-		if(this->_edgeCounts.counts.count(clusterID)) {
-			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(this->_edgeCounts.counts.at(clusterID))) {
-					const int edges = inner.second;
-					const int order1 = this->labelling.clusters.at(clusterID)->order();
-					const int order2 = this->labelling.clusters.at(inner.first)->order();
-					const int pairs = (inner.first == clusterID) ? ((order1 * (order1-1))/2) : (order1 * order2);
-					assert(edges > 0);
-					assert(edges <= pairs);
-					correction -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
-					// PP2(order1,order2);
-					// PP2(pairs,edges);
-			}
-		}
-		return assertNonPositiveFinite(correction);
-	}
 	long double State:: pmf_slow() const {
 		return assertNonPositiveFinite( this->P_edges_given_z_slow() + this->P_z_slow() );
 	}
