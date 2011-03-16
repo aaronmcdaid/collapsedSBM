@@ -474,6 +474,7 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const 
 		nodes_and_rels_wrap = new DumbGraphRaw<T>("");
 	}
 	assert(nodes_and_rels_wrap);
+	nodes_and_rels_wrap->hasASelfLoop = false; // this will be changed if/when a self loop is found
 
 		// PP(nodes_and_rels_wrap->strings_wrap->size());
 
@@ -500,8 +501,10 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const 
 					nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(l))
 					,nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(r))
 				);
-			if(! selfloops_allowed && edgeAsIds.first == edgeAsIds.second) {
-				throw shmGraphRaw:: SelfLoopsNotSupported();
+			if(edgeAsIds.first == edgeAsIds.second) {
+				nodes_and_rels_wrap->hasASelfLoop = true;
+				if(! selfloops_allowed)
+					throw shmGraphRaw:: SelfLoopsNotSupported();
 			}
 			int relId = nodes_and_rels_wrap->insertRel(edgeAsIds);
 

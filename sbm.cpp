@@ -32,6 +32,7 @@ static
 void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
+	PP(g->hasASelfLoop);
 	for(int rel=0; rel<g->numRels(); rel++) {
 		std::pair<int,int> eps = g->EndPoints(rel);
 		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
@@ -45,6 +46,7 @@ static
 void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
+	PP(g->hasASelfLoop);
 	for(int rel=0; rel<g->numRels(); rel++) {
 		std::pair<int,int> eps = g->EndPoints(rel);
 		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);

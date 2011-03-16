@@ -103,6 +103,7 @@ public:
 
 class ReadableShmGraphBase {
 public:
+	bool hasASelfLoop;
 	virtual ~ReadableShmGraphBase();
 	virtual int numNodes() const = 0;
 	virtual int numRels() const = 0;
