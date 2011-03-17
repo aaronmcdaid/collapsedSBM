@@ -24,7 +24,7 @@ namespace sbm {
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
 	}
-	State::State(const GraphType * const g) : _g(g), _N(g->numNodes()), labelling(this->_N) {
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), labelling(this->_N) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 

@@ -25,7 +25,7 @@ struct UsageMessage {
 };
 
 template<bool selfloops, bool directed, bool weighted>
-void runSBM(const sbm::GraphType *g, const int commandLineK);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 static
@@ -118,36 +118,36 @@ int main(int argc, char **argv) {
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
-			runSBM<true ,false,false>(g.get(), args_info.K_arg);
+			runSBM<true ,false,false>(g.get(), args_info.K_arg, &edge_details);
 		else
-			runSBM<false,false,false>(g.get(), args_info.K_arg);
+			runSBM<false,false,false>(g.get(), args_info.K_arg, &edge_details);
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
-			runSBM<true ,true,false>(g.get(), args_info.K_arg);
+			runSBM<true ,true,false>(g.get(), args_info.K_arg, &edge_details);
 		else
-			runSBM<false,true,false>(g.get(), args_info.K_arg);
+			runSBM<false,true,false>(g.get(), args_info.K_arg, &edge_details);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
-			runSBM<true ,false,true>(g.get(), args_info.K_arg);
+			runSBM<true ,false,true>(g.get(), args_info.K_arg, &edge_details);
 		else
-			runSBM<false,false,true>(g.get(), args_info.K_arg);
+			runSBM<false,false,true>(g.get(), args_info.K_arg, &edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
 		if(args_info.selfloop_flag)
-			runSBM<true ,true,true>(g.get(), args_info.K_arg);
+			runSBM<true ,true,true>(g.get(), args_info.K_arg, &edge_details);
 		else
-			runSBM<false,true,true>(g.get(), args_info.K_arg);
+			runSBM<false,true,true>(g.get(), args_info.K_arg, &edge_details);
 	}
 	exit(0);
 	// if(args_info.mmsb_flag)
@@ -623,8 +623,8 @@ void MetropolisOnK(sbm::State &s) {
 }
 
 template<bool selfloops, bool directed, bool weighted>
-void runSBM(const sbm::GraphType *g, const int commandLineK) {
-	sbm::State s(g);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details) {
+	sbm::State s(g, edge_details);
 
 	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
