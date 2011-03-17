@@ -496,6 +496,9 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const 
 			
 			fields.popFront();
 			std::string weight = fields.front();
+			if(weight.length()>0 && *weight.rbegin() == '\r') {
+				weight.resize(weight.length()-1);
+			}
 
 			pair<int,int> edgeAsIds = make_pair(
 					nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(l))
