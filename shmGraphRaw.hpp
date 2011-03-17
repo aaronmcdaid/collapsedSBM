@@ -139,8 +139,12 @@ public:
 	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
 };
 
+struct EdgeDetailsInterface {
+	virtual long double getl2h(const int relId) = 0;
+	virtual long double geth2l(const int relId) = 0;
+};
 template <class W>
-struct EdgeDetails {
+struct EdgeDetails : public EdgeDetailsInterface {
 	std:: vector < typename W::datumT > dw; // the directions and weights of all the edges
 	int size() const {
 		return this->dw.size();
@@ -152,16 +156,28 @@ struct EdgeDetails {
 		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
 		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
 	}
+	virtual long double getl2h(const int relId) { // this returns the value in the undirected case, and it handles self loops
+		return this->dw.at(relId).getl2h();
+	}
+	virtual long double geth2l(const int relId) { // this is only relevant in directed graphs.
+		return this->dw.at(relId).geth2l();
+	}
 };
 struct NoDetails { // unweighted, undirected
 	typedef struct nil {
 		void inform(const bool, const std::string) const {
 		}
+		long double getl2h() const {
+			return 1.0L;
+		}
+		long double geth2l() const {
+			return 0.0L;
+		}
 	} datumT;
 };
 struct DirectedLDoubleWeights {
-	typedef struct IntPair : public std:: pair<long double,long double> {
-		IntPair() {
+	typedef struct LdblPair : public std:: pair<long double,long double> {
+		LdblPair() {
 			this->first = this->second = 0.0L;
 		}
 		struct DuplicateWeightedEdge : public std::exception {
@@ -172,6 +188,7 @@ struct DirectedLDoubleWeights {
 			}
 			std:: istringstream oss(weight);
 			long double w = 0;
+			assert(oss.peek() != EOF);
 			oss >> w;
 			assert(oss.peek() == EOF);
 			if(highToLow) {
@@ -179,6 +196,59 @@ struct DirectedLDoubleWeights {
 			} else {
 				this->first = w;
 			}
+		}
+		long double getl2h() const {
+			return this->first;
+		}
+		long double geth2l() const {
+			return this->second;
+		}
+	} datumT; // the type needed to store the weights in each direction.
+};
+struct DirectedNoWeights {
+	typedef struct IntPair : public std:: pair<int,int> {
+		IntPair() {
+			this->first = this->second = 0;
+		}
+		void inform(const bool highToLow, const std::string) { // the weight string might be empty. I suppose we let that default to 0
+			if(highToLow) {
+				this->second = 1;
+			} else {
+				this->first = 1;
+			}
+		}
+		long double getl2h() const {
+			return this->first;
+		}
+		long double geth2l() const {
+			return this->second;
+		}
+	} datumT; // the type needed to store the weights in each direction.
+};
+struct WeightNoDir {
+	typedef struct LdblPair {
+		long double weight;
+		LdblPair() {
+			this->weight = 0.0L;
+		}
+		struct DuplicateWeightedEdge : public std::exception {
+		};
+		void inform(const bool , const std::string weight) { // the weight string might be empty. I suppose we let that default to 0
+			if( this->weight != 0) {
+				throw DuplicateWeightedEdge();
+			}
+			std:: istringstream oss(weight);
+			long double w = 0;
+			assert(oss.peek() != EOF);
+			oss >> w;
+			assert(oss.peek() == EOF);
+			this->weight = w;
+		}
+		long double getl2h() const {
+			return this->weight;
+		}
+		long double geth2l() const {
+			return 0.0L;
 		}
 	} datumT; // the type needed to store the weights in each direction.
 };

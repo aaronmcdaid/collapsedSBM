@@ -532,5 +532,13 @@ template
 ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
 template 
 ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedNoWeights > &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedNoWeights > &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<MapMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< WeightNoDir > &, const char * directory = 0);
+template 
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< WeightNoDir > &, const char * directory = 0);
 
 } // namespace shmGraphRaw {

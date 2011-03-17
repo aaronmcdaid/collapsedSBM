@@ -57,6 +57,36 @@ void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, 
 			<< endl;
 	}
 }
+static
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > & edge_details) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	PP(g->hasASelfLoop);
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std::pair<int,int> eps = g->EndPoints(rel);
+		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
+			<< endl;
+	}
+}
+static
+void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > & edge_details) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	PP(g->hasASelfLoop);
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std::pair<int,int> eps = g->EndPoints(rel);
+		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< '\t' << edge_details.dw.at(rel).weight
+			<< endl;
+	}
+}
 
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
@@ -92,7 +122,25 @@ int main(int argc, char **argv) {
 		else
 			runSBM<false,false,false>(g.get(), args_info.K_arg);
 	}
-	if( args_info.directed_flag &&  args_info.weighted_flag) { // UNdir UNwei
+	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > edge_details;
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
+		dumpGraph(g.get(), edge_details);
+		if(args_info.selfloop_flag)
+			runSBM<true ,true,false>(g.get(), args_info.K_arg);
+		else
+			runSBM<false,true,false>(g.get(), args_info.K_arg);
+	}
+	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > edge_details;
+		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
+		dumpGraph(g.get(), edge_details);
+		if(args_info.selfloop_flag)
+			runSBM<true ,false,true>(g.get(), args_info.K_arg);
+		else
+			runSBM<false,false,true>(g.get(), args_info.K_arg);
+	}
+	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
