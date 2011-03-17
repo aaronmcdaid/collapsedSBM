@@ -75,7 +75,7 @@ struct State {
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
 		long double get(const int cl1, const int cl2) const throw() ;
 		private:
-		// friend void State:: summarizeEdgeCounts() const;
+		friend void State:: summarizeEdgeCounts() const;
 		friend void State:: internalCheck() const;
 		map_type counts;
 	};

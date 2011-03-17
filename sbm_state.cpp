@@ -157,16 +157,14 @@ namespace sbm {
 	}
 
 	void State:: summarizeEdgeCounts() const {
-#if 0
-		forEach(const EdgeCounts::outer_value_type & outer, amd::mk_range(this->_edgeCounts.counts)) {
-			assert(outer.first >= 0 && outer.first < this->_k);
-			forEach(const EdgeCounts::inner_value_type & inner, amd::mk_range(outer.second)) {
-				cout << " edges " << outer.first << ',' << inner.first << '\t' << inner.second << endl;
-				assert(inner.first >= 0 && inner.first < this->_k);
-				assert(inner.second >  0);
+		forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
+			if(x.second != 0.0L) {
+				cout << x.first.first
+					<< ',' << x.first.second
+					<< '\t' << x.second
+					<< endl ;
 			}
 		}
-#endif
 	}
 	void State:: blockDetail() const {
 			cout << "    | ";
