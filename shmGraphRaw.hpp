@@ -140,8 +140,8 @@ public:
 };
 
 struct EdgeDetailsInterface {
-	virtual long double getl2h(const int relId) = 0;
-	virtual long double geth2l(const int relId) = 0;
+	virtual long double getl2h(const int relId) const = 0;
+	virtual long double geth2l(const int relId) const = 0;
 };
 template <class W>
 struct EdgeDetails : public EdgeDetailsInterface {
@@ -156,10 +156,10 @@ struct EdgeDetails : public EdgeDetailsInterface {
 		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
 		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
 	}
-	virtual long double getl2h(const int relId) { // this returns the value in the undirected case, and it handles self loops
+	virtual long double getl2h(const int relId) const { // this returns the value in the undirected case, and it handles self loops
 		return this->dw.at(relId).getl2h();
 	}
-	virtual long double geth2l(const int relId) { // this is only relevant in directed graphs.
+	virtual long double geth2l(const int relId) const { // this is only relevant in directed graphs.
 		return this->dw.at(relId).geth2l();
 	}
 };
