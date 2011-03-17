@@ -24,7 +24,7 @@ namespace sbm {
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
 	}
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), labelling(this->_N) {
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), labelling(this->_N), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -34,7 +34,7 @@ namespace sbm {
 			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
-			this->_edgeCounts.inform(cl1,cl2);
+			this->_edgeCounts.inform(cl1,cl2, relId);
 		}
 
 		// to ensure the nodes are dealt with in the order of their integer node name
@@ -234,16 +234,14 @@ namespace sbm {
 		this->labelling.SumOfLog2LOrderForInternal = sumVerifyInternal;
 		assert((int)alreadyConsidered.size() == this->_N);
 
-		EdgeCounts edgeCountsVerification;
+		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
 			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
-			edgeCountsVerification.inform(cl1,cl2);
+			edgeCountsVerification.inform(cl1,cl2,relId);
 		}
-		int numRelsVerification = 0; // should end up at twice g->numRels() // assuming no self-loops of course
-		forEach(const typeof(pair< pair<int,int> , int>) &x, amd::mk_range(this->_edgeCounts.counts)) {
-			numRelsVerification += x.second;
+		forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
 			if(x.second == 0) {
 				// we can ignore this
 			} else {
@@ -253,8 +251,10 @@ namespace sbm {
 				edgeCountsVerification.counts.erase(x.first);
 			}
 		}
-		assert(edgeCountsVerification.counts.size()==0);
-		assert(numRelsVerification == this->_g->numRels());
+		forEach(const State :: EdgeCounts :: map_type :: value_type &x, amd::mk_range(edgeCountsVerification.counts)) {
+			assert(x.second == 0.0L);
+		}
+		//assert(edgeCountsVerification.counts.size()==0);
 
 		assert(VERYCLOSE(this->pmf() , this->pmf_slow()));
 
@@ -281,24 +281,34 @@ namespace sbm {
 	}
 
 
-	void State::EdgeCounts::inform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
-		assert(cl1 >= 0); // && cl1 < this->_k);
-		assert(cl2 >= 0); // && cl2 < this->_k);
-		this->counts[make_pair(cl1,cl2)]++;
+	State:: EdgeCounts:: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details) {
 	}
-	void State::EdgeCounts::uninform(const int cl1, const int cl2) { // inform us of an edge between cl1 and cl2
+	void State::EdgeCounts::inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
-		this->counts[make_pair(cl1,cl2)]--;
+		long double l2h = this->_edge_details->getl2h(relId);
+		long double h2l = this->_edge_details->geth2l(relId);
+		this->counts[make_pair(cl1,cl2)]+=l2h;
+		this->counts[make_pair(cl2,cl1)]+=h2l;
+		// this->counts[make_pair(cl1,cl2)]++;
+	}
+	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
+		assert(cl1 >= 0); // && cl1 < this->_k);
+		assert(cl2 >= 0); // && cl2 < this->_k);
+		long double l2h = this->_edge_details->getl2h(relId);
+		long double h2l = this->_edge_details->geth2l(relId);
+		this->counts[make_pair(cl1,cl2)]-=l2h;
+		this->counts[make_pair(cl2,cl1)]-=h2l;
+		// this->counts[make_pair(cl1,cl2)]--;
 		DYINGWORDS(this->counts[make_pair(cl1,cl2)] >= 0) {
 			PP2(cl1,cl2);
 		}
 	}
-	int  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
-		int lowToHigh;
-		int highToLow;
-		try { lowToHigh = this->counts.at(make_pair(cl1,cl2)); } catch (const std::out_of_range &e) { lowToHigh = 0; }
-		try { highToLow = this->counts.at(make_pair(cl2,cl1)); } catch (const std::out_of_range &e) { highToLow = 0; }
+	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
+		long double lowToHigh;
+		long double highToLow;
+		try { lowToHigh = this->counts.at(make_pair(cl1,cl2)); } catch (const std::out_of_range &e) { lowToHigh = 0.0L; }
+		try { highToLow = this->counts.at(make_pair(cl2,cl1)); } catch (const std::out_of_range &e) { highToLow = 0.0L; }
 		if(cl1==cl2)
 			return lowToHigh;
 		else
@@ -321,8 +331,8 @@ namespace sbm {
 				assert(sndClusterOld == newcl);
 				sndClusterOld = oldcl;
 			}
-			this->_edgeCounts.uninform(fstClusterOld, sndClusterOld);
-			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew);
+			this->_edgeCounts.uninform(fstClusterOld, sndClusterOld, relId);
+			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew, relId);
 		}
 	}
 	void State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
