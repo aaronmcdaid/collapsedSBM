@@ -29,12 +29,14 @@ namespace sbm {
 		this->_k = 1;
 
 		// inform EdgeCounts of all the edges
+		this->total_edge_weight = 0.0L;
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
 			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
 			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			this->_edgeCounts.inform(cl1,cl2, relId);
+			this->total_edge_weight += edge_details->getl2h(relId) + edge_details->geth2l(relId);
 		}
 
 		// to ensure the nodes are dealt with in the order of their integer node name
@@ -304,13 +306,8 @@ namespace sbm {
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
 		long double lowToHigh;
-		long double highToLow;
 		try { lowToHigh = this->counts.at(make_pair(cl1,cl2)); } catch (const std::out_of_range &e) { lowToHigh = 0.0L; }
-		try { highToLow = this->counts.at(make_pair(cl2,cl1)); } catch (const std::out_of_range &e) { highToLow = 0.0L; }
-		if(cl1==cl2)
-			return lowToHigh;
-		else
-			return lowToHigh + highToLow;
+		return lowToHigh;
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
@@ -372,15 +369,22 @@ namespace sbm {
 		long double edges_bits_no_edges = 0.0L;
 		long double edges_bits = 0.0L;
 		int pairsEncountered = 0;
+		long double total_edge_weight_verification = 0.0L;
 		for(int i=0; i<this->_k; i++) {
 			const Cluster *I = this->labelling.clusters.at(i);
 			assert(I);
-			for(int j=0; j<=i; j++) {
+			for(int j=0; j<this->_k; j++) {
+				if(!obj->directed && j > i) {
+					break;
+				}
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
 				const int ni = I->order();
 				const int nj = J->order();
-				const int edges = this->_edgeCounts.get(i,j);
+				const long double edges = this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
+				total_edge_weight_verification += edges;
+				PP2(i,j);
+				PP2(ni,nj);
 				/*
 				cout << ni << " x " << nj;
 				if(i==j)
@@ -389,7 +393,8 @@ namespace sbm {
 					<< edges << " edges."
 					<< endl;
 					*/
-				const int pairs = (i==j) ? (ni * (nj-1) / 2) : (ni*nj);
+				const int pairs = (i==j) ? (ni * (nj + (obj->selfloops?1:-1) ) / 2) : (ni*nj); // if i==j, then ni==nj
+				PP2(edges, pairs);
 				assert(edges <= pairs);
 				// PP2(pairs,edges);
 				if(pairs > 0) {
@@ -401,7 +406,12 @@ namespace sbm {
 				// PP(edges_bits);
 			}
 		}
-		assert(pairsEncountered == this->_N * (this->_N-1) / 2);
+		PP2(pairsEncountered , this->_N * (this->_N-1) / 2);
+		assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
+			PP2(total_edge_weight_verification , this->total_edge_weight);
+			PP (total_edge_weight_verification - this->total_edge_weight);
+		}
 		/*
 		DYINGWORDS(VERYCLOSE(edges_bits, this->P_edges_given_z_baseline() + this->P_edges_given_z_correction())) {
 			cout << endl << "DYINGWORDS:" << __LINE__ << endl;

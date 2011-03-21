@@ -51,6 +51,7 @@ struct ObjectiveFunction {
 struct State {
 	const GraphType * const _g; // the graph
 	const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
+	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 
