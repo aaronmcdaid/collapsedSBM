@@ -41,6 +41,13 @@ struct Labelling {
 	int moveNode(const int n, const int newClusterID);
 };
 
+struct ObjectiveFunction {
+	const bool selfloops;
+	const bool directed;
+	const bool weighted;
+	ObjectiveFunction(const bool s, const bool d, const bool w) : selfloops(s), directed(d), weighted(w) {}
+};
+
 struct State {
 	const GraphType * const _g; // the graph
 	const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
@@ -62,7 +69,7 @@ struct State {
 	void internalCheck() const;
 
 	// summaries
-	void shortSummary() const;
+	void shortSummary(ObjectiveFunction *obj) const;
 	void summarizeEdgeCounts() const ;
 	void blockDetail() const ;
 
@@ -93,11 +100,11 @@ struct State {
 	long double P_z_orders() const; // 2.
 	long double P_z_slow() const;
 
-	long double P_edges_given_z_slow() const;
-	long double P_edges_given_z() const;
+	long double P_edges_given_z_slow(ObjectiveFunction *obj) const;
+	long double P_edges_given_z(ObjectiveFunction *obj) const;
 
-	long double pmf_slow() const;
-	long double pmf() const;
+	long double pmf_slow(ObjectiveFunction *obj) const;
+	long double pmf(ObjectiveFunction *obj) const;
 };
 	long double assertNonPositiveFinite(const long double x);
 

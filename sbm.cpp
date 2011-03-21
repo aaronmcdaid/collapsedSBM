@@ -24,8 +24,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-template<bool selfloops, bool directed, bool weighted>
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 static
@@ -113,41 +112,30 @@ int main(int argc, char **argv) {
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
 
+	sbm:: ObjectiveFunction obj(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		if(args_info.selfloop_flag)
-			runSBM<true ,false,false>(g.get(), args_info.K_arg, &edge_details);
-		else
-			runSBM<false,false,false>(g.get(), args_info.K_arg, &edge_details);
+		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		if(args_info.selfloop_flag)
-			runSBM<true ,true,false>(g.get(), args_info.K_arg, &edge_details);
-		else
-			runSBM<false,true,false>(g.get(), args_info.K_arg, &edge_details);
+		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		if(args_info.selfloop_flag)
-			runSBM<true ,false,true>(g.get(), args_info.K_arg, &edge_details);
-		else
-			runSBM<false,false,true>(g.get(), args_info.K_arg, &edge_details);
+		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		if(args_info.selfloop_flag)
-			runSBM<true ,true,true>(g.get(), args_info.K_arg, &edge_details);
-		else
-			runSBM<false,true,true>(g.get(), args_info.K_arg, &edge_details);
+		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
 	}
 	exit(0);
 	// if(args_info.mmsb_flag)
@@ -191,11 +179,12 @@ bool acceptTest(const long double delta) {
 		return false;
 }
 
-long double MoneNode(sbm::State &s) {
+static
+long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
-	const long double pre = s.pmf();
+	const long double pre = s.pmf(obj);
 	const int n = drand48() * s._N;
 	const int oldClusterID = s.labelling.cluster_id.at(n);
 	int newClusterID;
@@ -207,7 +196,7 @@ long double MoneNode(sbm::State &s) {
 	// PP(newClusterID);
 	s.moveNode(n, newClusterID);
 	s.informNodeMove(n, oldClusterID, newClusterID);
-	const long double post = s.pmf();
+	const long double post = s.pmf(obj);
 	const long double delta = post - pre;
 	// PP(pre);
 	// PP(post);
@@ -219,7 +208,7 @@ long double MoneNode(sbm::State &s) {
 		// cout << "   ";
 		s.moveNode(n, oldClusterID);
 		s.informNodeMove(n, newClusterID, oldClusterID);
-		// assert(VERYCLOSE(s.pmf(), pre)); // make sure it has undone it properly
+		// assert(VERYCLOSE(s.pmf(obj), pre)); // make sure it has undone it properly
 		return 0.0L;
 	}
 }
@@ -622,11 +611,10 @@ void MetropolisOnK(sbm::State &s) {
 	}
 }
 
-template<bool selfloops, bool directed, bool weighted>
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details) {
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj) {
 	sbm::State s(g, edge_details);
 
-	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
 
 	/*
@@ -642,13 +630,13 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		randomize(s, commandLineK);
 	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
 
-	PP(s.pmf());
+	PP(s.pmf(obj));
 
 	for(int i=1; i<=400000000; i++) {
 		if(commandLineK == -1)
 			MetropolisOnK(s);
 		// PP(i);
-		MoneNode(s);
+		MoneNode(s, obj);
 		// if(i%50 == 0)
 			// M3(s);
 	
@@ -658,11 +646,11 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
-			s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
 			cout << " end of check at i==" << i << endl;
 		}
 	}
-	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
 	s.internalCheck();
 }
 

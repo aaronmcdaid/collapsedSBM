@@ -254,14 +254,14 @@ namespace sbm {
 		}
 		//assert(edgeCountsVerification.counts.size()==0);
 
-		assert(VERYCLOSE(this->pmf() , this->pmf_slow()));
+		// assert(VERYCLOSE(this->pmf(obj) , this->pmf_slow(obj)));
 
 	}
 
-	void State:: shortSummary() const {
+	void State:: shortSummary(ObjectiveFunction *obj) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
-		PP(this->pmf());
+		PP(this->pmf(obj));
 		forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
 		// for(int n=0; n<this->_N;n++)
 		{
@@ -368,7 +368,7 @@ namespace sbm {
 	}
 
 	
-	long double State:: P_edges_given_z_slow() const {
+	long double State:: P_edges_given_z_slow(ObjectiveFunction *obj) const {
 		long double edges_bits_no_edges = 0.0L;
 		long double edges_bits = 0.0L;
 		int pairsEncountered = 0;
@@ -415,17 +415,17 @@ namespace sbm {
 		*/
 		return assertNonPositiveFinite(edges_bits);
 	}
-	long double State:: P_edges_given_z() const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
-		const long double slow = this->P_edges_given_z_slow();
+	long double State:: P_edges_given_z(ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
+		const long double slow = this->P_edges_given_z_slow(obj);
 		return assertNonPositiveFinite(slow);
 	}
 	struct BaseLineNotCorrectException {
 	};
-	long double State:: pmf_slow() const {
-		return assertNonPositiveFinite( this->P_edges_given_z_slow() + this->P_z_slow() );
+	long double State:: pmf_slow(ObjectiveFunction *obj) const {
+		return assertNonPositiveFinite( this->P_edges_given_z_slow(obj) + this->P_z_slow() );
 	}
-	long double State:: pmf() const {
-		return this->pmf_slow();
+	long double State:: pmf(ObjectiveFunction *obj) const {
+		return this->pmf_slow(obj);
 		/*
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
 		// const long double slow = this->P_z() + this->P_edges_given_z();
