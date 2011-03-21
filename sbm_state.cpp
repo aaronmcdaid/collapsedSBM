@@ -366,7 +366,6 @@ namespace sbm {
 
 	
 	long double State:: P_edges_given_z_slow(ObjectiveFunction *obj) const {
-		long double edges_bits_no_edges = 0.0L;
 		long double edges_bits = 0.0L;
 		int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
@@ -393,21 +392,36 @@ namespace sbm {
 					<< edges << " edges."
 					<< endl;
 					*/
-				const int pairs = (i==j) ? (ni * (nj + (obj->selfloops?1:-1) ) / 2) : (ni*nj); // if i==j, then ni==nj
+				int pairs = ni*nj; // if i==j, then ni==nj
+				if (i==j) {
+					assert(ni==nj);
+					if(obj->directed)
+						pairs = ni * (nj - 1); // both directions included
+					else
+						pairs = ni * (nj - 1) / 2; // just one direction included
+				}
+				if(i==j && obj->selfloops)
+					pairs += ni;
 				PP2(edges, pairs);
-				assert(edges <= pairs);
 				// PP2(pairs,edges);
 				if(pairs > 0) {
 					pairsEncountered += pairs;
-					edges_bits -= log2l(pairs + 1);
-					edges_bits_no_edges -= log2l(pairs + 1);
-					edges_bits -= M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+					if(obj->weighted) {
+						assert(edges <= pairs);
+						edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+					} else {
+						assert(edges <= pairs);
+						edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+					}
 				}
 				// PP(edges_bits);
 			}
 		}
 		PP2(pairsEncountered , this->_N * (this->_N-1) / 2);
-		assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+		if(obj->directed)
+			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
+		else
+			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
 		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
 			PP2(total_edge_weight_verification , this->total_edge_weight);
 			PP (total_edge_weight_verification - this->total_edge_weight);
