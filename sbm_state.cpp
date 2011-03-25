@@ -407,11 +407,9 @@ namespace sbm {
 				if(pairs > 0) {
 					pairsEncountered += pairs;
 					if(obj->weighted) {
-						assert(edges <= pairs);
-						edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+						edges_bits += obj->log2OneBlock(edges, pairs);
 					} else {
-						assert(edges <= pairs);
-						edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+						edges_bits += obj->log2OneBlock(edges, pairs);
 					}
 				}
 				// PP(edges_bits);
@@ -456,5 +454,29 @@ namespace sbm {
 		// assert(VERYCLOSE(fast, slow));
 		return assertNonPositiveFinite(fast);
 		*/
+	}
+
+	ObjectiveFunction :: ObjectiveFunction(const bool s, const bool d, const bool w) : selfloops(s), directed(d), weighted(w) {}
+	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
+	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
+		const long double beta_1 = 1.0L; // prior
+		const long double beta_2 = 1.0L; // prior
+		assert(isfinite(edge_total));
+		assert(edge_total == floor(edge_total));
+		assert(edge_total >= 0);
+		assert(edge_total <= pairs);
+		long double p = - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
+		// edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
+		long double p2 = M_LOG2E * gsl_sf_lnbeta(edge_total + beta_1, pairs - edge_total + beta_2);
+		assert(VERYCLOSE(p,p2));
+		return p2;
+	}
+	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
+	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
+		assert(isfinite(edge_total));
+		assert(edge_total == floor(edge_total));
+		assert(edge_total >= 0);
+		assert(edge_total <= pairs);
+		return - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
 	}
 } // namespace sbm

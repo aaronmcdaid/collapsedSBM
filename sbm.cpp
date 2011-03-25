@@ -112,30 +112,34 @@ int main(int argc, char **argv) {
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
 
-	sbm:: ObjectiveFunction obj(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
+	sbm:: ObjectiveFunction *obj = NULL;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
+		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
+		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
+		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
+		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
+		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
+		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
+		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
 		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
 		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, &obj);
+		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
 	}
 	exit(0);
 	// if(args_info.mmsb_flag)
