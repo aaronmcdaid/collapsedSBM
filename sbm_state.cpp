@@ -406,11 +406,7 @@ namespace sbm {
 				// PP2(pairs,edges);
 				if(pairs > 0) {
 					pairsEncountered += pairs;
-					if(obj->weighted) {
-						edges_bits += obj->log2OneBlock(edges, pairs);
-					} else {
-						edges_bits += obj->log2OneBlock(edges, pairs);
-					}
+					edges_bits += obj->log2OneBlock(edges, pairs);
 				}
 				// PP(edges_bits);
 			}
@@ -469,7 +465,8 @@ namespace sbm {
 		// edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
 		long double p2 = M_LOG2E * gsl_sf_lnbeta(edge_total + beta_1, pairs - edge_total + beta_2);
 		assert(VERYCLOSE(p,p2));
-		return p2;
+		assert(0.0 ==         gsl_sf_lnbeta(beta_1, beta_2)); // this'll be zero while \beta_1 = \beta_2 = 1
+		return p2 - M_LOG2E * gsl_sf_lnbeta(beta_1, beta_2);
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
