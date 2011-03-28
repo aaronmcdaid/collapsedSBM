@@ -375,9 +375,9 @@ namespace sbm {
 			const Cluster *I = this->labelling.clusters.at(i);
 			assert(I);
 			for(int j=0; j<this->_k; j++) {
-				if(!obj->directed && j > i) {
+				if(!obj->isValidBlock(i,j))
 					break;
-				}
+				assert(obj->directed || j <= i);
 				++ blocksEncountered;
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
@@ -459,6 +459,12 @@ namespace sbm {
 	}
 
 	ObjectiveFunction :: ObjectiveFunction(const bool s, const bool d, const bool w) : selfloops(s), directed(d), weighted(w) {}
+	bool ObjectiveFunction:: isValidBlock(const int i, const int j) const {
+		if(this->directed)
+			return true;
+		else
+			return j <=  i;
+	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
 		assert(pairs > 0);
