@@ -113,39 +113,42 @@ int main(int argc, char **argv) {
 	PP(args_info.selfloop_flag);
 
 	sbm:: ObjectiveFunction *obj = NULL;
+	auto_ptr<shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g;
+	auto_ptr<shmGraphRaw:: EdgeDetailsInterface> edge_details_;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
-		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails >();
+		// auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
+		g.reset(shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		dumpGraph(g.get(), *edge_details);
+		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
 		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
-		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights >();
+		g.reset (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		dumpGraph(g.get(), *edge_details);
+		edge_details_.reset(edge_details);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
 		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
-		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir >();
+		g.reset (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		dumpGraph(g.get(), *edge_details);
+		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > edge_details;
-		auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
-		dumpGraph(g.get(), edge_details);
-		runSBM(g.get(), args_info.K_arg, &edge_details, obj);
+		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights >();
+		g.reset (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		dumpGraph(g.get(), *edge_details);
+		edge_details_.reset(edge_details);
 	}
-	exit(0);
-	// if(args_info.mmsb_flag)
-		// runMMSB(g.get(), commandLineK);
-	// else
-		// runSBM(g.get(), commandLineK);
+	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj);
+	assert(edge_details_.get());
+	assert(g.get());
+	assert(obj);
+	delete obj;
 }
 
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
