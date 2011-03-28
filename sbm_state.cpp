@@ -24,7 +24,7 @@ namespace sbm {
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
 	}
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), labelling(this->_N), _edgeCounts(edge_details) {
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -344,24 +344,22 @@ namespace sbm {
 	long double State:: P_z_K() const { // 1 and 2
 		// const long double priorOnK = -this->_k; // Exponential prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
-		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
-		return assertNonPositiveFinite(K_dependant_bits);
+		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State:: P_z_orders() const { // given our current this->_k, what's P(z | k)
-		return this->labelling.SumOfLog2Facts;
+		return LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
 	}
 
 	long double State:: P_z_slow() const { // given our current this->_k, what's P(z | k)
-		const long double K_dependant_bits = this->P_z_K();
-		long double perCluster_bits = 0.0L;
+		const long double K_prior = this->P_z_K();
+		long double perCluster_bits = LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N) - this->_k*LOG2GAMMA(this->_alpha);
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->labelling.clusters.at(CL);
 			assert(cl);
 			perCluster_bits += LOG2FACT(cl->order());
 		}
-		// PP(K_dependant_bits + perCluster_bits);
-		assert(K_dependant_bits + perCluster_bits == P_z_K() + P_z_orders());
-		return assertNonPositiveFinite(K_dependant_bits + perCluster_bits);
+		assert(perCluster_bits == P_z_orders());
+		return assertNonPositiveFinite(K_prior + perCluster_bits);
 	}
 
 	

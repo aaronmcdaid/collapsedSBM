@@ -64,6 +64,7 @@ struct State {
 	const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
+	const long double _alpha; // the parameter to the Dirichlet prior on z
 	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 
 	Labelling	labelling;
