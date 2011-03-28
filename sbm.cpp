@@ -645,7 +645,10 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		else
 			assert(commandLineK == s._k);
 		// PP(i);
-		MoneNode(s, obj);
+		const long double pre = s.pmf(obj);
+		const long double delta = MoneNode(s, obj);
+		const long double post = s.pmf(obj);
+		assert(pre + delta == post);
 		// if(i%50 == 0)
 			// M3(s);
 	
