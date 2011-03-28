@@ -37,6 +37,7 @@ const char *gengetopt_args_info_help[] = {
   "  -d, --directed     directed  (default=off)",
   "  -w, --weighted     weighted  (default=off)",
   "  -s, --selfloop     selfloops allowed  (default=off)",
+  "      --seed=INT     seed to drand48()  (default=`0')",
     0
 };
 
@@ -70,6 +71,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->directed_given = 0 ;
   args_info->weighted_given = 0 ;
   args_info->selfloop_given = 0 ;
+  args_info->seed_given = 0 ;
 }
 
 static
@@ -83,6 +85,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->directed_flag = 0;
   args_info->weighted_flag = 0;
   args_info->selfloop_flag = 0;
+  args_info->seed_arg = 0;
+  args_info->seed_orig = NULL;
   
 }
 
@@ -100,6 +104,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->directed_help = gengetopt_args_info_help[6] ;
   args_info->weighted_help = gengetopt_args_info_help[7] ;
   args_info->selfloop_help = gengetopt_args_info_help[8] ;
+  args_info->seed_help = gengetopt_args_info_help[9] ;
   
 }
 
@@ -182,6 +187,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
   free_string_field (&(args_info->K_orig));
+  free_string_field (&(args_info->seed_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -234,6 +240,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "weighted", 0, 0 );
   if (args_info->selfloop_given)
     write_into_file(outfile, "selfloop", 0, 0 );
+  if (args_info->seed_given)
+    write_into_file(outfile, "seed", args_info->seed_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -482,6 +490,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "directed",	0, NULL, 'd' },
         { "weighted",	0, NULL, 'w' },
         { "selfloop",	0, NULL, 's' },
+        { "seed",	1, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -573,6 +582,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             if (update_arg((void *)&(args_info->git_version_flag), 0, &(args_info->git_version_given),
                 &(local_args_info.git_version_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "git-version", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* seed to drand48().  */
+          else if (strcmp (long_options[option_index].name, "seed") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->seed_arg), 
+                 &(args_info->seed_orig), &(args_info->seed_given),
+                &(local_args_info.seed_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "seed", '-',
                 additional_error))
               goto failure;
           

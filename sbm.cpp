@@ -144,6 +144,7 @@ int main(int argc, char **argv) {
 		dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
+	srand48(args_info.seed_arg);
 	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj);
 	assert(edge_details_.get());
 	assert(g.get());

@@ -8,3 +8,4 @@ option  "K"                  K "Number of clusters, K"               int        
 option  "directed"           d "directed"                            flag       off
 option  "weighted"           w "weighted"                            flag       off
 option  "selfloop"           s "selfloops allowed"                   flag       off
+option  "seed"               - "seed to drand48()"                   int        default="0" no
