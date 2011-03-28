@@ -195,10 +195,9 @@ namespace sbm {
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
 				const int nj = J->order();
-				const int edges = this->_edgeCounts.get(i,j);
+				const long double edges = this->_edgeCounts.get(i,j);
 				const int pairs = i==j ? (ni * (nj-1) / 2) : (ni*nj);
-				assert(edges <= pairs);
-				cout << printfstring("%10s %-#5.2f", printfstring("%d/%d", edges, pairs).c_str(), double(edges)/double(pairs)) << " | ";
+				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%d", edges, pairs).c_str(), edges/double(pairs)) << " | ";
 			}
 			cout << endl;
 		}
