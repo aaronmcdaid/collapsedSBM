@@ -642,6 +642,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	for(int i=1; i<=400000000; i++) {
 		if(commandLineK == -1)
 			MetropolisOnK(s);
+		else
+			assert(commandLineK == s._k);
 		// PP(i);
 		MoneNode(s, obj);
 		// if(i%50 == 0)

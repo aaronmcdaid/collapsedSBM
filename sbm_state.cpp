@@ -385,8 +385,6 @@ namespace sbm {
 				const int nj = J->order();
 				const long double edges = this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
 				total_edge_weight_verification += edges;
-				PP2(i,j);
-				PP2(ni,nj);
 				/*
 				cout << ni << " x " << nj;
 				if(i==j)
@@ -405,8 +403,9 @@ namespace sbm {
 				}
 				if(i==j && obj->selfloops)
 					pairs += ni;
-				PP2(edges, pairs);
-				// PP2(pairs,edges);
+				// PP2(i,j);
+				// PP2(ni,nj);
+				// PP2(edges, pairs);
 				if(pairs > 0) {
 					pairsEncountered += pairs;
 					edges_bits += obj->log2OneBlock(edges, pairs);
@@ -414,7 +413,6 @@ namespace sbm {
 				// PP(edges_bits);
 			}
 		}
-		PP2(pairsEncountered , this->_N * (this->_N-1) / 2);
 		if(obj->directed) {
 			assert(blocksEncountered == this->_k * this->_k);
 			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
