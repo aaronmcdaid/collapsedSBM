@@ -370,6 +370,7 @@ namespace sbm {
 		long double edges_bits = 0.0L;
 		int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
+		int blocksEncountered = 0; // should be K*K, or 1/2 * K * (K+1)
 		for(int i=0; i<this->_k; i++) {
 			const Cluster *I = this->labelling.clusters.at(i);
 			assert(I);
@@ -377,6 +378,7 @@ namespace sbm {
 				if(!obj->directed && j > i) {
 					break;
 				}
+				++ blocksEncountered;
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
 				const int ni = I->order();
@@ -413,10 +415,13 @@ namespace sbm {
 			}
 		}
 		PP2(pairsEncountered , this->_N * (this->_N-1) / 2);
-		if(obj->directed)
+		if(obj->directed) {
+			assert(blocksEncountered == this->_k * this->_k);
 			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
-		else
+		} else {
+			assert(blocksEncountered == this->_k * (this->_k+1) / 2);
 			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+		}
 		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
 			PP2(total_edge_weight_verification , this->total_edge_weight);
 			PP (total_edge_weight_verification - this->total_edge_weight);
