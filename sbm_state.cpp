@@ -456,6 +456,7 @@ namespace sbm {
 	ObjectiveFunction :: ObjectiveFunction(const bool s, const bool d, const bool w) : selfloops(s), directed(d), weighted(w) {}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
+		assert(pairs > 0);
 		const long double beta_1 = 1.0L; // prior
 		const long double beta_2 = 1.0L; // prior
 		assert(isfinite(edge_total));
@@ -467,14 +468,23 @@ namespace sbm {
 		long double p2 = M_LOG2E * gsl_sf_lnbeta(edge_total + beta_1, pairs - edge_total + beta_2);
 		assert(VERYCLOSE(p,p2));
 		assert(0.0 ==         gsl_sf_lnbeta(beta_1, beta_2)); // this'll be zero while \beta_1 = \beta_2 = 1
-		return p2 - M_LOG2E * gsl_sf_lnbeta(beta_1, beta_2);
+		const long double p3 = p2 - M_LOG2E * gsl_sf_lnbeta(beta_1, beta_2);
+		assertNonPositiveFinite(p3);
+		return p3;
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
-		assert(isfinite(edge_total));
-		assert(edge_total == floor(edge_total));
-		assert(edge_total >= 0);
-		assert(edge_total <= pairs);
-		return - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
+	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const int p_b) const { // virtual
+		assert(p_b > 0);
+		// y_b should be a non-negative integer
+		assert(isfinite(y_b));
+		// assert(y_b == floor(y_b));
+		assert(y_b >= 0);
+		const long double s = 1.0L;
+		const long double theta = 2.0L;
+		const long double log2p = LOG2GAMMA(s + y_b) + ( s+y_b) * -log2(p_b + 1.0L/theta) 
+		       	-   LOG2GAMMA(s)  - s*log2(theta) // this denominator is important because it depends on the number of blocks.
+			;
+		assertNonPositiveFinite(log2p);
+		return log2p;
 	}
 } // namespace sbm
