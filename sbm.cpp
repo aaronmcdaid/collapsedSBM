@@ -621,21 +621,21 @@ void MetropolisOnK(sbm::State &s) {
 void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj) {
 	sbm::State s(g, edge_details);
 
-	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
+	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 
 	/*
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
 
-	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 	PP(s.pmf());
 
 	*/
 	if(commandLineK != -1)
 		randomize(s, commandLineK);
-	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail();
+	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail(obj);
 
 	PP(s.pmf(obj));
 
@@ -655,11 +655,11 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
-			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
+			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
 			cout << " end of check at i==" << i << endl;
 		}
 	}
-	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail();
+	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 }
 

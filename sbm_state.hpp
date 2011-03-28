@@ -50,6 +50,7 @@ struct ObjectiveFunction {
 	ObjectiveFunction(const bool s, const bool d, const bool w);
 	virtual long double log2OneBlock(const long double edge_total, const int pairs) const = 0;
 	bool isValidBlock(const int i, const int j) const;
+	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
@@ -85,7 +86,7 @@ struct State {
 	// summaries
 	void shortSummary(ObjectiveFunction *obj) const;
 	void summarizeEdgeCounts() const ;
-	void blockDetail() const ;
+	void blockDetail(const ObjectiveFunction *obj) const ;
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {

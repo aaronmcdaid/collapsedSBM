@@ -177,15 +177,19 @@ namespace sbm {
 			}
 		}
 	}
-	void State:: blockDetail() const {
-			cout << "    | ";
-			for(int j=0; j<this->_k; j++) {
-				const Cluster *J = this->labelling.clusters.at(j);
-				assert(J);
-				const int nj = J->order();
-				cout << printfstring("      %5d     ", nj) << "   ";
-			}
-			cout << endl;
+	void State:: blockDetail(const ObjectiveFunction *obj) const {
+		int pairsEncountered = 0;
+		long double total_edge_weight_verification = 0.0L;
+
+		cout << "    | ";
+		for(int j=0; j<this->_k; j++) {
+			const Cluster *J = this->labelling.clusters.at(j);
+			assert(J);
+			const int nj = J->order();
+			cout << printfstring("      %5d     ", nj) << "   ";
+		}
+		cout << endl;
+
 		for(int i=0; i<this->_k; i++) {
 			const Cluster *I = this->labelling.clusters.at(i);
 			assert(I);
@@ -195,12 +199,31 @@ namespace sbm {
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
 				const int nj = J->order();
-				const long double edges = this->_edgeCounts.get(i,j);
-				const int pairs = i==j ? (ni * (nj-1) / 2) : (ni*nj);
+				const long double edges = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+				int pairs = ni*nj; // if i==j, then ni==nj
+				if (i==j) {
+					assert(ni==nj);
+					if(obj->directed)
+						pairs = ni * (nj - 1); // both directions included
+					else
+						pairs = ni * (nj - 1) / 2; // just one direction included
+				}
+				if(i==j && obj->selfloops)
+					pairs += ni;
+				if(obj->directed || j<=i) {
+					pairsEncountered += pairs;
+					total_edge_weight_verification += edges;
+				}
 				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%d", edges, pairs).c_str(), edges/double(pairs)) << " | ";
 			}
 			cout << endl;
 		}
+		if(obj->directed) {
+			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
+		} else {
+			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+		}
+		assert(total_edge_weight_verification == this->total_edge_weight);
 	}
 
 	void State::internalCheck() const {
@@ -383,7 +406,11 @@ namespace sbm {
 				assert(J);
 				const int ni = I->order();
 				const int nj = J->order();
-				const long double edges = this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
+				const long double edges = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+				{
+					const long double edges_= this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
+					assert(edges == edges_);
+				}
 				total_edge_weight_verification += edges;
 				/*
 				cout << ni << " x " << nj;
@@ -462,6 +489,13 @@ namespace sbm {
 			return true;
 		else
 			return j <=  i;
+	}
+	bool ObjectiveFunction:: isTwoSided(const int i, const int j) const{ // should the other direction be included when counting the edges?
+		if(j==i) // get(i,j) == get(j,i) already
+			return false;
+		if(this->directed)
+			return false;
+		return true; // it's undirected and non-diagonal, hence the reverse direction should be included
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
