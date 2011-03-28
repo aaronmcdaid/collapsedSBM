@@ -73,7 +73,7 @@ namespace sbm {
 		// const long double priorOnK = -this->_k; // Exponential prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
-		return sbm:: assertNonPositiveFinite(K_dependant_bits);
+		return sbm:: assertNonPositiveFinite_line(K_dependant_bits, __LINE__);
 	}
 	void MMSBstate:: P_zs_given_K() const {
 		cout << endl << "  P_zs_given_K()" << endl;
@@ -124,7 +124,7 @@ namespace sbm {
 		// PP(x);
 		x -= M_LOG2E * gsl_sf_lnchoose(n, k);
 		// PP(x);
-		return sbm:: assertNonPositiveFinite(x);
+		return sbm:: assertNonPositiveFinite_line(x, __LINE__);
 	}
 	long double MMSBstate:: pmf_slow() const {
 		// this will check that numEdges and numPairs as well as calculate everything

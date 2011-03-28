@@ -2,6 +2,15 @@
 #include "aaron_utils.hpp"
 using namespace shmGraphRaw;
 namespace sbm {
+#define assertNonPositiveFinite(x) assertNonPositiveFinite_line(x, __LINE__)
+	long double assertNonPositiveFinite_line(const long double x, const int lineno) {
+		DYINGWORDS(isfinite(x) && x<=0.0L) {
+			PP2(x,lineno);
+		}
+		assert(isfinite(x));
+		assert(x<=0.0L);
+		return x;
+	}
 	Labelling::Labelling(const int _N) : _N(_N), _k(1) {
 		this->SumOfLog2LOrders = log2l(this->_N);
 		this->SumOfLog2Facts   = LOG2FACT(this->_N);
@@ -334,11 +343,6 @@ namespace sbm {
 		const int oldClusterID = this->labelling.cluster_id.at(n);
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
-	}
-	long double assertNonPositiveFinite(const long double x) {
-		assert(isfinite(x));
-		assert(x<=0.0L);
-		return x;
 	}
 
 	long double State:: P_z_K() const { // 1 and 2

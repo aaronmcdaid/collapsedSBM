@@ -119,7 +119,7 @@ struct State {
 	long double pmf_slow(ObjectiveFunction *obj) const;
 	long double pmf(ObjectiveFunction *obj) const;
 };
-	long double assertNonPositiveFinite(const long double x);
+	long double assertNonPositiveFinite_line(const long double x, const int lineno);
 
 } // namespace sbm
 
