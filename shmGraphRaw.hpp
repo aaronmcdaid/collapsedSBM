@@ -152,7 +152,7 @@ struct EdgeDetails : public EdgeDetailsInterface {
 	void new_rel(int relId, std::pair<int,int> nodeIds, std::string &weight) {
 		if(relId == (int)this->dw.size())
 			this->dw.push_back( typename W::datumT() );
-		assert(relId+1 == (int)this->dw.size());
+		assert(relId <  (int)this->dw.size());
 		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
 		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
 	}
