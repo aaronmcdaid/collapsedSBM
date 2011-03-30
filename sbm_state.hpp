@@ -84,7 +84,7 @@ struct State {
 	void internalCheck() const;
 
 	// summaries
-	void shortSummary(ObjectiveFunction *obj) const;
+	void shortSummary(const ObjectiveFunction *obj) const;
 	void summarizeEdgeCounts() const ;
 	void blockDetail(const ObjectiveFunction *obj) const ;
 
@@ -115,11 +115,11 @@ struct State {
 	long double P_z_orders() const; // 2.
 	long double P_z_slow() const;
 
-	long double P_edges_given_z_slow(ObjectiveFunction *obj) const;
-	long double P_edges_given_z(ObjectiveFunction *obj) const;
+	long double P_edges_given_z_slow(const ObjectiveFunction *obj) const;
+	long double P_edges_given_z(const ObjectiveFunction *obj) const;
 
-	long double pmf_slow(ObjectiveFunction *obj) const;
-	long double pmf(ObjectiveFunction *obj) const;
+	long double pmf_slow(const ObjectiveFunction *obj) const;
+	long double pmf(const ObjectiveFunction *obj) const;
 };
 	long double assertNonPositiveFinite_line(const long double x, const int lineno);
 

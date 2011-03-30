@@ -291,7 +291,7 @@ namespace sbm {
 
 	}
 
-	void State:: shortSummary(ObjectiveFunction *obj) const {
+	void State:: shortSummary(const ObjectiveFunction *obj) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		PP(this->pmf(obj));
@@ -389,7 +389,7 @@ namespace sbm {
 	}
 
 	
-	long double State:: P_edges_given_z_slow(ObjectiveFunction *obj) const {
+	long double State:: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
 		long double edges_bits = 0.0L;
 		int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
@@ -464,16 +464,16 @@ namespace sbm {
 		*/
 		return assertNonPositiveFinite(edges_bits);
 	}
-	long double State:: P_edges_given_z(ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
+	long double State:: P_edges_given_z(const ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow(obj);
 		return assertNonPositiveFinite(slow);
 	}
 	struct BaseLineNotCorrectException {
 	};
-	long double State:: pmf_slow(ObjectiveFunction *obj) const {
+	long double State:: pmf_slow(const ObjectiveFunction *obj) const {
 		return assertNonPositiveFinite( this->P_edges_given_z_slow(obj) + this->P_z_slow() );
 	}
-	long double State:: pmf(ObjectiveFunction *obj) const {
+	long double State:: pmf(const ObjectiveFunction *obj) const {
 		return this->pmf_slow(obj);
 		/*
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();

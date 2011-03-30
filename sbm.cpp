@@ -570,8 +570,8 @@ void M3(sbm::State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-void MetropolisOnK(sbm::State &s) {
-	// const long double prePMF = s.pmf();
+static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
+	const long double prePMF = s.pmf(obj);
 	const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
 	if(fiftyfifty()) { // propose increase in K
@@ -583,32 +583,41 @@ void MetropolisOnK(sbm::State &s) {
 		// assert(postPMF < prePMF);
 		assert(postPMF12 < prePMF12);
 		// assert(VERYCLOSE(postPMF - prePMF, postPMF12 - prePMF12));
-		if(acceptTest(postPMF12 - prePMF12)) {
+		const long double presumed_delta = log2(preK) - log2(s._N+preK) - log2(preK+1);
+		if(acceptTest(presumed_delta)) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
+			// PP(s.pmf(obj) - prePMF);
+			// PP2(preK, s._k);
+			// PP(s._N);
+			// PP( presumed_delta );
+			// PP(postPMF12 - prePMF12);
+			assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
-			// assert(s.pmf()==prePMF);
+			assert(s.pmf(obj)==prePMF);
 			assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
 		}
 	} else { // propose decrease
 		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
+			const long double presumed_delta = - log2(preK-1) + log2(s._N+preK-1) + log2(preK);
 			s.deleteClusterFromTheEnd();
 			const long double postPMF12 = s.P_z_K();
-			// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
+			// assert(VERYCLOSE(s.pmf(obj), prePMF - prePMF12 + postPMF12));
 			// const long double postPMF = prePMF - prePMF12 + postPMF12; 
-			// assert(VERYCLOSE(s.pmf(), postPMF));
+			// assert(VERYCLOSE(s.pmf(obj), postPMF));
 			// assert(postPMF > prePMF);
 			if(acceptTest(postPMF12 - prePMF12)) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
+				assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function.
 				// cout << "k: rej dec" << endl;
 				s.appendEmptyCluster();
-				// assert(s.pmf()==postPMF);
+				// assert(s.pmf(obj)==postPMF);
 				assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
 			}
@@ -642,7 +651,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 
 	for(int i=1; i<=400000000; i++) {
 		if(commandLineK == -1)
-			MetropolisOnK(s);
+			MetropolisOnK(s, obj);
 		else
 			assert(commandLineK == s._k);
 		// PP(i);
