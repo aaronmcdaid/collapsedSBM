@@ -294,6 +294,12 @@ namespace sbm {
 	void State:: shortSummary(const ObjectiveFunction *obj) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
+		int nonEmptyK = 0;
+		for(int k=0; k<this->_k; k++) {
+			if(this->labelling.clusters.at(k)->order() > 0)
+				nonEmptyK++;
+		}
+		PP(nonEmptyK);
 		PP(this->pmf(obj));
 		forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
 		// for(int n=0; n<this->_N;n++)
