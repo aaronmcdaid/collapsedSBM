@@ -701,6 +701,15 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 
 	AcceptanceRate AR_metroK;
 	for(int i=1; i<=400000; i++) {
+		{
+			if(s._k > 1 && drand48() < 0.01) {
+				const int cl1 = s._k * drand48();
+				const int cl2 = s._k * drand48();
+				if(cl1 != cl2) {
+					s.swapClusters(cl1,cl2);
+				}
+			}
+		}
 		if(commandLineK == -1) {
 			pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 		} else

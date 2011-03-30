@@ -353,6 +353,59 @@ namespace sbm {
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
 	}
+	void Labelling :: swapClusters(const int cl1, const int cl2) {
+		assert(cl1 != cl2);
+		// PP2(cl1,cl2);
+		const Cluster * CL1 = this->clusters.at(cl1);
+		const Cluster * CL2 = this->clusters.at(cl2);
+		forEach(int n, amd::mk_range(CL1->members)) {
+			assert(this->cluster_id.at(n) == cl1);
+			       this->cluster_id.at(n) =  cl2 ;
+		}
+		forEach(int n, amd::mk_range(CL2->members)) {
+			assert(this->cluster_id.at(n) == cl2);
+			       this->cluster_id.at(n) =  cl1 ;
+		}
+		swap(this->clusters.at(cl1), this->clusters.at(cl2));
+	}
+	void State :: swapClusters(const int cl1, const int cl2) {
+		this->labelling.swapClusters(cl1,cl2);
+		// I must also swap the _edgeCounts structure
+		const size_t preSize = this->_edgeCounts.counts.size();
+		// PP(this->_edgeCounts.counts.size());
+		// PP(this->_k);
+		if(0)
+		for(State :: EdgeCounts :: map_type :: const_iterator i = this->_edgeCounts.counts.begin(); i != this->_edgeCounts.counts.end(); i++ ) {
+			PP3(i->first.first, i->first.second, i->second);
+		}
+		// cout << "swapping" << endl;
+		State :: EdgeCounts :: map_type merge_these_back_in_again;
+		for(State :: EdgeCounts :: map_type ::       iterator i = this->_edgeCounts.counts.begin(); i != this->_edgeCounts.counts.end();  ) {
+			if( i->first.first  == cl1
+			 || i->first.first  == cl2
+			 || i->first.second == cl1
+			 || i->first.second == cl2
+			 ) {
+				// flip them
+				pair< pair<int,int> , int> tmp = *i;
+				// PP3(tmp.first.first, tmp.first.second, tmp.second);
+				if(tmp.first.first == cl1) tmp.first.first = cl2; else if(tmp.first.first == cl2) tmp.first.first = cl1;
+				if(tmp.first.second == cl1) tmp.first.second = cl2; else if(tmp.first.second == cl2) tmp.first.second = cl1;
+				// remove it
+				// readd them
+				// PP3(tmp.first.first, tmp.first.second, tmp.second);
+				i = this->_edgeCounts.counts.erase(i); // erase it and leave the iterator pointing at the next item
+				merge_these_back_in_again.insert(tmp);
+			} else
+				++i;
+		}
+		// PP(merge_these_back_in_again.size());
+		for(State :: EdgeCounts :: map_type ::       iterator i = merge_these_back_in_again.begin(); i != merge_these_back_in_again.end(); i++) {
+			this->_edgeCounts.counts.insert(*i);
+		}
+		// PP2(preSize, this->_edgeCounts.counts.size());
+		assert(preSize == this->_edgeCounts.counts.size());
+	}
 
 	long double State:: P_z_K() const { // 1 and 2
 		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K

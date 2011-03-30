@@ -40,6 +40,7 @@ struct Labelling {
 	void appendEmptyCluster();
 	void deleteClusterFromTheEnd();
 	int moveNode(const int n, const int newClusterID);
+	void swapClusters(const int cl1, const int cl2);
 };
 
 struct ObjectiveFunction {
@@ -80,6 +81,7 @@ struct State {
 	void moveNode(const int n, const int newClusterID);
 	int isolateNode(const int n); // create a new (probably temporary) cluster to hold this one node
 	void unIsolateTempNode(const int n, const int newClusterID); // move a node from its 'temporary' cluster to an existing cluster
+	void swapClusters(const int cl1, const int cl2);
 
 	// internalcheck
 	void internalCheck() const;
@@ -100,6 +102,7 @@ struct State {
 		private:
 		friend void State:: summarizeEdgeCounts() const;
 		friend void State:: internalCheck() const;
+		friend void State:: swapClusters(int,int);
 		map_type counts;
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
