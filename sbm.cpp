@@ -583,7 +583,10 @@ static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 		// assert(postPMF < prePMF);
 		assert(postPMF12 < prePMF12);
 		// assert(VERYCLOSE(postPMF - prePMF, postPMF12 - prePMF12));
-		const long double presumed_delta = log2(preK) - log2(s._N+preK) - log2(preK+1);
+		const long double presumed_delta = log2(preK) - log2(s._N+preK)
+			- log2(preK+1) // Poisson(1) prior on K
+			// - 1 // Geometric(0.5) prior on K
+			;
 		if(acceptTest(presumed_delta)) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
@@ -602,7 +605,10 @@ static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 		}
 	} else { // propose decrease
 		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
-			const long double presumed_delta = - log2(preK-1) + log2(s._N+preK-1) + log2(preK);
+			const long double presumed_delta = - log2(preK-1) + log2(s._N+preK-1)
+				+ log2(preK) // Poisson(1) prior on K
+				// + 1 // Geometric(0.5) prior on K
+				;
 			s.deleteClusterFromTheEnd();
 			const long double postPMF12 = s.P_z_K();
 			// assert(VERYCLOSE(s.pmf(obj), prePMF - prePMF12 + postPMF12));

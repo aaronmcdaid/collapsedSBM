@@ -374,7 +374,7 @@ namespace sbm {
 	}
 
 	long double State:: P_z_K() const { // 1 and 2
-		// const long double priorOnK = -this->_k; // Exponential prior on K
+		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		return assertNonPositiveFinite(priorOnK);
 	}
