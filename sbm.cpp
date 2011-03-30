@@ -649,7 +649,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 
 	PP(s.pmf(obj));
 
-	for(int i=1; i<=400000000; i++) {
+	for(int i=1; i<=400000; i++) {
 		if(commandLineK == -1)
 			MetropolisOnK(s, obj);
 		else
