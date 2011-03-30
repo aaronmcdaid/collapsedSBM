@@ -694,6 +694,11 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	*/
 	if(commandLineK != -1)
 		randomize(s, commandLineK);
+	else {
+		randomize(s, sqrt(s._N));
+		// for(int n=0; n+1<s._N; n++) s.isolateNode(n);
+		// assert(s._k == s._N);
+	}
 	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail(obj);
 
 	long double pmf_track = s.pmf(obj);
