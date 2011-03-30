@@ -391,6 +391,9 @@ namespace sbm {
 			perCluster_bits += LOG2FACT(cl->order());
 		}
 		assert(perCluster_bits == P_z_orders());
+		if(VERYCLOSE(perCluster_bits, 0.0L)) {
+			perCluster_bits = 0.0L;
+		}
 		return assertNonPositiveFinite(K_prior + perCluster_bits);
 	}
 
