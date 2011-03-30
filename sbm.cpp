@@ -571,17 +571,17 @@ void M3(sbm::State &s) {
 }
 #endif
 static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
-	const long double prePMF = s.pmf(obj);
-	const long double prePMF12 = s.P_z_K();
+	/// const long double prePMF = s.pmf(obj);
+	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
 	if(fiftyfifty()) { // propose increase in K
 		s.appendEmptyCluster();
-		const long double postPMF12 = s.P_z_K();
+		// const long double postPMF12 = s.P_z_K();
 		// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
 		// const long double postPMF = prePMF - prePMF12 + postPMF12; 
 		// assert(VERYCLOSE(s.pmf(), postPMF));
 		// assert(postPMF < prePMF);
-		assert(postPMF12 < prePMF12);
+		// assert(postPMF12 < prePMF12);
 		// assert(VERYCLOSE(postPMF - prePMF, postPMF12 - prePMF12));
 		const long double presumed_delta = log2(preK) - log2(s._N+preK)
 			- log2(preK+1) // Poisson(1) prior on K
@@ -595,13 +595,13 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// PP(s._N);
 			// PP( presumed_delta );
 			// PP(postPMF12 - prePMF12);
-			assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
+			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
 			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
-			assert(s.pmf(obj)==prePMF);
-			assert(s.P_z_K()==prePMF12);
+			// assert(s.pmf(obj)==prePMF);
+			// assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
 			return 0.0L;
 		}
@@ -612,22 +612,23 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 				// + 1 // Geometric(0.5) prior on K
 				;
 			s.deleteClusterFromTheEnd();
-			const long double postPMF12 = s.P_z_K();
+			// const long double postPMF12 = s.P_z_K();
 			// assert(VERYCLOSE(s.pmf(obj), prePMF - prePMF12 + postPMF12));
 			// const long double postPMF = prePMF - prePMF12 + postPMF12; 
 			// assert(VERYCLOSE(s.pmf(obj), postPMF));
 			// assert(postPMF > prePMF);
-			if(acceptTest(postPMF12 - prePMF12)) {
+			/// PP2(postPMF12 - prePMF12, presumed_delta);
+			if(acceptTest(presumed_delta)) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
-				assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
+				// assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
 				return presumed_delta;
 			} else {
-				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function.
+				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
 				// cout << "k: rej dec" << endl;
 				s.appendEmptyCluster();
 				// assert(s.pmf(obj)==postPMF);
-				assert(s.P_z_K()==prePMF12);
+				// assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
 				return 0.0L;
 			}
