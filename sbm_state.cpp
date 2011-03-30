@@ -444,7 +444,7 @@ namespace sbm {
 				// PP2(edges, pairs);
 				if(pairs > 0) {
 					pairsEncountered += pairs;
-					edges_bits += obj->log2OneBlock(edges, pairs);
+					edges_bits += obj->log2OneBlock(edges, pairs, i==j);
 				}
 				// PP(edges_bits);
 			}
@@ -507,25 +507,25 @@ namespace sbm {
 		return true; // it's undirected and non-diagonal, hence the reverse direction should be included
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs) const { // virtual
+	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const { // virtual
 		assert(pairs > 0);
-		const long double beta_1 = 1.0L; // prior
-		const long double beta_2 = 1.0L; // prior
+		const long double beta_1 = isDiagonal ? 1.0L : 1.0L; // prior
+		const long double beta_2 = isDiagonal ? 1.0L : 1.0L; // prior. number of NON-edges in the urn. A large number here for !isDiagonal will give sparse offDiagonal (i.e. community finding)
 		assert(isfinite(edge_total));
 		assert(edge_total == floor(edge_total));
 		assert(edge_total >= 0);
 		assert(edge_total <= pairs);
-		long double p = - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
 		// edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
 		long double p2 = M_LOG2E * gsl_sf_lnbeta(edge_total + beta_1, pairs - edge_total + beta_2);
-		assert(VERYCLOSE(p,p2));
-		assert(0.0 ==         gsl_sf_lnbeta(beta_1, beta_2)); // this'll be zero while \beta_1 = \beta_2 = 1
+		// long double p = - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
+		// assert(VERYCLOSE(p,p2));
+		// assert(0.0 ==         gsl_sf_lnbeta(beta_1, beta_2)); // this'll be zero while \beta_1 = \beta_2 = 1
 		const long double p3 = p2 - M_LOG2E * gsl_sf_lnbeta(beta_1, beta_2);
 		assertNonPositiveFinite(p3);
 		return p3;
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const int p_b) const { // virtual
+	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const int p_b, bool isDiagonal) const { // virtual
 		assert(p_b > 0);
 		// y_b should be a non-negative integer
 		assert(isfinite(y_b));

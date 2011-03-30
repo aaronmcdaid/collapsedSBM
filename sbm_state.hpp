@@ -48,17 +48,17 @@ struct ObjectiveFunction {
 	// these first three bools decide which blocks to loop over, and how to calculate the valid pairs.
 	// But give the total edge weight of a block, which form of function will actually be used?
 	ObjectiveFunction(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs) const = 0;
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const = 0;
 	bool isValidBlock(const int i, const int j) const;
 	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs) const;
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
 };
 struct ObjectiveFunction_Poisson : public ObjectiveFunction {
 	ObjectiveFunction_Poisson(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs) const;
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
 };
 
 struct State {
