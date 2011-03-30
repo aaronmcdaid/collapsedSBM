@@ -183,7 +183,8 @@ bool fiftyfifty() {
 struct AcceptanceRate {
 	int n;
 	int a; // a/n is the acceptance rate
-	AcceptanceRate() : n(0), a(0) {
+	const string _name;
+	AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
 	}
 	void notify(bool accepted) {
 		this->n++;
@@ -191,15 +192,20 @@ struct AcceptanceRate {
 			this->a++;
 	}
 	void dump() const {
-		cout << "Acceptance Rate: ";
-		PP(double(this->a)/this->n);
+		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
+		cout << double(this->a)/this->n << endl;
 	}
 };
-bool acceptTest(const long double delta) {
+static
+bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
+	bool b;
 	if(log2(drand48()) < delta)
-		return true;
+		b = true;
 	else
-		return false;
+		b = false;
+	if(AR)
+		AR->notify(b);
+	return b;
 }
 
 static
@@ -610,7 +616,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) - postK*LOG2GAMMA(s._alpha) )
 			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) - preK*LOG2GAMMA(s._alpha) )
 			;
-		if(acceptTest(presumed_delta)) {
+		if(acceptTest(presumed_delta, AR)) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
 			// PP(s.pmf(obj) - prePMF);
@@ -619,7 +625,6 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// PP( presumed_delta );
 			// PP(postPMF12 - prePMF12);
 			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
-			AR->notify(true);
 			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
@@ -627,7 +632,6 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// assert(s.pmf(obj)==prePMF);
 			// assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
-			AR->notify(false);
 			return 0.0L;
 		}
 	} else { // propose decrease
@@ -650,11 +654,10 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// assert(VERYCLOSE(s.pmf(obj), postPMF));
 			// assert(postPMF > prePMF);
 			/// PP2(postPMF12 - prePMF12, presumed_delta);
-			if(acceptTest(presumed_delta)) {
+			if(acceptTest(presumed_delta, AR)) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
 				// assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
-				AR->notify(true);
 				return presumed_delta;
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
@@ -663,7 +666,6 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 				// assert(s.pmf(obj)==postPMF);
 				// assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
-				AR->notify(false);
 				return 0.0L;
 			}
 		} else {// otherwise, not possible to remove it
@@ -704,7 +706,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	long double pmf_track = s.pmf(obj);
 	PP(pmf_track);
 
-	AcceptanceRate AR_metroK;
+	AcceptanceRate AR_metroK("metroK");
 	for(int i=1; i<=4000000; i++) {
 		if(1) {
 			if(s._k > 1) // && drand48() < 0.01)
