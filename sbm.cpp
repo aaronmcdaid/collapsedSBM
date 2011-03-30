@@ -209,7 +209,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 }
 
 static
-long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
+long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
@@ -231,7 +231,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
 	// PP(pre);
 	// PP(post);
 	// PP(delta);
-	if(acceptTest(delta)) {
+	if(acceptTest(delta, AR)) {
 		// cout << " + ";
 		return delta;
 	} else {
@@ -707,6 +707,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	PP(pmf_track);
 
 	AcceptanceRate AR_metroK("metroK");
+	AcceptanceRate AR_metro1Node("metro1Node");
 	for(int i=1; i<=4000000; i++) {
 		if(1) {
 			if(s._k > 1) // && drand48() < 0.01)
@@ -724,7 +725,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			assert(commandLineK == s._k);
 		// PP(i);
 		// const long double pre = s.pmf(obj);
-		const long double delta = MoneNode(s, obj);
+		const long double delta = MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += delta;
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
@@ -738,6 +739,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			PP(i);
 			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
 			AR_metroK.dump();
+			AR_metro1Node.dump();
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
