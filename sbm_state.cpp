@@ -12,9 +12,7 @@ namespace sbm {
 		return x;
 	}
 	Labelling::Labelling(const int _N, const long double alpha) : _N(_N), _k(1), _alpha(alpha) {
-		this->SumOfLog2LOrders = log2l(this->_N);
 		this->SumOfLog2Facts   = LOG2GAMMA(this->_N + this->_alpha);
-		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
 		this->NonEmptyClusters = 1;
 		this->clusters.push_back(new Cluster());
 		assert(this->clusters.size()==1);
@@ -115,34 +113,17 @@ namespace sbm {
 		if(cl->order() == 1) {
 			this->NonEmptyClusters++;
 		}
-		const int from_order = oldcl->order();
 		const int   to_order =    cl->order();
 		assert(to_order > 0);
-		this->SumOfLog2LOrders +=
-					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
-					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
-					;
 		this->SumOfLog2Facts +=
 					+ (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()))
 					- (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()+1))
-					;
-		this->SumOfLog2LOrderForInternal +=
-					+ (oldcl->order()<2?0.0L:log2l( (from_order  )*(from_order  -1)/2 ))
-					- (oldcl->order()<1?0.0L:log2l( (from_order+1)*(from_order+1-1)/2 ))
-					;
-		this->SumOfLog2LOrders +=
-					+ (cl->order()<2   ?0.0L:log2l(cl->order()))
-					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
 					;
 		this->SumOfLog2Facts +=
 					+ (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()))
 					- (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()-1))
 					;
 		assert(isfinite(this->SumOfLog2Facts));
-		this->SumOfLog2LOrderForInternal +=
-					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
-					- (cl->order()<3   ?0.0L:log2l( (to_order-1)*(to_order-1-1)/2 ))
-					;
 		return oldClusterID;
 	}
 	void State::moveNode(const int n, const int newClusterID) {
@@ -261,12 +242,8 @@ namespace sbm {
 			}
 		}
 		assert(NonEmptyVerify == this->labelling.NonEmptyClusters);
-		assert(VERYCLOSE(sumVerify , this->labelling.SumOfLog2LOrders));
 		assert(VERYCLOSE(sumVerifyFacts , this->labelling.SumOfLog2Facts));
-		assert(VERYCLOSE(sumVerifyInternal , this->labelling.SumOfLog2LOrderForInternal));
-		this->labelling.SumOfLog2LOrders = sumVerify;
 		this->labelling.SumOfLog2Facts = sumVerifyFacts;
-		this->labelling.SumOfLog2LOrderForInternal = sumVerifyInternal;
 		assert((int)alreadyConsidered.size() == this->_N);
 
 		EdgeCounts edgeCountsVerification(this->_edge_details);

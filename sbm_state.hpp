@@ -33,9 +33,7 @@ struct Labelling {
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
 	int NonEmptyClusters;
-	mutable long double SumOfLog2LOrders;
 	mutable long double SumOfLog2Facts;
-	mutable long double SumOfLog2LOrderForInternal;
 	Labelling(const int _N, const long double _alpha);
 
 
