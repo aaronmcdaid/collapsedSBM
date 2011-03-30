@@ -180,6 +180,21 @@ bool fiftyfifty() {
 	else
 		return false;
 }
+struct AcceptanceRate {
+	int n;
+	int a; // a/n is the acceptance rate
+	AcceptanceRate() : n(0), a(0) {
+	}
+	void notify(bool accepted) {
+		this->n++;
+		if(accepted)
+			this->a++;
+	}
+	void dump() const {
+		cout << "Acceptance Rate: ";
+		PP(double(this->a)/this->n);
+	}
+};
 bool acceptTest(const long double delta) {
 	if(log2(drand48()) < delta)
 		return true;
@@ -570,7 +585,7 @@ void M3(sbm::State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
+static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
@@ -604,6 +619,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// PP( presumed_delta );
 			// PP(postPMF12 - prePMF12);
 			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
+			AR->notify(true);
 			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
@@ -611,6 +627,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			// assert(s.pmf(obj)==prePMF);
 			// assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
+			AR->notify(false);
 			return 0.0L;
 		}
 	} else { // propose decrease
@@ -637,6 +654,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
 				// assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
+				AR->notify(true);
 				return presumed_delta;
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
@@ -645,11 +663,13 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 				// assert(s.pmf(obj)==postPMF);
 				// assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
+				AR->notify(false);
 				return 0.0L;
 			}
 		} else {// otherwise, not possible to remove it
 			// cout << "k: rej-dec" << endl;
 			assert(s._k==preK);
+			AR->notify(false);
 			return 0.0L;
 		}
 	}
@@ -679,9 +699,10 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	long double pmf_track = s.pmf(obj);
 	PP(pmf_track);
 
+	AcceptanceRate AR_metroK;
 	for(int i=1; i<=400000; i++) {
 		if(commandLineK == -1) {
-			pmf_track += MetropolisOnK(s, obj);
+			pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 		} else
 			assert(commandLineK == s._k);
 		// PP(i);
@@ -699,6 +720,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
+			AR_metroK.dump();
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
