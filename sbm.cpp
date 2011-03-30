@@ -192,7 +192,6 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
-	const long double pre = s.pmf(obj);
 	const int n = drand48() * s._N;
 	const int oldClusterID = s.labelling.cluster_id.at(n);
 	int newClusterID;
@@ -202,8 +201,10 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
 	assert(newClusterID != oldClusterID);
 	// PP(oldClusterID);
 	// PP(newClusterID);
-	s.moveNode(n, newClusterID);
-	s.informNodeMove(n, oldClusterID, newClusterID);
+
+	const long double pre = s.pmf(obj);
+
+	s.moveNodeAndInformOfEdges(n, newClusterID);
 	const long double post = s.pmf(obj);
 	const long double delta = post - pre;
 	// PP(pre);
@@ -214,8 +215,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj) {
 		return delta;
 	} else {
 		// cout << "   ";
-		s.moveNode(n, oldClusterID);
-		s.informNodeMove(n, newClusterID, oldClusterID);
+		s.moveNodeAndInformOfEdges(n, oldClusterID);
 		// assert(VERYCLOSE(s.pmf(obj), pre)); // make sure it has undone it properly
 		return 0.0L;
 	}
