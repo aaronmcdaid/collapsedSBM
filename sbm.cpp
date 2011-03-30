@@ -583,9 +583,17 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 		// assert(postPMF < prePMF);
 		// assert(postPMF12 < prePMF12);
 		// assert(VERYCLOSE(postPMF - prePMF, postPMF12 - prePMF12));
-		const long double presumed_delta = log2(preK) - log2(s._N+preK)
+		const int postK = preK + 1;
+		assert(s._k == postK);
+		const long double presumed_delta =
 			- log2(preK+1) // Poisson(1) prior on K
 			// - 1 // Geometric(0.5) prior on K
+
+			+ LOG2GAMMA(s._alpha) // the change to SumOfLog2Facts
+
+			// log2(preK) - log2(s._N+preK)
+			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) - postK*LOG2GAMMA(s._alpha) )
+			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) - preK*LOG2GAMMA(s._alpha) )
 			;
 		if(acceptTest(presumed_delta)) {
 			// cout << "k: acc inc" << endl;
@@ -607,9 +615,16 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 		}
 	} else { // propose decrease
 		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
-			const long double presumed_delta = - log2(preK-1) + log2(s._N+preK-1)
+			const int postK = preK-1;
+			const long double presumed_delta =
 				+ log2(preK) // Poisson(1) prior on K
 				// + 1 // Geometric(0.5) prior on K
+
+				- LOG2GAMMA(s._alpha) // the change to SumOfLog2Facts
+
+				// - log2(preK-1) + log2(s._N+preK-1)
+				+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) - postK*LOG2GAMMA(s._alpha) )
+				-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) - preK*LOG2GAMMA(s._alpha) )
 				;
 			s.deleteClusterFromTheEnd();
 			// const long double postPMF12 = s.P_z_K();
@@ -667,27 +682,26 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	for(int i=1; i<=400000; i++) {
 		if(commandLineK == -1) {
 			pmf_track += MetropolisOnK(s, obj);
-			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 		} else
 			assert(commandLineK == s._k);
 		// PP(i);
-		const long double pre = s.pmf(obj);
+		// const long double pre = s.pmf(obj);
 		const long double delta = MoneNode(s, obj);
 		pmf_track += delta;
-		assert(pmf_track == s.pmf(obj));
-		const long double post = s.pmf(obj);
-		assert(pre + delta == post);
+		// const long double post = s.pmf(obj);
+		// assert(pre + delta == post);
 		// if(i%50 == 0)
 			// M3(s);
 	
 		// PP(s.pmf());
 		// cout << endl;
-		s.internalCheck();
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
 			cout << " end of check at i==" << i << endl;
+			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
+			s.internalCheck();
 		}
 	}
 	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);

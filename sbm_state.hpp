@@ -28,6 +28,7 @@ struct Cluster {
 struct Labelling {
 	const int _N;
 	int _k;
+	const long double _alpha;
 	std::vector< Cluster* > clusters; // numbered 0 to k-1
 	std::vector< int > cluster_id; // the cluster that each node is in
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
@@ -35,7 +36,7 @@ struct Labelling {
 	mutable long double SumOfLog2LOrders;
 	mutable long double SumOfLog2Facts;
 	mutable long double SumOfLog2LOrderForInternal;
-	Labelling(const int _N);
+	Labelling(const int _N, const long double _alpha);
 
 
 	void appendEmptyCluster();

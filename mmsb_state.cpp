@@ -44,7 +44,7 @@ namespace sbm {
 	}
 	MMSBstate:: MMSBstate (const GraphType * const g): _g(g), _N(g->numNodes()), _k(1) {
 		for(int i=0; i< this->_N; i++) {
-			ls.push_back(new Labelling(_N));
+			ls.push_back(new Labelling(_N, 1.0L));
 		}
 		for(int i=0; i< this->_N; i++) {
 			assert((int)ls.at(i)->clusters.size()==this->_k);

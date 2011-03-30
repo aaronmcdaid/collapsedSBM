@@ -11,9 +11,9 @@ namespace sbm {
 		assert(x<=0.0L);
 		return x;
 	}
-	Labelling::Labelling(const int _N) : _N(_N), _k(1) {
+	Labelling::Labelling(const int _N, const long double alpha) : _N(_N), _k(1), _alpha(alpha) {
 		this->SumOfLog2LOrders = log2l(this->_N);
-		this->SumOfLog2Facts   = LOG2FACT(this->_N);
+		this->SumOfLog2Facts   = LOG2GAMMA(this->_N + this->_alpha);
 		this->SumOfLog2LOrderForInternal = log2l((this->_N * this->_N - this->_N)/2);
 		this->NonEmptyClusters = 1;
 		this->clusters.push_back(new Cluster());
@@ -33,7 +33,7 @@ namespace sbm {
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
 	}
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N), _edgeCounts(edge_details) {
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -66,6 +66,7 @@ namespace sbm {
 		Cluster * newCluster = new Cluster();
 		this->clusters.push_back(newCluster);
 		this->_k ++;
+		this->SumOfLog2Facts += LOG2GAMMA(this->_alpha);
 	}
 	int State:: appendEmptyCluster() {
 		this->labelling.appendEmptyCluster();
@@ -80,6 +81,7 @@ namespace sbm {
 		this->clusters.pop_back();
 		delete clusterToDelete;
 		this->_k --;
+		this->SumOfLog2Facts -= LOG2GAMMA(this->_alpha);
 	}
 	void State:: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
@@ -115,13 +117,14 @@ namespace sbm {
 		}
 		const int from_order = oldcl->order();
 		const int   to_order =    cl->order();
+		assert(to_order > 0);
 		this->SumOfLog2LOrders +=
 					+ (oldcl->order()<2?0.0L:log2l(oldcl->order()))
 					- (oldcl->order()<1?0.0L:log2l(oldcl->order()+1))
 					;
 		this->SumOfLog2Facts +=
-					+ (oldcl->order()<2?0.0L:LOG2FACT(oldcl->order()))
-					- (oldcl->order()<1?0.0L:LOG2FACT(oldcl->order()+1))
+					+ (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()))
+					- (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()+1))
 					;
 		this->SumOfLog2LOrderForInternal +=
 					+ (oldcl->order()<2?0.0L:log2l( (from_order  )*(from_order  -1)/2 ))
@@ -132,9 +135,10 @@ namespace sbm {
 					- (cl->order()<3   ?0.0L:log2l(cl->order()-1))
 					;
 		this->SumOfLog2Facts +=
-					+ (cl->order()<2   ?0.0L:LOG2FACT(cl->order()))
-					- (cl->order()<3   ?0.0L:LOG2FACT(cl->order()-1))
+					+ (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()))
+					- (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()-1))
 					;
+		assert(isfinite(this->SumOfLog2Facts));
 		this->SumOfLog2LOrderForInternal +=
 					+ (cl->order()<2   ?0.0L:log2l( (to_order  )*(to_order  -1)/2 ))
 					- (cl->order()<3   ?0.0L:log2l( (to_order-1)*(to_order-1-1)/2 ))
@@ -250,9 +254,9 @@ namespace sbm {
 			}
 			if(cl->order() >0)
 				NonEmptyVerify++;
+			sumVerifyFacts += LOG2GAMMA(cl->order() + this->_alpha);
 			if(cl->order() >=2) {
 				sumVerify += log2l(cl->order());
-				sumVerifyFacts += LOG2FACT(cl->order());
 				sumVerifyInternal += log2l(cl->order()*(cl->order()-1)/2);
 			}
 		}
@@ -379,16 +383,16 @@ namespace sbm {
 		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State:: P_z_orders() const { // given our current this->_k, what's P(z | k)
-		return LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
+		return                        LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
 	}
 
 	long double State:: P_z_slow() const { // given our current this->_k, what's P(z | k)
 		const long double K_prior = this->P_z_K();
-		long double perCluster_bits = LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N) - this->_k*LOG2GAMMA(this->_alpha);
+		long double perCluster_bits = LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha);
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->labelling.clusters.at(CL);
 			assert(cl);
-			perCluster_bits += LOG2FACT(cl->order());
+			perCluster_bits += LOG2GAMMA(cl->order() + this->_alpha);
 		}
 		assert(perCluster_bits == P_z_orders());
 		if(VERYCLOSE(perCluster_bits, 0.0L)) {
