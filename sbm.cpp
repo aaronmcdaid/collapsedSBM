@@ -570,7 +570,7 @@ void M3(sbm::State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
+static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 	const long double prePMF = s.pmf(obj);
 	const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
@@ -596,12 +596,14 @@ static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 			// PP( presumed_delta );
 			// PP(postPMF12 - prePMF12);
 			assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
+			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
 			assert(s.pmf(obj)==prePMF);
 			assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
+			return 0.0L;
 		}
 	} else { // propose decrease
 		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
@@ -619,6 +621,7 @@ static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
 				assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
+				return presumed_delta;
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function.
 				// cout << "k: rej dec" << endl;
@@ -626,13 +629,17 @@ static void MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj) {
 				// assert(s.pmf(obj)==postPMF);
 				assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
+				return 0.0L;
 			}
 		} else {// otherwise, not possible to remove it
 			// cout << "k: rej-dec" << endl;
 			assert(s._k==preK);
+			return 0.0L;
 		}
 	}
 }
+
+#define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
 void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj) {
 	sbm::State s(g, edge_details);
@@ -653,16 +660,20 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		randomize(s, commandLineK);
 	// s.shortSummary(); s.summarizeEdgeCounts(); s.blockDetail(obj);
 
-	PP(s.pmf(obj));
+	long double pmf_track = s.pmf(obj);
+	PP(pmf_track);
 
 	for(int i=1; i<=400000; i++) {
-		if(commandLineK == -1)
-			MetropolisOnK(s, obj);
-		else
+		if(commandLineK == -1) {
+			pmf_track += MetropolisOnK(s, obj);
+			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
+		} else
 			assert(commandLineK == s._k);
 		// PP(i);
 		const long double pre = s.pmf(obj);
 		const long double delta = MoneNode(s, obj);
+		pmf_track += delta;
+		assert(pmf_track == s.pmf(obj));
 		const long double post = s.pmf(obj);
 		assert(pre + delta == post);
 		// if(i%50 == 0)
