@@ -153,11 +153,14 @@ namespace sbm {
 	}
 
 	void State:: summarizeEdgeCounts() const {
-		forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
-			if(x.second != 0.0L) {
-				cout << x.first.first
-					<< ',' << x.first.second
-					<< '\t' << x.second
+		for (int i=-1; i<this->_k; i++)
+		for (int j=-1; j<this->_k; j++)
+		{
+			const long double x = this->_edgeCounts.counts.at(i,j);
+			if(x != 0.0L) {
+				cout << i
+					<< ',' << j
+					<< '\t' << x
 					<< endl ;
 			}
 		}
@@ -250,7 +253,11 @@ namespace sbm {
 			long double total_edge_weight_verification = 0.0L;
 			long double total_edge_weight_Inside_verification = 0.0L; // just the edges that are inside a cluster
 			long double total_edge_weight_Outside_verification = 0.0L; // just the edges that are from one cluster to another
-			forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
+			// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts))
+			for(int i=-1; i<this->_k; i++)
+			for(int j=-1; j<this->_k; j++)
+			{
+				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.counts.at(i,j));
 				if(x.second == 0) {
 					// we can ignore this
 				} else if(x.first.first == -1 && x.first.second == -1) {
@@ -272,7 +279,7 @@ namespace sbm {
 			assert(this->total_edge_weight == total_edge_weight_verification);
 			assert(this->total_edge_weight == total_edge_weight_Outside_verification + total_edge_weight_Inside_verification);
 			try {
-				assert(this->_edgeCounts.counts.at(make_pair(-1,-1)) == total_edge_weight_Outside_verification);
+				assert(this->_edgeCounts.counts.at(-1,-1) == total_edge_weight_Outside_verification);
 			} catch (const std::out_of_range &e) {
 				// we don't mind an out_of_range here, as long as total_edge_weight_Outside_verification is 0
 				assert(total_edge_weight_Outside_verification == 0);
@@ -285,7 +292,19 @@ namespace sbm {
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
 		}
-		forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
+		for(int i=-1; i<this->_k; i++) {
+			edgeCountsVerification.counts.at(i,this->_k-1);
+			const std :: vector<long double> & xx = edgeCountsVerification.counts.x.at(i+1);
+
+			for(int j=-1; j<this->_k; j++) {
+				assert(xx.at(j+1) == this->_edgeCounts.counts.at(i,j));
+			}
+		}
+		/*
+		// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts))
+		for(int i=0; i<this->_k; i++)
+		for(int j=0; j<this->_k; j++)
+		{
 			if(x.second == 0) {
 				// we can ignore this
 			} else {
@@ -298,6 +317,7 @@ namespace sbm {
 		forEach(const State :: EdgeCounts :: map_type :: value_type &x, amd::mk_range(edgeCountsVerification.counts)) {
 			assert(x.second == 0.0L);
 		}
+		*/
 		//assert(edgeCountsVerification.counts.size()==0);
 
 		// assert(VERYCLOSE(this->pmf(obj) , this->pmf_slow(obj)));
@@ -331,6 +351,26 @@ namespace sbm {
 	}
 
 
+			long double & State:: EdgeCounts:: map_type :: at(int i,int j) {
+				i++; // so as to handle (-1,-1)
+				j++; // so as to handle (-1,-1)
+				if((int) this->x.size() <= i)
+					this->x.resize(i+1);
+				std :: vector<long double> &y = this->x.at(i);
+				if((int) y.size() <= j)
+					y.resize(j+1);
+				return y.at(j);
+			}
+			long double State:: EdgeCounts:: map_type :: at(int i, int j) const {
+				i++; // so as to handle (-1,-1)
+				j++; // so as to handle (-1,-1)
+				if((int) this->x.size() <= i)
+					this->x.resize(i+1);
+				std :: vector<long double> &y = this->x.at(i);
+				if((int) y.size() <= j)
+					y.resize(j+1);
+				return y.at(j);
+			}
 	State:: EdgeCounts:: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details) {
 	}
 	void State::EdgeCounts::inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
@@ -338,11 +378,11 @@ namespace sbm {
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
 		long double h2l = this->_edge_details->geth2l(relId);
-		this->counts[make_pair(cl1,cl2)]+=l2h;
-		this->counts[make_pair(cl2,cl1)]+=h2l;
+		this->counts.at(cl1,cl2)+=l2h;
+		this->counts.at(cl2,cl1)+=h2l;
 		// this->counts[make_pair(cl1,cl2)]++;
 		if(cl1 != cl2) {
-			this->counts[make_pair(-1,-1)] += l2h+h2l;
+			this->counts.at(-1,-1) += l2h+h2l;
 		}
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
@@ -350,17 +390,15 @@ namespace sbm {
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
 		long double h2l = this->_edge_details->geth2l(relId);
-		this->counts[make_pair(cl1,cl2)]-=l2h;
-		this->counts[make_pair(cl2,cl1)]-=h2l;
+		this->counts.at(cl1,cl2)-=l2h;
+		this->counts.at(cl2,cl1)-=h2l;
 		// this->counts[make_pair(cl1,cl2)]--;
 		if(cl1 != cl2) {
-			this->counts[make_pair(-1,-1)] -= l2h+h2l;
+			this->counts.at(-1,-1) -= l2h+h2l;
 		}
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
-		long double lowToHigh;
-		try { lowToHigh = this->counts.at(make_pair(cl1,cl2)); } catch (const std::out_of_range &e) { lowToHigh = 0.0L; }
-		return lowToHigh;
+		return this->counts.at(cl1,cl2);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
@@ -404,42 +442,22 @@ namespace sbm {
 		swap(this->clusters.at(cl1), this->clusters.at(cl2));
 	}
 	void State :: swapClusters(const int cl1, const int cl2) {
+		assert(cl1 != cl2);
 		this->labelling.swapClusters(cl1,cl2);
 		// I must also swap the _edgeCounts structure
-		const size_t preSize = this->_edgeCounts.counts.size();
 		// PP(this->_edgeCounts.counts.size());
 		// PP(this->_k);
-		if(0)
-		for(State :: EdgeCounts :: map_type :: const_iterator i = this->_edgeCounts.counts.begin(); i != this->_edgeCounts.counts.end(); i++ ) {
-			PP3(i->first.first, i->first.second, i->second);
+		for(int i=0; i<this->_k; i++) {
+			this->_edgeCounts.counts.at(i,this->_k - 1); // just to ensure counts :: x is big enough
+			std :: vector<long double> &row = this->_edgeCounts.counts.x.at(i+1);
+			PP(row.size());
+			PP2(cl1,cl2);
+			PP2(i,this->_k);
+			PP(__LINE__);
+			swap(row.at(cl1+1),row.at(cl2+1));
+			PP(__LINE__);
 		}
-		// cout << "swapping" << endl;
-		State :: EdgeCounts :: map_type merge_these_back_in_again;
-		for(State :: EdgeCounts :: map_type ::       iterator i = this->_edgeCounts.counts.begin(); i != this->_edgeCounts.counts.end();  ) {
-			if( i->first.first  == cl1
-			 || i->first.first  == cl2
-			 || i->first.second == cl1
-			 || i->first.second == cl2
-			 ) {
-				// flip them
-				pair< pair<int,int> , int> tmp = *i;
-				// PP3(tmp.first.first, tmp.first.second, tmp.second);
-				if(tmp.first.first == cl1) tmp.first.first = cl2; else if(tmp.first.first == cl2) tmp.first.first = cl1;
-				if(tmp.first.second == cl1) tmp.first.second = cl2; else if(tmp.first.second == cl2) tmp.first.second = cl1;
-				// remove it
-				// readd them
-				// PP3(tmp.first.first, tmp.first.second, tmp.second);
-				i = this->_edgeCounts.counts.erase(i); // erase it and leave the iterator pointing at the next item
-				merge_these_back_in_again.insert(tmp);
-			} else
-				++i;
-		}
-		// PP(merge_these_back_in_again.size());
-		for(State :: EdgeCounts :: map_type ::       iterator i = merge_these_back_in_again.begin(); i != merge_these_back_in_again.end(); i++) {
-			this->_edgeCounts.counts.insert(*i);
-		}
-		// PP2(preSize, this->_edgeCounts.counts.size());
-		assert(preSize == this->_edgeCounts.counts.size());
+		swap(this->_edgeCounts.counts.x.at(cl1+1), this->_edgeCounts.counts.x.at(cl2+1));
 	}
 
 	long double State:: P_z_K() const { // 1 and 2
