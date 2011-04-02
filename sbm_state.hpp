@@ -97,7 +97,7 @@ struct State {
 		struct map_type { //; // the special entry (-1,-1) will denote edge that are not inside a cluster/community
 			mutable std :: vector< std :: vector<long double> > x;
 			long double & at(int i,int j) ;
-			long double at(int i, int j) const ;
+			long double read(int i, int j) const ;
 		};
 		EdgeCounts(const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2

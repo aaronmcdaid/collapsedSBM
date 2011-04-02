@@ -156,7 +156,7 @@ namespace sbm {
 		for (int i=-1; i<this->_k; i++)
 		for (int j=-1; j<this->_k; j++)
 		{
-			const long double x = this->_edgeCounts.counts.at(i,j);
+			const long double x = this->_edgeCounts.get(i,j);
 			if(x != 0.0L) {
 				cout << i
 					<< ',' << j
@@ -257,7 +257,7 @@ namespace sbm {
 			for(int i=-1; i<this->_k; i++)
 			for(int j=-1; j<this->_k; j++)
 			{
-				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.counts.at(i,j));
+				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.get(i,j));
 				if(x.second == 0) {
 					// we can ignore this
 				} else if(x.first.first == -1 && x.first.second == -1) {
@@ -279,7 +279,7 @@ namespace sbm {
 			assert(this->total_edge_weight == total_edge_weight_verification);
 			assert(this->total_edge_weight == total_edge_weight_Outside_verification + total_edge_weight_Inside_verification);
 			try {
-				assert(this->_edgeCounts.counts.at(-1,-1) == total_edge_weight_Outside_verification);
+				assert(this->_edgeCounts.get(-1,-1) == total_edge_weight_Outside_verification);
 			} catch (const std::out_of_range &e) {
 				// we don't mind an out_of_range here, as long as total_edge_weight_Outside_verification is 0
 				assert(total_edge_weight_Outside_verification == 0);
@@ -297,7 +297,7 @@ namespace sbm {
 			const std :: vector<long double> & xx = edgeCountsVerification.counts.x.at(i+1);
 
 			for(int j=-1; j<this->_k; j++) {
-				assert(xx.at(j+1) == this->_edgeCounts.counts.at(i,j));
+				assert(xx.at(j+1) == this->_edgeCounts.get(i,j));
 			}
 		}
 		/*
@@ -361,7 +361,7 @@ namespace sbm {
 					y.resize(j+1);
 				return y.at(j);
 			}
-			long double State:: EdgeCounts:: map_type :: at(int i, int j) const {
+			long double State:: EdgeCounts:: map_type :: read(int i, int j) const {
 				i++; // so as to handle (-1,-1)
 				j++; // so as to handle (-1,-1)
 				if((int) this->x.size() <= i)
@@ -398,7 +398,7 @@ namespace sbm {
 		}
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
-		return this->counts.at(cl1,cl2);
+		return this->counts.read(cl1,cl2);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
