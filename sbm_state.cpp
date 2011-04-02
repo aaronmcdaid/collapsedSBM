@@ -353,9 +353,6 @@ namespace sbm {
 		this->counts[make_pair(cl1,cl2)]-=l2h;
 		this->counts[make_pair(cl2,cl1)]-=h2l;
 		// this->counts[make_pair(cl1,cl2)]--;
-		DYINGWORDS(this->counts[make_pair(cl1,cl2)] >= 0) {
-			PP2(cl1,cl2);
-		}
 		if(cl1 != cl2) {
 			this->counts[make_pair(-1,-1)] -= l2h+h2l;
 		}
