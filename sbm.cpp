@@ -750,7 +750,9 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
-			s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
+			s.shortSummary(obj);
+			// s.summarizeEdgeCounts();
+			s.blockDetail(obj);
 			AR_metroK.dump();
 			AR_metro1Node.dump();
 			cout << " end of check at i==" << i << endl;

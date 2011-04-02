@@ -453,9 +453,7 @@ namespace sbm {
 			PP(row.size());
 			PP2(cl1,cl2);
 			PP2(i,this->_k);
-			PP(__LINE__);
 			swap(row.at(cl1+1),row.at(cl2+1));
-			PP(__LINE__);
 		}
 		swap(this->_edgeCounts.counts.x.at(cl1+1), this->_edgeCounts.counts.x.at(cl2+1));
 	}
