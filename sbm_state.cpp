@@ -246,6 +246,38 @@ namespace sbm {
 		this->labelling.SumOfLog2Facts = sumVerifyFacts;
 		assert((int)alreadyConsidered.size() == this->_N);
 
+		{ // this->total_edge_weight
+			long double total_edge_weight_verification = 0.0L;
+			long double total_edge_weight_Inside_verification = 0.0L; // just the edges that are inside a cluster
+			long double total_edge_weight_Outside_verification = 0.0L; // just the edges that are from one cluster to another
+			forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts)) {
+				if(x.second == 0) {
+					// we can ignore this
+				} else if(x.first.first == -1 && x.first.second == -1) {
+					// skip this for now. it should equal total_edge_weight_Outside_verification
+				} else {
+					assert(x.second > 0);
+					assert(x.first.first < this->_k);
+					assert(x.first.second < this->_k);
+					assert(x.first.first >= 0);
+					assert(x.first.second >= 0);
+
+					total_edge_weight_verification += x.second;
+					if(x.first.first == x.first.second)
+						total_edge_weight_Inside_verification += x.second;
+					else
+						total_edge_weight_Outside_verification += x.second;
+				}
+			}
+			assert(this->total_edge_weight == total_edge_weight_verification);
+			assert(this->total_edge_weight == total_edge_weight_Outside_verification + total_edge_weight_Inside_verification);
+			try {
+				assert(this->_edgeCounts.counts.at(make_pair(-1,-1)) == total_edge_weight_Outside_verification);
+			} catch (const std::out_of_range &e) {
+				// we don't mind an out_of_range here, as long as total_edge_weight_Outside_verification is 0
+				assert(total_edge_weight_Outside_verification == 0);
+			}
+		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
 			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
@@ -309,6 +341,9 @@ namespace sbm {
 		this->counts[make_pair(cl1,cl2)]+=l2h;
 		this->counts[make_pair(cl2,cl1)]+=h2l;
 		// this->counts[make_pair(cl1,cl2)]++;
+		if(cl1 != cl2) {
+			this->counts[make_pair(-1,-1)] += l2h+h2l;
+		}
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
@@ -320,6 +355,9 @@ namespace sbm {
 		// this->counts[make_pair(cl1,cl2)]--;
 		DYINGWORDS(this->counts[make_pair(cl1,cl2)] >= 0) {
 			PP2(cl1,cl2);
+		}
+		if(cl1 != cl2) {
+			this->counts[make_pair(-1,-1)] -= l2h+h2l;
 		}
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {

@@ -94,7 +94,7 @@ struct State {
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
 		const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
-		typedef boost::unordered_map< std:: pair<int,int> , long double> map_type;
+		typedef boost::unordered_map< std:: pair<int,int> , long double> map_type; // the special entry (-1,-1) will denote edge that are not inside a cluster/community
 		EdgeCounts(const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
