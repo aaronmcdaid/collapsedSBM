@@ -635,7 +635,24 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			return 0.0L;
 		}
 	} else { // propose decrease
-		if(s._k >= 1 && s.labelling.clusters.back()->order()==0) {
+		if(s._k == 1) { // can't propose a decrease
+			assert(s._k==preK);
+			AR->notify(false);
+			return 0.0L;
+		}
+		assert(s._k > 1);
+		const int clusterToProposeDelete = drand48() * s._k;
+		if(s.labelling.clusters.at(clusterToProposeDelete)->order()>0) {
+			// can't delete this. Time to get out
+			assert(s._k==preK);
+			AR->notify(false);
+			return 0.0L;
+		}
+		if(clusterToProposeDelete != s._k-1) {
+			s.swapClusters(clusterToProposeDelete , s._k-1);
+		}
+		assert(s.labelling.clusters.back()->order()==0);
+		{
 			const int postK = preK-1;
 			const long double presumed_delta =
 				+ log2(preK) // Poisson(1) prior on K
@@ -668,11 +685,6 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 				assert(s._k==preK);
 				return 0.0L;
 			}
-		} else {// otherwise, not possible to remove it
-			// cout << "k: rej-dec" << endl;
-			assert(s._k==preK);
-			AR->notify(false);
-			return 0.0L;
 		}
 	}
 }
@@ -709,7 +721,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	for(int i=1; i<=4000000; i++) {
-		if(1) {
+		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
 				const int cl1 = s._k * drand48();
