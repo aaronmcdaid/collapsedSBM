@@ -227,7 +227,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 	const long double pre = s.pmf(obj);
 	const long double pre_x_z = s.P_edges_given_z_slow(obj);
 #endif
-	const long double pre_z = s.P_z_slow();
+	const long double pre_z = s.P_z();
 
 	std :: vector < pair< pair<int,int> , pair<long double, int> > > blocksBefore; // all the blocks that'll be modified
 	for(int i=0; i<s._k; i++) {
@@ -246,7 +246,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 
 	s.moveNodeAndInformOfEdges(n, newClusterID);
 
-	const long double post_z = s.P_z_slow();
+	const long double post_z = s.P_z();
 	long double delta_x_z = 0.0L;
 	{ // now to calculate those that have changed
 		// cout << "  delta x|z" << endl;

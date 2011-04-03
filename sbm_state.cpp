@@ -481,6 +481,10 @@ namespace sbm {
 		}
 		return assertNonPositiveFinite(K_prior + perCluster_bits);
 	}
+	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
+		const long double K_prior = this->P_z_K();
+		return assertNonPositiveFinite(K_prior + P_z_orders());
+	}
 
 	
 	long double State:: P_edges_given_z_slow(const ObjectiveFunction *obj) const {

@@ -102,6 +102,7 @@ struct State {
 	long double P_z_K() const; // 1.
 	long double P_z_orders() const; // 2.
 	long double P_z_slow() const;
+	long double P_z() const;
 
 	long double P_edges_given_z_slow(const ObjectiveFunction *obj) const;
 	long double P_edges_given_z(const ObjectiveFunction *obj) const;
