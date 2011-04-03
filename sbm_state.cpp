@@ -529,10 +529,8 @@ namespace sbm {
 				// PP2(i,j);
 				// PP2(ni,nj);
 				// PP2(edges, pairs);
-				if(pairs > 0) {
-					pairsEncountered += pairs;
-					edges_bits += obj->log2OneBlock(edges, pairs, i==j);
-				}
+				pairsEncountered += pairs;
+				edges_bits += obj->log2OneBlock(edges, pairs, i==j);
 				// PP(edges_bits);
 			}
 		}
@@ -599,6 +597,8 @@ namespace sbm {
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const { // virtual
+		if(pairs==0)
+			return 0.0L;
 		assert(pairs > 0);
 		const long double beta_1 = isDiagonal ? 1.0L : 1.0L; // prior
 		const long double beta_2 = isDiagonal ? 1.0L : 1.0L; // prior. number of NON-edges in the urn. A large number here for !isDiagonal will give sparse offDiagonal (i.e. community finding)
@@ -617,6 +617,8 @@ namespace sbm {
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const int p_b, bool isDiagonal) const { // virtual
+		if(p_b==0)
+			return 0.0L;
 		assert(p_b > 0);
 		// y_b should be a non-negative integer
 		assert(isfinite(y_b));
