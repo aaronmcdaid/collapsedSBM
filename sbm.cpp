@@ -224,16 +224,67 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 	// PP(newClusterID);
 
 	const long double pre = s.pmf(obj);
+	const long double pre_x_z = s.P_edges_given_z_slow(obj);
+	const long double pre_z = s.P_z_slow();
+
+	std :: vector < pair< pair<int,int> , pair<long double, int> > > blocksBefore; // all the blocks that'll be modified
+	for(int i=0; i<s._k; i++) {
+		for(int j=0; j<s._k; j++) {
+			if(!obj->isValidBlock(i,j))
+				break;
+			assert(obj->directed || j <= i);
+			if(i == newClusterID || j==newClusterID
+			|| i == oldClusterID || j==oldClusterID) { // this block is of interest
+				const long double w = obj->relevantWeight(i,j, &s._edgeCounts);
+				const int pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
+				blocksBefore.push_back (make_pair(  make_pair(i,j), make_pair(w,       pairs     )));
+			}
+		}
+	}
 
 	s.moveNodeAndInformOfEdges(n, newClusterID);
-	const long double post = s.pmf(obj);
-	const long double delta = post - pre;
-	// PP(pre);
-	// PP(post);
-	// PP(delta);
-	if(acceptTest(delta, AR)) {
+
+	const long double post_z = s.P_z_slow();
+	long double delta_x_z = 0.0L;
+	{ // now to calculate those that have changed
+		// cout << "  delta x|z" << endl;
+		forEach( typeof(pair< pair<int,int> , pair<long double,int> >) & block, amd :: mk_range(blocksBefore)) {
+			const int i = block.first.first;
+			const int j = block.first.second;
+			// PP2(i,j);
+			const long double old_weight = block.second.first;
+			const long double old_pairs = block.second.second;
+			const long double new_weight = obj->relevantWeight(i,j, &s._edgeCounts);
+			const int new_pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
+			// PP2(new_weight, old_weight);
+			// PP2(new_pairs, old_pairs);
+			const long double old_x_z = obj->log2OneBlock(old_weight, old_pairs, i==j);
+			const long double new_x_z = obj->log2OneBlock(new_weight, new_pairs, i==j);
+			// PP3(old_x_z, new_x_z, new_x_z-old_x_z);
+			delta_x_z += new_x_z-old_x_z;
+		}
+		// PP(delta_x_z);
+		// cout << " ~delta x|z" << endl;
+	}
+	const long double delta_z = post_z - pre_z;
+	const long double delta_ = delta_z + delta_x_z;
+	{
+		const long double post_x_z = s.P_edges_given_z_slow(obj);
+		const long double delta_x_z_ = post_x_z - pre_x_z;
+		// PP3(pre_x_z, post_x_z, post_x_z - pre_x_z);
+		// PP3(delta_x_z, delta_x_z_, delta_x_z - delta_x_z_);
+		assert(VERYCLOSE(delta_x_z , delta_x_z_));
+
+		const long double post = s.pmf(obj);
+		const long double delta = post - pre;
+		assert(VERYCLOSE(delta, delta_));
+		// PP(pre);
+		// PP(post);
+		// PP(delta);
+	}
+	if(acceptTest(delta_, AR)) {
 		// cout << " + ";
-		return delta;
+		return delta_;
 	} else {
 		// cout << "   ";
 		s.moveNodeAndInformOfEdges(n, oldClusterID);
