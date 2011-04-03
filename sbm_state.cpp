@@ -505,8 +505,9 @@ namespace sbm {
 				}
 				total_edge_weight_verification += edges;
 
-				int pairs = 0;
+				const int pairs_ = obj->numberOfPairsInBlock(i,j, &this->labelling);
 				{
+					int pairs = 0;
 					const Cluster *I = this->labelling.clusters.at(i);
 					assert(I);
 					const Cluster *J = this->labelling.clusters.at(j);
@@ -523,9 +524,10 @@ namespace sbm {
 					}
 					if(i==j && obj->selfloops)
 						pairs += ni;
+					assert(pairs == pairs_);
 				}
-				pairsEncountered += pairs;
-				edges_bits += obj->log2OneBlock(edges, pairs, i==j);
+				pairsEncountered += pairs_;
+				edges_bits += obj->log2OneBlock(edges, pairs_, i==j);
 			}
 		}
 		if(obj->directed) {
@@ -588,6 +590,26 @@ namespace sbm {
 	long double ObjectiveFunction :: relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const { // this might include the other direction, if it's undirected
 		const long double edges = edge_counts->get(i,j) + ( this->isTwoSided(i,j) ? edge_counts->get(j,i) : 0);
 		return edges;
+	}
+	int ObjectiveFunction :: numberOfPairsInBlock(const int i, const int j, const Labelling *labelling) const {
+		int pairs=0;
+					const Cluster *I = labelling->clusters.at(i);
+					assert(I);
+					const Cluster *J = labelling->clusters.at(j);
+					assert(J);
+					const int ni = I->order();
+					const int nj = J->order();
+					pairs += ni*nj; // if i==j, then ni==nj
+					if (i==j) {
+						assert(ni==nj);
+						if(this->directed)
+							pairs = ni * (nj - 1); // both directions included
+						else
+							pairs = ni * (nj - 1) / 2; // just one direction included
+						if(this->selfloops)
+							pairs += ni;
+					}
+		return pairs;
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const { // virtual
