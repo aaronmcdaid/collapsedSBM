@@ -223,8 +223,10 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 	// PP(oldClusterID);
 	// PP(newClusterID);
 
+#ifdef MoneNodeParanoid
 	const long double pre = s.pmf(obj);
 	const long double pre_x_z = s.P_edges_given_z_slow(obj);
+#endif
 	const long double pre_z = s.P_z_slow();
 
 	std :: vector < pair< pair<int,int> , pair<long double, int> > > blocksBefore; // all the blocks that'll be modified
@@ -268,6 +270,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 	}
 	const long double delta_z = post_z - pre_z;
 	const long double delta_ = delta_z + delta_x_z;
+#ifdef MoneNodeParanoid
 	{
 		const long double post_x_z = s.P_edges_given_z_slow(obj);
 		const long double delta_x_z_ = post_x_z - pre_x_z;
@@ -282,6 +285,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 		// PP(post);
 		// PP(delta);
 	}
+#endif
 	if(acceptTest(delta_, AR)) {
 		// cout << " + ";
 		return delta_;
