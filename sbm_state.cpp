@@ -153,8 +153,8 @@ namespace sbm {
 	}
 
 	void State:: summarizeEdgeCounts() const {
-		for (int i=-1; i<this->_k; i++)
-		for (int j=-1; j<this->_k; j++)
+		for (int i=0; i<this->_k; i++)
+		for (int j=0; j<this->_k; j++)
 		{
 			const long double x = this->_edgeCounts.get(i,j);
 			if(x != 0.0L) {
@@ -254,14 +254,12 @@ namespace sbm {
 			long double total_edge_weight_Inside_verification = 0.0L; // just the edges that are inside a cluster
 			long double total_edge_weight_Outside_verification = 0.0L; // just the edges that are from one cluster to another
 			// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts))
-			for(int i=-1; i<this->_k; i++)
-			for(int j=-1; j<this->_k; j++)
+			for(int i=0; i<this->_k; i++)
+			for(int j=0; j<this->_k; j++)
 			{
 				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.get(i,j));
 				if(x.second == 0) {
 					// we can ignore this
-				} else if(x.first.first == -1 && x.first.second == -1) {
-					// skip this for now. it should equal total_edge_weight_Outside_verification
 				} else {
 					assert(x.second > 0);
 					assert(x.first.first < this->_k);
@@ -278,12 +276,7 @@ namespace sbm {
 			}
 			assert(this->total_edge_weight == total_edge_weight_verification);
 			assert(this->total_edge_weight == total_edge_weight_Outside_verification + total_edge_weight_Inside_verification);
-			try {
-				assert(this->_edgeCounts.get(-1,-1) == total_edge_weight_Outside_verification);
-			} catch (const std::out_of_range &e) {
-				// we don't mind an out_of_range here, as long as total_edge_weight_Outside_verification is 0
-				assert(total_edge_weight_Outside_verification == 0);
-			}
+			assert(this->_edgeCounts.counts.externalEdgeWeight == total_edge_weight_Outside_verification);
 		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
@@ -385,7 +378,7 @@ namespace sbm {
 		this->counts.at(cl2,cl1)+=h2l;
 		// this->counts[make_pair(cl1,cl2)]++;
 		if(cl1 != cl2) {
-			this->counts.at(-1,-1) += l2h+h2l;
+			this->counts.externalEdgeWeight += l2h+h2l;
 		}
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
@@ -397,10 +390,12 @@ namespace sbm {
 		this->counts.at(cl2,cl1)-=h2l;
 		// this->counts[make_pair(cl1,cl2)]--;
 		if(cl1 != cl2) {
-			this->counts.at(-1,-1) -= l2h+h2l;
+			this->counts.externalEdgeWeight -= l2h+h2l;
 		}
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
+		assert(cl1>=0);
+		assert(cl2>=0);
 		return this->counts.read(cl1,cl2);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
