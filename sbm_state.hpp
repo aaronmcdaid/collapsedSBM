@@ -94,22 +94,18 @@ struct State {
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
 		const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
-		struct map_type { //; // the special entry (-1,-1) will denote edge that are not inside a cluster/community
-			mutable std :: vector< std :: vector<long double> > z;
-			long double externalEdgeWeight;
-			long double & at(int i,int j) ;
-			long double read(int i, int j) const ;
-			map_type();
-		};
+		mutable std :: vector< std :: vector<long double> > counts;
+		long double externalEdgeWeight;
 		EdgeCounts(const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
 		long double get(const int cl1, const int cl2) const throw() ;
+		long double & at(int i,int j) ;
+		long double read(int i, int j) const ;
 		private:
 		friend void State:: summarizeEdgeCounts() const;
 		friend void State:: internalCheck() const;
 		friend void State:: swapClusters(int,int);
-		map_type counts;
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 	void moveNodeAndInformOfEdges(const int n, const int newcl);

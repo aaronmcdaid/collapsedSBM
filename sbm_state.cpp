@@ -276,7 +276,7 @@ namespace sbm {
 			}
 			assert(this->total_edge_weight == total_edge_weight_verification);
 			assert(this->total_edge_weight == total_edge_weight_Outside_verification + total_edge_weight_Inside_verification);
-			assert(this->_edgeCounts.counts.externalEdgeWeight == total_edge_weight_Outside_verification);
+			assert(this->_edgeCounts.externalEdgeWeight == total_edge_weight_Outside_verification);
 		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
@@ -285,10 +285,10 @@ namespace sbm {
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
 		}
-		assert(edgeCountsVerification.counts.externalEdgeWeight == this->_edgeCounts.counts.externalEdgeWeight);
+		assert(edgeCountsVerification.externalEdgeWeight == this->_edgeCounts.externalEdgeWeight);
 		for(int i=0; i<this->_k; i++) {
-			edgeCountsVerification.counts.at(i,this->_k-1);
-			const std :: vector<long double> & xx = edgeCountsVerification.counts.z.at(i);
+			edgeCountsVerification.at(i,this->_k-1);
+			const std :: vector<long double> & xx = edgeCountsVerification.counts.at(i);
 
 			for(int j=0; j<this->_k; j++) {
 				assert(xx.at(j) == this->_edgeCounts.get(i,j));
@@ -345,40 +345,38 @@ namespace sbm {
 	}
 
 
-			State:: EdgeCounts:: map_type :: map_type(): externalEdgeWeight(0.0L) {
-			}
-			long double & State:: EdgeCounts:: map_type :: at(int i,int j) {
-				assert(i>=0);
+	long double & State:: EdgeCounts:: at(int i,int j) {
+			assert(i>=0);
 				assert(j>=0);
-				if((int) this->z.size() <= i)
-					this->z.resize(i+1);
-				std :: vector<long double> &y = this->z.at(i);
+				if((int) this->counts.size() <= i)
+					this->counts.resize(i+1);
+				std :: vector<long double> &y = this->counts.at(i);
 				if((int) y.size() <= j)
 					y.resize(j+1);
 				return y.at(j);
-			}
-			long double State:: EdgeCounts:: map_type :: read(int i, int j) const {
+	}
+	long double State:: EdgeCounts:: read(int i, int j) const {
 				assert(i>=0);
 				assert(j>=0);
-				if((int) this->z.size() <= i)
-					this->z.resize(i+1);
-				std :: vector<long double> &y = this->z.at(i);
+				if((int) this->counts.size() <= i)
+					this->counts.resize(i+1);
+				std :: vector<long double> &y = this->counts.at(i);
 				if((int) y.size() <= j)
 					y.resize(j+1);
 				return y.at(j);
-			}
-	State:: EdgeCounts:: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details) {
+	}
+	State:: EdgeCounts:: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
 	}
 	void State::EdgeCounts::inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
 		long double h2l = this->_edge_details->geth2l(relId);
-		this->counts.at(cl1,cl2)+=l2h;
-		this->counts.at(cl2,cl1)+=h2l;
+		this->at(cl1,cl2)+=l2h;
+		this->at(cl2,cl1)+=h2l;
 		// this->counts[make_pair(cl1,cl2)]++;
 		if(cl1 != cl2) {
-			this->counts.externalEdgeWeight += l2h+h2l;
+			this->externalEdgeWeight += l2h+h2l;
 		}
 	}
 	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
@@ -386,17 +384,17 @@ namespace sbm {
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
 		long double h2l = this->_edge_details->geth2l(relId);
-		this->counts.at(cl1,cl2)-=l2h;
-		this->counts.at(cl2,cl1)-=h2l;
+		this->at(cl1,cl2)-=l2h;
+		this->at(cl2,cl1)-=h2l;
 		// this->counts[make_pair(cl1,cl2)]--;
 		if(cl1 != cl2) {
-			this->counts.externalEdgeWeight -= l2h+h2l;
+			this->externalEdgeWeight -= l2h+h2l;
 		}
 	}
 	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
 		assert(cl1>=0);
 		assert(cl2>=0);
-		return this->counts.read(cl1,cl2);
+		return this->read(cl1,cl2);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
@@ -446,14 +444,14 @@ namespace sbm {
 		// PP(this->_edgeCounts.counts.size());
 		// PP(this->_k);
 		for(int i=0; i<this->_k; i++) {
-			this->_edgeCounts.counts.read(i,this->_k - 1); // just to ensure counts :: x is big enough
-			std :: vector<long double> &row = this->_edgeCounts.counts.z.at(i);
+			this->_edgeCounts.read(i,this->_k - 1); // just to ensure counts :: x is big enough
+			std :: vector<long double> &row = this->_edgeCounts.counts.at(i);
 			// PP(row.size());
 			// PP2(cl1,cl2);
 			// PP2(i,this->_k);
 			swap(row.at(cl1),row.at(cl2));
 		}
-		swap(this->_edgeCounts.counts.z.at(cl1), this->_edgeCounts.counts.z.at(cl2));
+		swap(this->_edgeCounts.counts.at(cl1), this->_edgeCounts.counts.at(cl2));
 	}
 
 	long double State:: P_z_K() const { // 1 and 2
