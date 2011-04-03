@@ -81,7 +81,6 @@ struct State {
 		EdgeCounts(const shmGraphRaw:: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
-		long double get(const int cl1, const int cl2) const throw() ;
 		long double & at(int i,int j) ;
 		long double read(int i, int j) const ;
 		private:

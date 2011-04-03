@@ -156,7 +156,7 @@ namespace sbm {
 		for (int i=0; i<this->_k; i++)
 		for (int j=0; j<this->_k; j++)
 		{
-			const long double x = this->_edgeCounts.get(i,j);
+			const long double x = this->_edgeCounts.read(i,j);
 			if(x != 0.0L) {
 				cout << i
 					<< ',' << j
@@ -189,7 +189,7 @@ namespace sbm {
 				const int nj = J->order();
 				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
 				{
-					const long double edges_ = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+					const long double edges_ = this->_edgeCounts.read(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.read(j,i) : 0);
 					assert(edges==edges_);
 				}
 				int pairs = ni*nj; // if i==j, then ni==nj
@@ -261,7 +261,7 @@ namespace sbm {
 			for(int i=0; i<this->_k; i++)
 			for(int j=0; j<this->_k; j++)
 			{
-				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.get(i,j));
+				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.read(i,j));
 				if(x.second == 0) {
 					// we can ignore this
 				} else {
@@ -295,7 +295,7 @@ namespace sbm {
 			const std :: vector<long double> & xx = edgeCountsVerification.counts.at(i);
 
 			for(int j=0; j<this->_k; j++) {
-				assert(xx.at(j) == this->_edgeCounts.get(i,j));
+				assert(xx.at(j) == this->_edgeCounts.read(i,j));
 			}
 		}
 		/*
@@ -394,11 +394,6 @@ namespace sbm {
 		if(cl1 != cl2) {
 			this->externalEdgeWeight -= l2h+h2l;
 		}
-	}
-	long double  State::EdgeCounts:: get(const int cl1, const int cl2) const throw() {
-		assert(cl1>=0);
-		assert(cl2>=0);
-		return this->read(cl1,cl2);
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
@@ -502,9 +497,9 @@ namespace sbm {
 
 				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
 				{
-					const long double edges_= this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
+					const long double edges_= this->_edgeCounts.read(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.read(j,i));
 					assert(edges == edges_);
-					const long double edges__ = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+					const long double edges__ = this->_edgeCounts.read(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.read(j,i) : 0);
 					assert(edges == edges__);
 				}
 				total_edge_weight_verification += edges;
@@ -592,7 +587,7 @@ namespace sbm {
 		return true; // it's undirected and non-diagonal, hence the reverse direction should be included
 	}
 	long double ObjectiveFunction :: relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const { // this might include the other direction, if it's undirected
-		const long double edges = edge_counts->get(i,j) + ( this->isTwoSided(i,j) ? edge_counts->get(j,i) : 0);
+		const long double edges = edge_counts->read(i,j) + ( this->isTwoSided(i,j) ? edge_counts->read(j,i) : 0);
 		return edges;
 	}
 	int ObjectiveFunction :: numberOfPairsInBlock(const int i, const int j, const Labelling *labelling) const {
