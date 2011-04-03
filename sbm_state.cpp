@@ -187,7 +187,11 @@ namespace sbm {
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
 				const int nj = J->order();
-				const long double edges = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
+				{
+					const long double edges_ = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+					assert(edges==edges_);
+				}
 				int pairs = ni*nj; // if i==j, then ni==nj
 				if (i==j) {
 					assert(ni==nj);
@@ -496,10 +500,12 @@ namespace sbm {
 				assert(J);
 				const int ni = I->order();
 				const int nj = J->order();
-				const long double edges = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
 				{
 					const long double edges_= this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
 					assert(edges == edges_);
+					const long double edges__ = this->_edgeCounts.get(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.get(j,i) : 0);
+					assert(edges == edges__);
 				}
 				total_edge_weight_verification += edges;
 				/*
@@ -586,6 +592,10 @@ namespace sbm {
 		if(this->directed)
 			return false;
 		return true; // it's undirected and non-diagonal, hence the reverse direction should be included
+	}
+	long double ObjectiveFunction :: relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const { // this might include the other direction, if it's undirected
+		const long double edges = edge_counts->get(i,j) + ( this->isTwoSided(i,j) ? edge_counts->get(j,i) : 0);
+		return edges;
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const { // virtual

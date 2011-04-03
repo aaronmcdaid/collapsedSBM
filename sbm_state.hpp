@@ -119,7 +119,7 @@ struct ObjectiveFunction {
 	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const = 0;
 	bool isValidBlock(const int i, const int j) const;
 	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
-	// long double relevantWeight(const int i, const int j) const; // this might include the other direction, if it's undirected
+	long double relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const; // this might include the other direction, if it's undirected
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
