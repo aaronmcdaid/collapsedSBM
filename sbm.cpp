@@ -649,6 +649,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 			return 0.0L;
 		}
 		if(clusterToProposeDelete != s._k-1) {
+			cout << "swapped during deletion"; PP2(clusterToProposeDelete , s._k-1);
 			s.swapClusters(clusterToProposeDelete , s._k-1);
 		}
 		assert(s.labelling.clusters.back()->order()==0);
