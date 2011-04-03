@@ -43,25 +43,7 @@ struct Labelling {
 	void swapClusters(const int cl1, const int cl2);
 };
 
-struct ObjectiveFunction {
-	const bool selfloops;
-	const bool directed;
-	const bool weighted;
-	// these first three bools decide which blocks to loop over, and how to calculate the valid pairs.
-	// But give the total edge weight of a block, which form of function will actually be used?
-	ObjectiveFunction(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const = 0;
-	bool isValidBlock(const int i, const int j) const;
-	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
-};
-struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
-	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
-};
-struct ObjectiveFunction_Poisson : public ObjectiveFunction {
-	ObjectiveFunction_Poisson(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
-};
+struct ObjectiveFunction;
 
 struct State {
 	const GraphType * const _g; // the graph
@@ -126,6 +108,26 @@ struct State {
 
 	long double pmf_slow(const ObjectiveFunction *obj) const;
 	long double pmf(const ObjectiveFunction *obj) const;
+};
+struct ObjectiveFunction {
+	const bool selfloops;
+	const bool directed;
+	const bool weighted;
+	// these first three bools decide which blocks to loop over, and how to calculate the valid pairs.
+	// But give the total edge weight of a block, which form of function will actually be used?
+	ObjectiveFunction(const bool s, const bool d, const bool w);
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const = 0;
+	bool isValidBlock(const int i, const int j) const;
+	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
+	// long double relevantWeight(const int i, const int j) const; // this might include the other direction, if it's undirected
+};
+struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
+	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
+};
+struct ObjectiveFunction_Poisson : public ObjectiveFunction {
+	ObjectiveFunction_Poisson(const bool s, const bool d, const bool w);
+	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
 };
 	long double assertNonPositiveFinite_line(const long double x, const int lineno);
 
