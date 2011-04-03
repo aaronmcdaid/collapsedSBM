@@ -489,17 +489,13 @@ namespace sbm {
 		long double total_edge_weight_verification = 0.0L;
 		int blocksEncountered = 0; // should be K*K, or 1/2 * K * (K+1)
 		for(int i=0; i<this->_k; i++) {
-			const Cluster *I = this->labelling.clusters.at(i);
-			assert(I);
 			for(int j=0; j<this->_k; j++) {
 				if(!obj->isValidBlock(i,j))
 					break;
 				assert(obj->directed || j <= i);
 				++ blocksEncountered;
-				const Cluster *J = this->labelling.clusters.at(j);
-				assert(J);
-				const int ni = I->order();
-				const int nj = J->order();
+
+
 				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
 				{
 					const long double edges_= this->_edgeCounts.get(i,j) + ( (obj->directed || j==i) ? 0 : this->_edgeCounts.get(j,i));
@@ -508,30 +504,28 @@ namespace sbm {
 					assert(edges == edges__);
 				}
 				total_edge_weight_verification += edges;
-				/*
-				cout << ni << " x " << nj;
-				if(i==j)
-					cout << "-1 x1/2";
-				cout	<< " pairs. "
-					<< edges << " edges."
-					<< endl;
-					*/
-				int pairs = ni*nj; // if i==j, then ni==nj
-				if (i==j) {
-					assert(ni==nj);
-					if(obj->directed)
-						pairs = ni * (nj - 1); // both directions included
-					else
-						pairs = ni * (nj - 1) / 2; // just one direction included
+
+				int pairs = 0;
+				{
+					const Cluster *I = this->labelling.clusters.at(i);
+					assert(I);
+					const Cluster *J = this->labelling.clusters.at(j);
+					assert(J);
+					const int ni = I->order();
+					const int nj = J->order();
+					pairs += ni*nj; // if i==j, then ni==nj
+					if (i==j) {
+						assert(ni==nj);
+						if(obj->directed)
+							pairs = ni * (nj - 1); // both directions included
+						else
+							pairs = ni * (nj - 1) / 2; // just one direction included
+					}
+					if(i==j && obj->selfloops)
+						pairs += ni;
 				}
-				if(i==j && obj->selfloops)
-					pairs += ni;
-				// PP2(i,j);
-				// PP2(ni,nj);
-				// PP2(edges, pairs);
 				pairsEncountered += pairs;
 				edges_bits += obj->log2OneBlock(edges, pairs, i==j);
-				// PP(edges_bits);
 			}
 		}
 		if(obj->directed) {
