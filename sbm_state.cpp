@@ -292,12 +292,13 @@ namespace sbm {
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
 		}
-		for(int i=-1; i<this->_k; i++) {
+		assert(edgeCountsVerification.counts.externalEdgeWeight == this->_edgeCounts.counts.externalEdgeWeight);
+		for(int i=0; i<this->_k; i++) {
 			edgeCountsVerification.counts.at(i,this->_k-1);
-			const std :: vector<long double> & xx = edgeCountsVerification.counts.x.at(i+1);
+			const std :: vector<long double> & xx = edgeCountsVerification.counts.z.at(i);
 
-			for(int j=-1; j<this->_k; j++) {
-				assert(xx.at(j+1) == this->_edgeCounts.get(i,j));
+			for(int j=0; j<this->_k; j++) {
+				assert(xx.at(j) == this->_edgeCounts.get(i,j));
 			}
 		}
 		/*
@@ -351,22 +352,24 @@ namespace sbm {
 	}
 
 
+			State:: EdgeCounts:: map_type :: map_type(): externalEdgeWeight(0.0L) {
+			}
 			long double & State:: EdgeCounts:: map_type :: at(int i,int j) {
-				i++; // so as to handle (-1,-1)
-				j++; // so as to handle (-1,-1)
-				if((int) this->x.size() <= i)
-					this->x.resize(i+1);
-				std :: vector<long double> &y = this->x.at(i);
+				assert(i>=0);
+				assert(j>=0);
+				if((int) this->z.size() <= i)
+					this->z.resize(i+1);
+				std :: vector<long double> &y = this->z.at(i);
 				if((int) y.size() <= j)
 					y.resize(j+1);
 				return y.at(j);
 			}
 			long double State:: EdgeCounts:: map_type :: read(int i, int j) const {
-				i++; // so as to handle (-1,-1)
-				j++; // so as to handle (-1,-1)
-				if((int) this->x.size() <= i)
-					this->x.resize(i+1);
-				std :: vector<long double> &y = this->x.at(i);
+				assert(i>=0);
+				assert(j>=0);
+				if((int) this->z.size() <= i)
+					this->z.resize(i+1);
+				std :: vector<long double> &y = this->z.at(i);
 				if((int) y.size() <= j)
 					y.resize(j+1);
 				return y.at(j);
@@ -448,14 +451,14 @@ namespace sbm {
 		// PP(this->_edgeCounts.counts.size());
 		// PP(this->_k);
 		for(int i=0; i<this->_k; i++) {
-			this->_edgeCounts.counts.at(i,this->_k - 1); // just to ensure counts :: x is big enough
-			std :: vector<long double> &row = this->_edgeCounts.counts.x.at(i+1);
-			PP(row.size());
-			PP2(cl1,cl2);
-			PP2(i,this->_k);
-			swap(row.at(cl1+1),row.at(cl2+1));
+			this->_edgeCounts.counts.read(i,this->_k - 1); // just to ensure counts :: x is big enough
+			std :: vector<long double> &row = this->_edgeCounts.counts.z.at(i);
+			// PP(row.size());
+			// PP2(cl1,cl2);
+			// PP2(i,this->_k);
+			swap(row.at(cl1),row.at(cl2));
 		}
-		swap(this->_edgeCounts.counts.x.at(cl1+1), this->_edgeCounts.counts.x.at(cl2+1));
+		swap(this->_edgeCounts.counts.z.at(cl1), this->_edgeCounts.counts.z.at(cl2));
 	}
 
 	long double State:: P_z_K() const { // 1 and 2
