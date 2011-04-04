@@ -1,6 +1,7 @@
 using namespace std;
 #include <algorithm>
 #include <vector>
+#include <map>
 
 #include <getopt.h>
 #include <unistd.h>
@@ -319,7 +320,29 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	}
 
 
-	const int newCluster = drand48() * pre_k; // in due course, this'll be selected properly from the table
+	// now to select cluster with probability proportional to exp(delta_P_x_z_IfIMoveIntoClusterT + delta_P_z_K_IfIMoveIntoClusterT)
+	vector<long double> combinedDelta;
+	for(int t=0; t<pre_k; t++) {
+		combinedDelta.push_back(delta_P_x_z_IfIMoveIntoClusterT.at(t) + delta_P_z_K_IfIMoveIntoClusterT.at(t));
+		// PP2(t,combinedDelta.at(t));
+	}
+	const long double maxDelta = * std :: max_element(combinedDelta.begin(), combinedDelta.end());
+
+	long double sumOfTruncatedExpDeltas = 0.0L;
+	for(int t=0; t<pre_k; t++) {
+		combinedDelta.at(t) -= maxDelta;
+		// PP(exp2l(combinedDelta.at(t)));
+		sumOfTruncatedExpDeltas += exp2l(combinedDelta.at(t));
+	}
+
+	int newCluster = 0;
+	long double unif = sumOfTruncatedExpDeltas * drand48();
+	while(unif > exp2l(combinedDelta.at(newCluster))) {
+		unif -= exp2l(combinedDelta.at(newCluster));
+		newCluster ++;
+		assert(newCluster < pre_k);
+	}
+	assert(isfinite(unif));
 
 #ifdef gibbsOneNode_Paranoid
 	{
@@ -459,7 +482,7 @@ struct TwoChoices {
 	long double Pright;
 	TwoChoices(const OneChoice &_l, const OneChoice &_r) : left(_l), right(_r), left_deltaSum(this->left.deltaSum()), right_deltaSum(this->right.deltaSum()) {
 		const long double log2LeftOverRight = left_deltaSum - right_deltaSum;
-		const long double LeftOverRight = exp2(log2LeftOverRight);
+		const long double LeftOverRight = exp2l(log2LeftOverRight);
 		assert(isfinite(LeftOverRight));
 		Pright = 1.0L / (LeftOverRight + 1.0L);
 		Pleft = 1.0L - Pright;
@@ -756,7 +779,7 @@ void M3(sbm::State &s) {
 
 	assert(preM3_k == s._k);
 
-	// Now we either accept it with probability exp2(acceptanceLog2), or reject it
+	// Now we either accept it with probability exp2l(acceptanceLog2), or reject it
 
 	if(log2(drand48()) < acceptanceLog2 /*|| IsRandomProposalIdenticalToStatusQuo*/) {
 		// accepting.
