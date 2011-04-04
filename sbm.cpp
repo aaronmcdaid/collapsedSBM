@@ -321,6 +321,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 
 	const int newCluster = drand48() * pre_k; // in due course, this'll be selected properly from the table
 
+#ifdef gibbsOneNode_Paranoid
 	{
 		// going from isolated to back_home will:
 		// SUBTRACT P_x_z_forIsolated
@@ -340,6 +341,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			));
 		s.moveNodeAndInformOfEdges(n, isolatedClusterId);
 	}
+#endif
 
 	s.moveNodeAndInformOfEdges(n, newCluster);
 
