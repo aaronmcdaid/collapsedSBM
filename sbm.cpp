@@ -249,8 +249,8 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 					+ ( (obj->directed) ? (s.labelling.clusters.at(t)->order()) : 0)
 					+ ( (obj->selfloops) ? (1) : 0)
 					;
-			const long double old_log2 = obj -> log2OneBlock(old_weight, old_p_b, t==t);
-			const long double new_log2 = obj -> log2OneBlock(new_weight, new_p_b, t==t);
+			const long double old_log2 = obj -> log2OneBlock(old_weight, old_p_b, true);
+			const long double new_log2 = obj -> log2OneBlock(new_weight, new_p_b, true);
 			const long double delta_1_block = new_log2 - old_log2;
 			delta_blocks += delta_1_block;
 		}
@@ -283,12 +283,15 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				// PP2(old_weight, old_pairs);
 				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order();
 
-				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
-				const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, t==j);
+				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, false);
+				const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, false);
 				const long double delta_1_block = new_log2 - old_log2;
 				delta_blocks += delta_1_block;
 			}
 		}
+
+#define gibbsOneNode_Paranoid
+#ifdef gibbsOneNode_Paranoid
 		{ // paranoid verification that the above calculation was correct
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
 				s.moveNodeAndInformOfEdges(n, t);
@@ -300,6 +303,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
 				assert(pre_x_z == s.P_edges_given_z_slow(obj));
 		}
+#endif
 	}
 
 	s.moveNodeAndInformOfEdges(n, origClusterID);
