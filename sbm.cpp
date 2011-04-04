@@ -281,33 +281,15 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 
 				const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
 				// PP2(old_weight, old_pairs);
-				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order()
-					;
+				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order();
 
 				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
 				const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, t==j);
 				const long double delta_1_block = new_log2 - old_log2;
-				{
-					// PP2(t,j);
-					const long double pre_x_z = s.pmf(obj);
-					s.moveNodeAndInformOfEdges(n, t);
-					// PP3(old_weight, new_weight, obj->relevantWeight(t,j, &s._edgeCounts));
-					// PP2(direction, new_weight);
-					// PP(obj->relevantWeight(t,j, &s._edgeCounts));
-					// PP(obj->relevantWeight(j,t, &s._edgeCounts));
-					if(direction==0)
-						assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
-					else
-						assert(new_weight == obj->relevantWeight(j,t, &s._edgeCounts));
-					// PP2(new_pairs, obj->numberOfPairsInBlock(t,j, &s.labelling));
-					assert(new_pairs == obj->numberOfPairsInBlock(t,j, &s.labelling));
-					s.moveNodeAndInformOfEdges(n, isolatedClusterId);
-					assert(pre_x_z == s.pmf(obj));
-				}
 				delta_blocks += delta_1_block;
 			}
 		}
-		{
+		{ // paranoid verification that the above calculation was correct
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
 				s.moveNodeAndInformOfEdges(n, t);
 				const long double post_x_z = s.P_edges_given_z_slow(obj);
