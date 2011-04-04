@@ -217,6 +217,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	const int n = drand48() * s._N;
 	const int origClusterID = s.labelling.cluster_id.at(n);
 	const int isolatedClusterId = s._k;
+	assert(pre_k == isolatedClusterId);
 	s.appendEmptyCluster();
 	s.moveNodeAndInformOfEdges(n, isolatedClusterId);
 
@@ -224,6 +225,14 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	// We proceed to propose to add it to every existing
 
 	// all the blocks involving isolatedClusterId will be destroyed, no matter where it's merged.
+	long double P_x_z_forIsolated = 0.0L;
+	for(int i=0; i<pre_k+1; i++) { // +1 so as to include iso<=>iso (which will only have an effect with selfloops)
+		P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(isolatedClusterId, i, &s._edgeCounts) , obj->numberOfPairsInBlock(isolatedClusterId,i, &s.labelling), i==isolatedClusterId);
+		if(i<pre_k && obj->directed) { // don't forget the block in the other direction
+			P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(i, isolatedClusterId, &s._edgeCounts) , obj->numberOfPairsInBlock(i, isolatedClusterId, &s.labelling), i==isolatedClusterId);
+		}
+	}
+	PP(P_x_z_forIsolated);
 	for(int t=0; t<pre_k; t++) {
 		long double delta_blocks = 0.0L;
 		// pretend we're merging into cluster t
@@ -260,15 +269,17 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				assert(pre_x_z == s.pmf(obj));
 			}
 			delta_blocks += delta_1_block;
-
 		}
 		{
-				const long double pre_x_z = s.pmf(obj);
+				const long double pre_x_z = s.P_edges_given_z_slow(obj);
 				s.moveNodeAndInformOfEdges(n, t);
-				const long double post_x_z = s.pmf(obj);
+				const long double post_x_z = s.P_edges_given_z_slow(obj);
 				PP2(post_x_z - pre_x_z, delta_blocks);
+				PP (post_x_z - pre_x_z - delta_blocks);
+				PP2(post_x_z - pre_x_z,  delta_blocks - P_x_z_forIsolated);
+				assert(post_x_z - pre_x_z == delta_blocks - P_x_z_forIsolated);
 				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
-				assert(pre_x_z == s.pmf(obj));
+				assert(pre_x_z == s.P_edges_given_z_slow(obj));
 		}
 	}
 
