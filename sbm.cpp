@@ -290,7 +290,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			}
 		}
 
-#define gibbsOneNode_Paranoid
+// #define gibbsOneNode_Paranoid
 #ifdef gibbsOneNode_Paranoid
 		{ // paranoid verification that the above calculation was correct
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
