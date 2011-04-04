@@ -209,10 +209,12 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 	return b;
 }
 
-static
+// static
 long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
-	if(s._k == 1)
+	if(s._k == 1) {
+		AR->notify(false);
 		return 0.0L;
+	}
 	const int pre_k = s._k;
 	const int n = drand48() * s._N;
 	const int origClusterID = s.labelling.cluster_id.at(n);
@@ -369,12 +371,13 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	s.moveNodeAndInformOfEdges(n, newCluster);
 
 	s.deleteClusterFromTheEnd();
+	AR->notify(newCluster != origClusterID);
 	return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
 	       - delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID) - delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID)
 		;
 }
 
-static
+// static
 long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
@@ -943,6 +946,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
+	AcceptanceRate AR_gibbs("gibbs");
 	for(int i=1; i<=40000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
@@ -962,7 +966,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// const long double pre = s.pmf(obj);
 		const long double delta = MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += delta;
-		pmf_track += gibbsOneNode(s, obj, NULL);
+		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)
@@ -978,6 +982,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			s.blockDetail(obj);
 			AR_metroK.dump();
 			AR_metro1Node.dump();
+			AR_gibbs.dump();
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
