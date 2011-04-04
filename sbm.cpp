@@ -231,10 +231,32 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(i, isolatedClusterId, &s._edgeCounts) , obj->numberOfPairsInBlock(i, isolatedClusterId, &s.labelling), i==isolatedClusterId);
 		}
 	}
+	const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
 	for(int t=0; t<pre_k; t++) {
 		long double delta_blocks = 0.0L;
 		// pretend we're merging into cluster t
+
+		// The easiest thing to consider first is the block for the inside of t, block t<>t.
+		// The edges to and from isolatedClusterId will become internal edges of t
+		{
+			const long double old_weight = obj->relevantWeight(t,t, &s._edgeCounts);
+			const long double new_weight = old_weight + s._edgeCounts.read(isolatedClusterId, t)
+								  + s._edgeCounts.read(t, isolatedClusterId)
+								+ isolatedNodesSelfLoop
+								;
+			const int old_p_b = obj->numberOfPairsInBlock(t,t, &s.labelling);
+			const int new_p_b = old_p_b          + s.labelling.clusters.at(t)->order()
+					+ ( (obj->directed) ? (s.labelling.clusters.at(t)->order()) : 0)
+					+ ( (obj->selfloops) ? (1) : 0)
+					;
+			const long double old_log2 = obj -> log2OneBlock(old_weight, old_p_b, t==t);
+			const long double new_log2 = obj -> log2OneBlock(new_weight, new_p_b, t==t);
+			const long double delta_1_block = new_log2 - old_log2;
+			delta_blocks += delta_1_block;
+		}
+
 		for(int j=0; j<pre_k;j++) {
+			if(t==j) continue; // the internal t-block has already been handled in the previous few lines.
 			// the blocks from  t->j and j->t will be enlarged
 			// PP3(isolatedClusterId, t, j);
 			// PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
@@ -242,37 +264,24 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 
 			// isolatedClusterId is a small cluster distinct from t and j. t might be equal to j, but first we'll pretend they're different.
 			// Assuming t!=j, there are up to four types of links that must be considered. iso->j, j->iso, iso->t, t->iso. Be careful with directions
-			//
-			// Then, if you're happy you understand when t!=j, then consider t==j, where all four types of links simply become internal links.
 
-			const int numDirectionsToConsider = (t!=j && obj->directed) ? 2 : 1;
+			assert(t!=j);
+			const int numDirectionsToConsider = (obj->directed) ? 2 : 1;
 			for(int direction = 0; direction < numDirectionsToConsider; direction++) {
 				const long double old_weight = direction==0 ? obj->relevantWeight(t,j, &s._edgeCounts) : obj->relevantWeight(j,t, &s._edgeCounts);
 				// PP3(isolatedClusterId, t,j);
 				// PP(direction);
 				// if direction==1, then we have to think about j->t, not t->j
 				if(direction==1) {
-					assert(t!=j);
 					assert(obj->directed);
 				}
 				// PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
 				// PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
-				const long double new_weight = old_weight + (
-					(direction==0)
-					? (
-						obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts)
-						+ ( (t==j && obj->directed) ? obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts) : 0 )
-						+ ( (t==j && obj->selfloops) ? obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts) : 0 )
-					  ) : (
-						obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts)
-					      )
-				) ;
+				const long double new_weight = old_weight + ( (direction==0) ?  obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts) : obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts)) ;
 
 				const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
 				// PP2(old_weight, old_pairs);
 				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order()
-					+ ( (t==j && obj->directed) ? (s.labelling.clusters.at(j)->order()) : 0)
-					+ ( (t==j && obj->selfloops) ? (1) : 0)
 					;
 
 				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
