@@ -318,9 +318,35 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 #endif
 	}
 
-	s.moveNodeAndInformOfEdges(n, origClusterID);
+
+	const int newCluster = drand48() * pre_k; // in due course, this'll be selected properly from the table
+
+	{
+		// going from isolated to back_home will:
+		// SUBTRACT P_x_z_forIsolated
+		// ADD delta_P_x_z_IfIMoveIntoClusterT.at(newCluster)
+		// ADD delta_P_z_K_IfIMoveIntoClusterT.at(newCluster))
+
+		const long double isolated_pmf = s.pmf(obj);
+		s.moveNodeAndInformOfEdges(n, newCluster);
+		const long double inNewCluster_pmf = s.pmf(obj);
+		// PP2(isolated_pmf, inNewCluster_pmf);
+		// PP3(P_x_z_forIsolated, delta_P_x_z_IfIMoveIntoClusterT.at(newCluster), delta_P_z_K_IfIMoveIntoClusterT.at(newCluster));
+		// PP2(P_x_z_forIsolated, delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster));
+		// PP ( - isolated_pmf      + inNewCluster_pmf);
+		// PP ( - P_x_z_forIsolated + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster));
+		assert (VERYCLOSE(  - isolated_pmf      + inNewCluster_pmf
+			,   - P_x_z_forIsolated + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
+			));
+		s.moveNodeAndInformOfEdges(n, isolatedClusterId);
+	}
+
+	s.moveNodeAndInformOfEdges(n, newCluster);
+
 	s.deleteClusterFromTheEnd();
-	return 0.0L;
+	return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
+	       - delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID) - delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID)
+		;
 }
 
 static
