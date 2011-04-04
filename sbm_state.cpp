@@ -644,7 +644,9 @@ namespace sbm {
 		const long double log2p = LOG2GAMMA(s + y_b) + ( s+y_b) * -log2(p_b + 1.0L/theta) 
 		       	-   LOG2GAMMA(s)  - s*log2(theta) // this denominator is important because it depends on the number of blocks.
 			;
-		assertNonPositiveFinite(log2p);
+		// PP2(y_b, p_b);
+		// PP(log2p);
+		// assertNonPositiveFinite(log2p); // this needn't hold after all. We've ignored \prod x_i, hence this might be positive sometimes.
 		return log2p;
 	}
 } // namespace sbm

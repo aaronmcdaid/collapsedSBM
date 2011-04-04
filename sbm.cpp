@@ -242,6 +242,11 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			const long double old_weight = obj->relevantWeight(t,j, &s._edgeCounts);
 			PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
 			PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
+
+			// isolatedClusterId is a small cluster distinct from t and j. t might be equal to j, but first we'll pretend they're different.
+			// Assuming t!=j, there are up to four types of links that must be considered. iso->j, j->iso, iso->t, t->iso. Be careful with directions
+			//
+			// Then, if you're happy you understand when t!=j, then consider t==j, where all four types of links simply become internal links.
 			const long double new_weight = old_weight + obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts)
 				+ ( (t==j && obj->directed) ? obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts) : 0 )
 				+ ( (t==j && obj->selfloops) ? obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts) : 0 )
