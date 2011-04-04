@@ -238,42 +238,57 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 		// pretend we're merging into cluster t
 		for(int j=0; j<pre_k;j++) {
 			// the blocks from  t->j and j->t will be enlarged
-			PP3(isolatedClusterId, t, j);
+			// PP3(isolatedClusterId, t, j);
 			const long double old_weight = obj->relevantWeight(t,j, &s._edgeCounts);
-			PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
-			PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
+			// PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
+			// PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
 
 			// isolatedClusterId is a small cluster distinct from t and j. t might be equal to j, but first we'll pretend they're different.
 			// Assuming t!=j, there are up to four types of links that must be considered. iso->j, j->iso, iso->t, t->iso. Be careful with directions
 			//
 			// Then, if you're happy you understand when t!=j, then consider t==j, where all four types of links simply become internal links.
-			const long double new_weight = old_weight + obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts)
-				+ ( (t==j && obj->directed) ? obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts) : 0 )
-				+ ( (t==j && obj->selfloops) ? obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts) : 0 )
-				;
 
-			const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
-			PP2(old_weight, old_pairs);
-			const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order()
-				+ ( (t==j && obj->directed) ? (s.labelling.clusters.at(j)->order()) : 0)
-				+ ( (t==j && obj->selfloops) ? (1) : 0)
-				;
+			const int numDirectionsToConsider = (t!=j && obj->directed) ? 2 : 1;
+			for(int direction = 0; direction < numDirectionsToConsider; direction++) {
+				// if direction==1, then we have to think about j->t, not t->j
+				if(direction==1) {
+					assert(t!=j);
+					assert(obj->directed);
+				}
+				const long double new_weight = old_weight + (
+					(direction==0)
+					? (
+						obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts)
+						+ ( (t==j && obj->directed) ? obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts) : 0 )
+						+ ( (t==j && obj->selfloops) ? obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts) : 0 )
+					  ) : (
+						obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts)
+					      )
+				) ;
 
-			const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
-			const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, t==j);
-			const long double delta_1_block = new_log2 - old_log2;
-			{
-				PP2(t,j);
-				const long double pre_x_z = s.pmf(obj);
-				s.moveNodeAndInformOfEdges(n, t);
-				PP3(old_weight, new_weight, obj->relevantWeight(t,j, &s._edgeCounts));
-				assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
-				PP2(new_pairs, obj->numberOfPairsInBlock(t,j, &s.labelling));
-				assert(new_pairs == obj->numberOfPairsInBlock(t,j, &s.labelling));
-				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
-				assert(pre_x_z == s.pmf(obj));
+				const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
+				// PP2(old_weight, old_pairs);
+				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order()
+					+ ( (t==j && obj->directed) ? (s.labelling.clusters.at(j)->order()) : 0)
+					+ ( (t==j && obj->selfloops) ? (1) : 0)
+					;
+
+				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
+				const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, t==j);
+				const long double delta_1_block = new_log2 - old_log2;
+				{
+					// PP2(t,j);
+					const long double pre_x_z = s.pmf(obj);
+					s.moveNodeAndInformOfEdges(n, t);
+					// PP3(old_weight, new_weight, obj->relevantWeight(t,j, &s._edgeCounts));
+					assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
+					// PP2(new_pairs, obj->numberOfPairsInBlock(t,j, &s.labelling));
+					assert(new_pairs == obj->numberOfPairsInBlock(t,j, &s.labelling));
+					s.moveNodeAndInformOfEdges(n, isolatedClusterId);
+					assert(pre_x_z == s.pmf(obj));
+				}
+				delta_blocks += delta_1_block;
 			}
-			delta_blocks += delta_1_block;
 		}
 		{
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
