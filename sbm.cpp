@@ -213,7 +213,6 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	if(s._k == 1)
 		return 0.0L;
 	const int pre_k = s._k;
-	PP(pre_k);
 	const int n = drand48() * s._N;
 	const int origClusterID = s.labelling.cluster_id.at(n);
 	const int isolatedClusterId = s._k;
@@ -232,14 +231,12 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(i, isolatedClusterId, &s._edgeCounts) , obj->numberOfPairsInBlock(i, isolatedClusterId, &s.labelling), i==isolatedClusterId);
 		}
 	}
-	PP(P_x_z_forIsolated);
 	for(int t=0; t<pre_k; t++) {
 		long double delta_blocks = 0.0L;
 		// pretend we're merging into cluster t
 		for(int j=0; j<pre_k;j++) {
 			// the blocks from  t->j and j->t will be enlarged
 			// PP3(isolatedClusterId, t, j);
-			const long double old_weight = obj->relevantWeight(t,j, &s._edgeCounts);
 			// PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
 			// PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
 
@@ -250,11 +247,16 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 
 			const int numDirectionsToConsider = (t!=j && obj->directed) ? 2 : 1;
 			for(int direction = 0; direction < numDirectionsToConsider; direction++) {
+				const long double old_weight = direction==0 ? obj->relevantWeight(t,j, &s._edgeCounts) : obj->relevantWeight(j,t, &s._edgeCounts);
+				// PP3(isolatedClusterId, t,j);
+				// PP(direction);
 				// if direction==1, then we have to think about j->t, not t->j
 				if(direction==1) {
 					assert(t!=j);
 					assert(obj->directed);
 				}
+				// PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
+				// PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
 				const long double new_weight = old_weight + (
 					(direction==0)
 					? (
@@ -281,7 +283,13 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 					const long double pre_x_z = s.pmf(obj);
 					s.moveNodeAndInformOfEdges(n, t);
 					// PP3(old_weight, new_weight, obj->relevantWeight(t,j, &s._edgeCounts));
-					assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
+					// PP2(direction, new_weight);
+					// PP(obj->relevantWeight(t,j, &s._edgeCounts));
+					// PP(obj->relevantWeight(j,t, &s._edgeCounts));
+					if(direction==0)
+						assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
+					else
+						assert(new_weight == obj->relevantWeight(j,t, &s._edgeCounts));
 					// PP2(new_pairs, obj->numberOfPairsInBlock(t,j, &s.labelling));
 					assert(new_pairs == obj->numberOfPairsInBlock(t,j, &s.labelling));
 					s.moveNodeAndInformOfEdges(n, isolatedClusterId);
@@ -294,10 +302,10 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
 				s.moveNodeAndInformOfEdges(n, t);
 				const long double post_x_z = s.P_edges_given_z_slow(obj);
-				PP2(post_x_z - pre_x_z, delta_blocks);
-				PP (post_x_z - pre_x_z - delta_blocks);
-				PP2(post_x_z - pre_x_z,  delta_blocks - P_x_z_forIsolated);
-				assert(post_x_z - pre_x_z == delta_blocks - P_x_z_forIsolated);
+				// PP2(post_x_z - pre_x_z, delta_blocks);
+				// PP (post_x_z - pre_x_z - delta_blocks);
+				// PP2(post_x_z - pre_x_z,  delta_blocks - P_x_z_forIsolated);
+				assert(VERYCLOSE(post_x_z - pre_x_z , delta_blocks - P_x_z_forIsolated));
 				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
 				assert(pre_x_z == s.P_edges_given_z_slow(obj));
 		}
