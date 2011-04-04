@@ -231,6 +231,9 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(i, isolatedClusterId, &s._edgeCounts) , obj->numberOfPairsInBlock(i, isolatedClusterId, &s.labelling), i==isolatedClusterId);
 		}
 	}
+
+	vector<long double> delta_P_x_z_IfIMoveIntoClusterT(pre_k);
+	vector<long double> delta_P_z_K_IfIMoveIntoClusterT(pre_k);
 	const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
 	for(int t=0; t<pre_k; t++) {
 		long double delta_blocks = 0.0L;
@@ -288,6 +291,15 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				const long double delta_1_block = new_log2 - old_log2;
 				delta_blocks += delta_1_block;
 			}
+		}
+		delta_P_x_z_IfIMoveIntoClusterT.at(t) = delta_blocks;
+		{ // this block should be pretty cheap. P_z_orders and moveNode are relatively cheap, as no edges are involved.
+				const long double pre_z_K = s.P_z_orders();
+				s.moveNode(n, t);
+				const long double post_z_K = s.P_z_orders();
+				s.moveNode(n, isolatedClusterId);
+				assert(pre_z_K == s.P_z_orders());
+				delta_P_z_K_IfIMoveIntoClusterT.at(t) = post_z_K - pre_z_K;
 		}
 
 // #define gibbsOneNode_Paranoid
