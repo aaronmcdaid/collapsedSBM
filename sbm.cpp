@@ -947,7 +947,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
-	for(int i=1; i<=40000; i++) {
+	for(int i=1; i<=4000000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
@@ -964,8 +964,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			assert(commandLineK == s._k);
 		// PP(i);
 		// const long double pre = s.pmf(obj);
-		const long double delta = MoneNode(s, obj, &AR_metro1Node);
-		pmf_track += delta;
+		pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
