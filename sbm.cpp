@@ -209,6 +209,75 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 }
 
 static
+long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
+	if(s._k == 1)
+		return 0.0L;
+	const int pre_k = s._k;
+	PP(pre_k);
+	const int n = drand48() * s._N;
+	const int origClusterID = s.labelling.cluster_id.at(n);
+	const int isolatedClusterId = s._k;
+	s.appendEmptyCluster();
+	s.moveNodeAndInformOfEdges(n, isolatedClusterId);
+
+	// the randomly chosen node is now in a little cluster of is own.
+	// We proceed to propose to add it to every existing
+
+	// all the blocks involving isolatedClusterId will be destroyed, no matter where it's merged.
+	for(int t=0; t<pre_k; t++) {
+		long double delta_blocks = 0.0L;
+		// pretend we're merging into cluster t
+		for(int j=0; j<pre_k;j++) {
+			// the blocks from  t->j and j->t will be enlarged
+			PP3(isolatedClusterId, t, j);
+			const long double old_weight = obj->relevantWeight(t,j, &s._edgeCounts);
+			PP(obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts));
+			PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
+			const long double new_weight = old_weight + obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts)
+				+ ( (t==j && obj->directed) ? obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts) : 0 )
+				+ ( (t==j && obj->selfloops) ? obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts) : 0 )
+				;
+
+			const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
+			PP2(old_weight, old_pairs);
+			const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order()
+				+ ( (t==j && obj->directed) ? (s.labelling.clusters.at(j)->order()) : 0)
+				+ ( (t==j && obj->selfloops) ? (1) : 0)
+				;
+
+			const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, t==j);
+			const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, t==j);
+			const long double delta_1_block = new_log2 - old_log2;
+			{
+				PP2(t,j);
+				const long double pre_x_z = s.pmf(obj);
+				s.moveNodeAndInformOfEdges(n, t);
+				PP3(old_weight, new_weight, obj->relevantWeight(t,j, &s._edgeCounts));
+				assert(new_weight == obj->relevantWeight(t,j, &s._edgeCounts));
+				PP2(new_pairs, obj->numberOfPairsInBlock(t,j, &s.labelling));
+				assert(new_pairs == obj->numberOfPairsInBlock(t,j, &s.labelling));
+				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
+				assert(pre_x_z == s.pmf(obj));
+			}
+			delta_blocks += delta_1_block;
+
+		}
+		{
+				const long double pre_x_z = s.pmf(obj);
+				s.moveNodeAndInformOfEdges(n, t);
+				const long double post_x_z = s.pmf(obj);
+				PP2(post_x_z - pre_x_z, delta_blocks);
+				s.moveNodeAndInformOfEdges(n, isolatedClusterId);
+				assert(pre_x_z == s.pmf(obj));
+		}
+	}
+
+	s.moveNodeAndInformOfEdges(n, origClusterID);
+	s.deleteClusterFromTheEnd();
+	return 0.0L;
+}
+
+static
 long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
@@ -796,6 +865,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// const long double pre = s.pmf(obj);
 		const long double delta = MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += delta;
+		pmf_track += gibbsOneNode(s, obj, NULL);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)
