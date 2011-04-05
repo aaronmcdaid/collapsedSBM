@@ -346,6 +346,17 @@ namespace sbm {
 				cout << '<' << id_of_cluster << '>';
 		}
 		cout << endl;
+
+		vector<int> cluster_sizes;
+		for(int k=0; k<this->_k; k++) {
+			cluster_sizes.push_back(this->labelling.clusters.at(k)->order());
+		}
+		sort(cluster_sizes.begin(), cluster_sizes.end(), greater<int>());
+		cout << "K and cluster sizes:" << this->_k;
+		forEach(int size, amd :: mk_range(cluster_sizes)) {
+			cout << '\t' << size;
+		}
+		cout << endl;
 	}
 
 

@@ -978,10 +978,10 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			PP(i);
 			s.shortSummary(obj);
 			// s.summarizeEdgeCounts();
-			s.blockDetail(obj);
 			AR_metroK.dump();
 			AR_metro1Node.dump();
 			AR_gibbs.dump();
+			s.blockDetail(obj);
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
