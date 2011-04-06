@@ -9,3 +9,4 @@ option  "directed"           d "directed"                            flag       
 option  "weighted"           w "weighted"                            flag       off
 option  "selfloop"           s "selfloops allowed"                   flag       off
 option  "seed"               - "seed to drand48()"                   int        default="0" no
+option  "GT.vector"          - "The ground truth. a file with N lines. Starts from ZERO." string  no

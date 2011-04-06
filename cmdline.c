@@ -28,21 +28,23 @@ const char *gengetopt_args_info_usage = "Usage: Stochastic Block Models [OPTIONS
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help         Print help and exit",
-  "  -V, --version      Print version and exit",
-  "      --git-version  detailed version description  (default=off)",
-  "  -v, --verbose      detailed debugging  (default=off)",
-  "  -m, --mmsb         Airoldi's MMSB  (default=off)",
-  "  -K, --K=INT        Number of clusters, K  (default=`-1')",
-  "  -d, --directed     directed  (default=off)",
-  "  -w, --weighted     weighted  (default=off)",
-  "  -s, --selfloop     selfloops allowed  (default=off)",
-  "      --seed=INT     seed to drand48()  (default=`0')",
+  "  -h, --help              Print help and exit",
+  "  -V, --version           Print version and exit",
+  "      --git-version       detailed version description  (default=off)",
+  "  -v, --verbose           detailed debugging  (default=off)",
+  "  -m, --mmsb              Airoldi's MMSB  (default=off)",
+  "  -K, --K=INT             Number of clusters, K  (default=`-1')",
+  "  -d, --directed          directed  (default=off)",
+  "  -w, --weighted          weighted  (default=off)",
+  "  -s, --selfloop          selfloops allowed  (default=off)",
+  "      --seed=INT          seed to drand48()  (default=`0')",
+  "      --GT.vector=STRING  The ground truth. a file with N lines. Starts from \n                            ZERO.",
     0
 };
 
 typedef enum {ARG_NO
   , ARG_FLAG
+  , ARG_STRING
   , ARG_INT
 } cmdline_parser_arg_type;
 
@@ -72,6 +74,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->weighted_given = 0 ;
   args_info->selfloop_given = 0 ;
   args_info->seed_given = 0 ;
+  args_info->GT_vector_given = 0 ;
 }
 
 static
@@ -87,6 +90,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->selfloop_flag = 0;
   args_info->seed_arg = 0;
   args_info->seed_orig = NULL;
+  args_info->GT_vector_arg = NULL;
+  args_info->GT_vector_orig = NULL;
   
 }
 
@@ -105,6 +110,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->weighted_help = gengetopt_args_info_help[7] ;
   args_info->selfloop_help = gengetopt_args_info_help[8] ;
   args_info->seed_help = gengetopt_args_info_help[9] ;
+  args_info->GT_vector_help = gengetopt_args_info_help[10] ;
   
 }
 
@@ -188,6 +194,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   unsigned int i;
   free_string_field (&(args_info->K_orig));
   free_string_field (&(args_info->seed_orig));
+  free_string_field (&(args_info->GT_vector_arg));
+  free_string_field (&(args_info->GT_vector_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -242,6 +250,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "selfloop", 0, 0 );
   if (args_info->seed_given)
     write_into_file(outfile, "seed", args_info->seed_orig, 0);
+  if (args_info->GT_vector_given)
+    write_into_file(outfile, "GT.vector", args_info->GT_vector_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -374,6 +384,7 @@ int update_arg(void *field, char **orig_field,
   char *stop_char = 0;
   const char *val = value;
   int found;
+  char **string_field;
 
   stop_char = 0;
   found = 0;
@@ -407,6 +418,14 @@ int update_arg(void *field, char **orig_field,
     break;
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
+    break;
+  case ARG_STRING:
+    if (val) {
+      string_field = (char **)field;
+      if (!no_free && *string_field)
+        free (*string_field); /* free previous string */
+      *string_field = gengetopt_strdup (val);
+    }
     break;
   default:
     break;
@@ -491,6 +510,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "weighted",	0, NULL, 'w' },
         { "selfloop",	0, NULL, 's' },
         { "seed",	1, NULL, 0 },
+        { "GT.vector",	1, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -596,6 +616,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                 &(local_args_info.seed_given), optarg, 0, "0", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "seed", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* The ground truth. a file with N lines. Starts from ZERO..  */
+          else if (strcmp (long_options[option_index].name, "GT.vector") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->GT_vector_arg), 
+                 &(args_info->GT_vector_orig), &(args_info->GT_vector_given),
+                &(local_args_info.GT_vector_given), optarg, 0, 0, ARG_STRING,
+                check_ambiguity, override, 0, 0,
+                "GT.vector", '-',
                 additional_error))
               goto failure;
           

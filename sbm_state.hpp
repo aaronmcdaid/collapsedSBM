@@ -69,7 +69,7 @@ struct State {
 	void internalCheck() const;
 
 	// summaries
-	void shortSummary(const ObjectiveFunction *obj) const;
+	void shortSummary(const ObjectiveFunction *obj, const std :: vector<int> *groundTruth) const;
 	void summarizeEdgeCounts() const ;
 	void blockDetail(const ObjectiveFunction *obj) const ;
 

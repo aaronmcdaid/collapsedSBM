@@ -52,6 +52,9 @@ struct gengetopt_args_info
   int seed_arg;	/**< @brief seed to drand48() (default='0').  */
   char * seed_orig;	/**< @brief seed to drand48() original value given at command line.  */
   const char *seed_help; /**< @brief seed to drand48() help description.  */
+  char * GT_vector_arg;	/**< @brief The ground truth. a file with N lines. Starts from ZERO..  */
+  char * GT_vector_orig;	/**< @brief The ground truth. a file with N lines. Starts from ZERO. original value given at command line.  */
+  const char *GT_vector_help; /**< @brief The ground truth. a file with N lines. Starts from ZERO. help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -63,6 +66,7 @@ struct gengetopt_args_info
   unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
   unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
+  unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

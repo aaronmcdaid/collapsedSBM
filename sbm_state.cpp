@@ -322,7 +322,7 @@ namespace sbm {
 
 	}
 
-	void State:: shortSummary(const ObjectiveFunction *obj) const {
+	void State:: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		int nonEmptyK = 0;
@@ -346,6 +346,14 @@ namespace sbm {
 				cout << '<' << id_of_cluster << '>';
 		}
 		cout << endl;
+		if(groundTruth) {
+			assert(!groundTruth->empty());
+			forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
+			{
+				cout << groundTruth->at(node_name);
+			}
+			cout << " ground truth" << endl;
+		}
 
 		vector<int> cluster_sizes;
 		for(int k=0; k<this->_k; k++) {

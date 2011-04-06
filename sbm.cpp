@@ -25,7 +25,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 static
@@ -112,6 +112,10 @@ int main(int argc, char **argv) {
 	PP(args_info.directed_flag);
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
+	if(args_info.GT_vector_given)
+		PP(args_info.GT_vector_arg);
+	else
+		cout << "args_info.GT_vector_arg:<undefined>";
 
 	sbm:: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g;
@@ -145,8 +149,29 @@ int main(int argc, char **argv) {
 		dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
+
+	vector<int> groundTruth;
+	if(args_info.GT_vector_given) { //populate groundTruth based on the --GT.vector option
+		std :: ifstream GTvectorStream(args_info.GT_vector_arg);
+		for(int i=0; ; i++) {
+			if(!GTvectorStream.is_open())
+				break;
+			int z_i;
+			GTvectorStream >> z_i;
+			if(GTvectorStream.eof())
+				break;
+			groundTruth.push_back(z_i);
+		}
+		if((int) groundTruth.size() != g->numNodes()) {
+			cerr << "Error: the GT.vector file \"" << args_info.GT_vector_arg << "\" has " << groundTruth.size() << " lines. "
+				<< "I was expecting " << g->numNodes() << "lines."
+				<< endl;
+			groundTruth.clear();
+		}
+	}
+
 	srand48(args_info.seed_arg);
-	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj);
+	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth);
 	assert(edge_details_.get());
 	assert(g.get());
 	assert(obj);
@@ -916,10 +941,10 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj) {
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth) {
 	sbm::State s(g, edge_details);
 
-	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 
 	/*
@@ -938,7 +963,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// for(int n=0; n+1<s._N; n++) s.isolateNode(n);
 		// assert(s._k == s._N);
 	}
-	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 
 	long double pmf_track = s.pmf(obj);
@@ -947,7 +972,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
-	for(int i=1; i<=4000000; i++) {
+	for(int i=1; i<=40000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
@@ -976,7 +1001,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
-			s.shortSummary(obj);
+			s.shortSummary(obj, groundTruth);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
 			AR_metro1Node.dump();
@@ -987,7 +1012,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			s.internalCheck();
 		}
 	}
-	s.shortSummary(obj); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
 }
 
