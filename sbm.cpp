@@ -236,6 +236,89 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
+void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR) {
+	// 1. Choose two clusters at random
+
+	if(s._k < 7) {
+		return; // should this be recorded as a rejection for the purpose of the acceptance rate?
+	}
+
+	assert(AR);
+	const int pre_k = s._k;
+	const int left = drand48() * s._k;
+	int right_; do { right_ = drand48() * s._k; } while (left==right_);
+	const int right = right_;
+	PP3(s._k, left,right);
+
+	vector<int> randomizedNodeIDs; // the nodes in both clusters. Will be considered in a random order
+	const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
+	const sbm :: Cluster * const rCluster = s.labelling.clusters.at(right);
+	forEach(int n, amd :: mk_range(lCluster->members)) { randomizedNodeIDs.push_back(n); }
+	forEach(int n, amd :: mk_range(rCluster->members)) { randomizedNodeIDs.push_back(n); }
+
+	const int M = randomizedNodeIDs.size();
+	PP(M);
+	assert(M == lCluster->order() + rCluster->order());
+
+	random_shuffle(randomizedNodeIDs.begin(), randomizedNodeIDs.end());
+	vector<int> clusterIDs;
+	for(int m=0; m<M; m++) {
+		const int n = randomizedNodeIDs.at(m);
+		clusterIDs.push_back(s.labelling.cluster_id.at(n));
+	}
+	assert((int) clusterIDs.size() == M);
+
+	long double sumToOrig = 0.0L; // The total delta in P(x|z), but the clusters < pre_k
+	for(int m = 0; m<M; m++) {
+		const int nToRemove = randomizedNodeIDs.at(m);
+		const int origClusterID = clusterIDs.at(m);
+		assert(origClusterID == left || origClusterID == right);
+		PP2(nToRemove, origClusterID);
+		const int isolatedClusterId = s.appendEmptyCluster();
+		const int origClusterID_verify = s.moveNodeAndInformOfEdges(nToRemove, isolatedClusterId);
+		assert(origClusterID == origClusterID_verify);
+		const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
+		const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
+		const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
+		PP2(toTheLeft, toTheRight);
+		const long double toOrig = origClusterID == left ? toTheLeft : toTheRight;
+		sumToOrig += toOrig;
+	}
+	assert(s._k == pre_k + M);
+
+	if(0)
+	{ // randomly assign them to the two clusters
+		for(int m = M-1; m>=0; m--) {
+			const int n = randomizedNodeIDs.at(m);
+			cout << "randomly assign " << n << endl;
+			const int randomClusterId = drand48() < 0.5 ? left : right;
+			const int isolatedCluster_verify = s.moveNodeAndInformOfEdges(n, randomClusterId);
+			s.deleteClusterFromTheEnd();
+			assert(s._k == isolatedCluster_verify);
+		}
+		assert(s._k == pre_k);
+	}
+	cout << "Put everything back the way it was" << endl;
+	for(int i = M-1; i>=0; i--) {
+		const int nToPutBack = randomizedNodeIDs.at(i);
+		const int currentClusterID = s.labelling.cluster_id.at(nToPutBack);
+		const int origClusterID = clusterIDs.at(i);
+		const int theOtherCluster = origClusterID == left ? right : left;
+		if(currentClusterID == origClusterID) {
+			continue; // this is OK where it is
+		} else if(currentClusterID == theOtherCluster) {
+			s.moveNodeAndInformOfEdges(nToPutBack, origClusterID);
+		} else { // it's current isolated
+			assert(s.labelling.clusters.at(currentClusterID)->order()==1);
+			assert(currentClusterID >= pre_k);
+			s.moveNodeAndInformOfEdges(nToPutBack, origClusterID);
+			s.deleteClusterFromTheEnd();
+		}
+	}
+
+	assert(pre_k == s._k);
+}
+
 // static
 long double gibbsOneNode(sbm::State &s, const sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1) {
@@ -992,6 +1075,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
+	AcceptanceRate AR_M3("M3");
 	for(int i=1; i<=40000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
@@ -1011,6 +1095,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// const long double pre = s.pmf(obj);
 		pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+		M3(s, obj, &AR_M3);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)
@@ -1026,6 +1111,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			AR_metroK.dump();
 			AR_metro1Node.dump();
 			AR_gibbs.dump();
+			AR_M3.dump();
 			s.blockDetail(obj);
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
