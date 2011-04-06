@@ -360,7 +360,9 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 
 		assert(t >= 0);
 		assert(t < pre_k);
-		assert(isolatedClusterId == pre_k); // for M3, it'll often be bigger, not just equal
+		assert(pre_k < s._k); // we currently have some small "temporary" clusters, as part of gibbsOneNode() or M3()
+		assert(isolatedClusterId == s._k-1); // for M3, it'll often be bigger, not just equal. And maybe equal to s._k usually.
+		assert(s.labelling.clusters.at(isolatedClusterId)->order()==1);
 
 		long double delta_blocks = 0.0L;
 		// pretend we're merging into cluster t
