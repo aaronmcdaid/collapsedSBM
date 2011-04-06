@@ -322,6 +322,57 @@ namespace sbm {
 
 	}
 
+	static double NMI(const vector<int> &left, const vector<int> &top) {
+		const int N = left.size();
+		assert(left.size() == top.size());
+		map< pair<int,int> , int> joint;
+		map< int , int> left_marginal;
+		map< int , int> top_marginal;
+		for(int n=0; n<N; n++) {
+			joint[make_pair(left.at(n), top.at(n))] ++;
+			left_marginal[left.at(n)] ++;
+			top_marginal[top.at(n)] ++;
+		}
+		double mutual_information = 0.0;
+		double H_left = 0.0;
+		forEach( typeof(pair<const int,int>) & l, amd :: mk_range(left_marginal) ) {
+			const long double P_left  = double(left_marginal[l.first]) / N;
+			if(P_left > 0.0)
+				H_left += - P_left * log2(P_left);
+		}
+		assert(isfinite(H_left));
+		double H_top = 0.0;
+		forEach( typeof(pair<const int,int>) & t, amd :: mk_range(top_marginal) ) {
+			const long double P_top  = double(top_marginal[t.first]) / N;
+			if(P_top > 0.0)
+				H_top += - P_top * log2(P_top);
+		}
+		assert(isfinite(H_top));
+		forEach( typeof(pair<const int,int>) & l, amd :: mk_range(left_marginal) ) {
+			forEach( typeof(pair<const int,int>) & t, amd :: mk_range(top_marginal) ) {
+				const long double P_joint = double(joint[make_pair(l.first,t.first)]) / N;
+				const long double P_left  = double(left_marginal[l.first]) / N;
+				const long double P_top   = double( top_marginal[t.first]) / N;
+				if(P_joint > 0.0)
+					mutual_information += P_joint * (log2(P_joint) - log2(P_left) - log2(P_top));
+				else
+					assert(P_joint == 0.0);
+			}
+		}
+		assert(isfinite(mutual_information));
+		const long double normalization = std :: max(H_left, H_top);
+		assert(mutual_information >= 0.0);
+		assert(mutual_information <= normalization);
+
+		if(normalization > 0.0) {
+			const long double nmi = mutual_information / normalization;
+			assert(isfinite(nmi));
+			return nmi;
+		} else {
+			return 0;
+		}
+	}
+
 	void State:: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
@@ -348,11 +399,19 @@ namespace sbm {
 		cout << endl;
 		if(groundTruth) {
 			assert(!groundTruth->empty());
+			vector<int> z_vector;
 			forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
 			{
 				cout << groundTruth->at(node_name);
+				const int n = this->_g->StringToNodeId(printfstring("%d", node_name).c_str());
+				const int id_of_cluster = this->labelling.cluster_id.at(n);
+				z_vector.push_back(id_of_cluster);
 			}
-			cout << " ground truth" << endl;
+			assert(z_vector.size() == groundTruth->size());
+			cout << " ground truth. NMI="
+				<< NMI(z_vector, *groundTruth) * 100
+				<< " %"
+				<< endl;
 		}
 
 		vector<int> cluster_sizes;
