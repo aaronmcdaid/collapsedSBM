@@ -37,7 +37,7 @@ struct Labelling {
 	Labelling(const int _N, const long double _alpha);
 
 
-	void appendEmptyCluster();
+	int appendEmptyCluster();
 	void deleteClusterFromTheEnd();
 	int moveNode(const int n, const int newClusterID);
 	void swapClusters(const int cl1, const int cl2);
@@ -89,7 +89,7 @@ struct State {
 		friend void State:: swapClusters(int,int);
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
-	void moveNodeAndInformOfEdges(const int n, const int newcl);
+	int moveNodeAndInformOfEdges(const int n, const int newcl);
 	EdgeCounts _edgeCounts;
 
 	// pmf - probability mass function to guide sampling

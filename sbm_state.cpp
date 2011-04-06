@@ -60,11 +60,13 @@ namespace sbm {
 		return this->members.begin();
 	}
 
-	void Labelling:: appendEmptyCluster() {
+	int Labelling:: appendEmptyCluster() {
+		const int emptyClusterId = this->_k;
 		Cluster * newCluster = new Cluster();
 		this->clusters.push_back(newCluster);
 		this->_k ++;
 		this->SumOfLog2Facts += LOG2GAMMA(this->_alpha);
+		return emptyClusterId;
 	}
 	int State:: appendEmptyCluster() {
 		this->labelling.appendEmptyCluster();
@@ -494,10 +496,11 @@ namespace sbm {
 			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew, relId);
 		}
 	}
-	void State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
+	int State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
 		const int oldClusterID = this->labelling.cluster_id.at(n);
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
+		return oldClusterID;
 	}
 	void Labelling :: swapClusters(const int cl1, const int cl2) {
 		assert(cl1 != cl2);
