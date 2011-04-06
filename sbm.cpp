@@ -252,6 +252,8 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 	// We proceed to propose to add it to every existing
 
 	// all the blocks involving isolatedClusterId will be destroyed, no matter where it's merged.
+// #define gibbsOneNode_Paranoid
+#ifdef gibbsOneNode_Paranoid
 	long double P_x_z_forIsolated = 0.0L;
 	for(int i=0; i<pre_k+1; i++) { // +1 so as to include iso<=>iso (which will only have an effect with selfloops)
 		P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(isolatedClusterId, i, &s._edgeCounts) , obj->numberOfPairsInBlock(isolatedClusterId,i, &s.labelling), i==isolatedClusterId);
@@ -259,6 +261,7 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 			P_x_z_forIsolated += obj->log2OneBlock(obj->relevantWeight(i, isolatedClusterId, &s._edgeCounts) , obj->numberOfPairsInBlock(i, isolatedClusterId, &s.labelling), i==isolatedClusterId);
 		}
 	}
+#endif
 
 	vector<long double> delta_P_x_z_IfIMoveIntoClusterT(pre_k);
 	vector<long double> delta_P_z_K_IfIMoveIntoClusterT(pre_k);
@@ -330,7 +333,6 @@ long double gibbsOneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, Acceptance
 				delta_P_z_K_IfIMoveIntoClusterT.at(t) = post_z_K - pre_z_K;
 		}
 
-// #define gibbsOneNode_Paranoid
 #ifdef gibbsOneNode_Paranoid
 		{ // paranoid verification that the above calculation was correct
 				const long double pre_x_z = s.P_edges_given_z_slow(obj);
