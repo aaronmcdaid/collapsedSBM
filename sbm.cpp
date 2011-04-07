@@ -238,7 +238,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR) {
+long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative) {
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
@@ -383,6 +383,22 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		;
 
 	if(acceptTest(acceptanceProbability, AR)) {
+		// how many nodes haven't actually moved?
+		int changed = 0;
+		for(int m = 0; m<M; m++) {
+			const int n = randomizedNodeIDs.at(m);
+			const int origClusterID = clusterIDs.at(m);
+			const int currentClusterID = s.labelling.cluster_id.at(n);
+			assert(currentClusterID == left || currentClusterID == right);
+			assert(origClusterID == left || origClusterID == right);
+			if(currentClusterID != origClusterID) {
+				changed ++;
+			}
+		}
+		assert(changed >= 0 && changed <= M);
+		AR_alittleConservative->notify(changed>0);
+		AR_veryConservative->notify(changed>0 && changed < M);
+
 		assert(pre_k == s._k);
 		return delta_P_zK;
 	}
@@ -405,6 +421,8 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		}
 	}
 	assert(pre_k == s._k);
+	AR_alittleConservative->notify(false);
+	AR_veryConservative->notify(false);
 	return 0.0L;
 	}
 }
@@ -1167,6 +1185,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
 	AcceptanceRate AR_M3("M3");
+	AcceptanceRate AR_M3little("M3lConservative");
+	AcceptanceRate AR_M3very  ("M3vConservative");
 	for(int i=1; i<=4000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
@@ -1186,8 +1206,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// const long double pre = s.pmf(obj);
 		// pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		// pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
-		pmf_track +=
-		M3(s, obj, &AR_M3);
+		pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)
@@ -1195,6 +1214,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	
 		// PP(s.pmf());
 		// cout << endl;
+		if(i%1000 == 0)
+			cerr << "i:" << i << endl;
 		if(i%100 == 0) {
 			cout << endl;
 			PP(i);
@@ -1204,6 +1225,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			AR_metro1Node.dump();
 			AR_gibbs.dump();
 			AR_M3.dump();
+			AR_M3little.dump();
+			AR_M3very.dump();
 			s.blockDetail(obj);
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
