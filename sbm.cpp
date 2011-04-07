@@ -243,6 +243,11 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 		return; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
 
+#define M3_Paranoid
+#ifdef M3_Paranoid
+	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
+#endif
+
 	assert(AR);
 	const int pre_k = s._k;
 	const int left = drand48() * s._k;
@@ -261,6 +266,7 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 	assert(M == lCluster->order() + rCluster->order());
 
 	random_shuffle(randomizedNodeIDs.begin(), randomizedNodeIDs.end());
+
 	vector<int> clusterIDs;
 	for(int m=0; m<M; m++) {
 		const int n = randomizedNodeIDs.at(m);
@@ -286,20 +292,39 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 	}
 	assert(s._k == pre_k + M);
 
-	if(0)
 	{ // randomly assign them to the two clusters
+		long double delta_P_x_z_forRandom = 0.0L;
 		for(int m = M-1; m>=0; m--) {
 			const int n = randomizedNodeIDs.at(m);
 			cout << "randomly assign " << n << endl;
+
+			const int isolatedClusterId = s.labelling.cluster_id.at(n);
+			assert(isolatedClusterId == s._k-1);
+			const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
+			const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
+			const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
+			PP2(toTheLeft, toTheRight);
+
 			const int randomClusterId = drand48() < 0.5 ? left : right;
 			const int isolatedCluster_verify = s.moveNodeAndInformOfEdges(n, randomClusterId);
 			s.deleteClusterFromTheEnd();
 			assert(s._k == isolatedCluster_verify);
+
+			delta_P_x_z_forRandom += randomClusterId == left ? toTheLeft : toTheRight;
 		}
 		assert(s._k == pre_k);
+
+		// must assert that the delta_P_x_z is as was expected
+#ifdef M3_Paranoid
+		const long double postRandom_P_x_z = s.P_edges_given_z_slow(obj);
+		PP2(preRandom_P_x_z, postRandom_P_x_z);
+		PP2(sumToOrig, delta_P_x_z_forRandom);
+		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom);
+		assert(VERYCLOSE(preRandom_P_x_z , postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom));
+#endif
 	}
 	cout << "Put everything back the way it was" << endl;
-	for(int i = M-1; i>=0; i--) {
+	for(int i = M-1; i>=0; i--) { // regardless of whether the nodes are still isolated, or have already been assigned randomly, this will put everything back the way it was.
 		const int nToPutBack = randomizedNodeIDs.at(i);
 		const int currentClusterID = s.labelling.cluster_id.at(nToPutBack);
 		const int origClusterID = clusterIDs.at(i);
@@ -502,6 +527,7 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 				delta_blocks += delta_1_block;
 			}
 		}
+		assert(isfinite(delta_blocks));
 		return delta_blocks;
 }
 
@@ -1076,7 +1102,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
 	AcceptanceRate AR_M3("M3");
-	for(int i=1; i<=40000; i++) {
+	for(int i=1; i<=4000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
