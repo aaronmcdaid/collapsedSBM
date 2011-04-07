@@ -1184,8 +1184,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 			assert(commandLineK == s._k);
 		// PP(i);
 		// const long double pre = s.pmf(obj);
-		pmf_track += MoneNode(s, obj, &AR_metro1Node);
-		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+		// pmf_track += MoneNode(s, obj, &AR_metro1Node);
+		// pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
 		pmf_track +=
 		M3(s, obj, &AR_M3);
 		// const long double post = s.pmf(obj);
