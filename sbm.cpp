@@ -219,7 +219,9 @@ struct AcceptanceRate {
 	}
 	void dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
-		cout << double(this->a)/this->n << endl;
+		cout << double(this->a)/this->n;
+		cout << "\t" << this->a << " / " << this->n;
+		cout << endl;
 	}
 };
 static
