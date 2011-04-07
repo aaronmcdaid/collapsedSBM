@@ -236,18 +236,19 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR) {
+long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR) {
 	// 1. Choose two clusters at random
 
 	if(s._k < 7) {
-		return; // should this be recorded as a rejection for the purpose of the acceptance rate?
+		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
 
 #define M3_Paranoid
 #ifdef M3_Paranoid
 	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
+	const long double preRandom_P_zK_x = s.pmf_slow(obj);
 #endif
-
+	const long double preRandom_P_z_K = s.P_z_orders();
 	assert(AR);
 	const int pre_k = s._k;
 	const int left = drand48() * s._k;
@@ -306,9 +307,9 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 	}
 	assert(s._k == pre_k + M);
 
-	{ // randomly assign them to the two clusters
-		long double delta_P_x_z_forRandom = 0.0L;
-		long double proposalProbNew_log2 = 0.0L;
+	long double delta_P_x_z_forRandom = 0.0L;
+	long double proposalProbNew_log2 = 0.0L;
+	// randomly assign them to the two clusters
 		for(int m = M-1; m>=0; m--) {
 			const int n = randomizedNodeIDs.at(m);
 			cout << "randomly assign " << n << endl;
@@ -346,18 +347,37 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 		assert(s._k == pre_k);
 
 		// must assert that the delta_P_x_z is as was expected
+		const long double postRandom_P_z_K = s.P_z_orders();
 #ifdef M3_Paranoid
+		const long double postRandom_P_zK_x = s.pmf_slow(obj);
 		const long double postRandom_P_x_z = s.P_edges_given_z_slow(obj);
 		PP2(preRandom_P_x_z, postRandom_P_x_z);
 		PP2(sumToOrig, delta_P_x_z_forRandom);
 		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom);
 		assert(VERYCLOSE(preRandom_P_x_z + delta_P_x_z_forRandom - sumToOrig, postRandom_P_x_z));
+		PP2(preRandom_P_zK_x , postRandom_P_zK_x);
+		PP(delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
+		assert( -preRandom_P_zK_x + postRandom_P_zK_x == delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
 #endif
 
 		cout << "Did it randomly find a good one?" << endl;
 		PP(delta_P_x_z_forRandom - sumToOrig);
 		PP2(proposalProbOld_log2, proposalProbNew_log2);
+
+	const long double delta_P_zK = delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K;
+	assert(delta_P_zK == postRandom_P_zK_x - preRandom_P_zK_x);
+	const long double acceptanceProbability =
+		+ delta_P_zK
+		- proposalProbNew_log2 + proposalProbOld_log2
+		;
+	PP(acceptanceProbability);
+
+	if(acceptTest(acceptanceProbability, AR)) {
+		assert(pre_k == s._k);
+		return delta_P_zK;
 	}
+	else
+	{
 	cout << "Put everything back the way it was" << endl;
 	for(int i = M-1; i>=0; i--) { // regardless of whether the nodes are still isolated, or have already been assigned randomly, this will put everything back the way it was.
 		const int nToPutBack = randomizedNodeIDs.at(i);
@@ -375,8 +395,9 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 			s.deleteClusterFromTheEnd();
 		}
 	}
-
 	assert(pre_k == s._k);
+	return 0.0L;
+	}
 }
 
 // static
@@ -1156,6 +1177,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// const long double pre = s.pmf(obj);
 		pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+		pmf_track +=
 		M3(s, obj, &AR_M3);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
