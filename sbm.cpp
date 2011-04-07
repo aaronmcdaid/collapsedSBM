@@ -275,6 +275,7 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 	assert((int) clusterIDs.size() == M);
 
 	long double sumToOrig = 0.0L; // The total delta in P(x|z), but the clusters < pre_k
+	long double proposalProbOld_log2 = 0.0L;
 	for(int m = 0; m<M; m++) {
 		const int nToRemove = randomizedNodeIDs.at(m);
 		const int origClusterID = clusterIDs.at(m);
@@ -289,11 +290,25 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 		PP2(toTheLeft, toTheRight);
 		const long double toOrig = origClusterID == left ? toTheLeft : toTheRight;
 		sumToOrig += toOrig;
+
+		// would would the proposal probability have been in reverse, so to speak?
+		const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
+		const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
+		assert(toTheLeft__ <= 0.0L);
+		assert(toTheRight__ <= 0.0L);
+		PP2(toTheLeft__, toTheRight__);
+		const long double toTheLeft____  = exp2l(toTheLeft__);
+		const long double toTheRight____ = exp2l(toTheRight__);
+		PP2(toTheLeft____, toTheRight____);
+		const long double totalProb____ = toTheLeft____ + toTheRight____;
+		proposalProbOld_log2 +=          toOrig - max(toTheLeft, toTheRight);
+		proposalProbOld_log2 -=          log2l(totalProb____);
 	}
 	assert(s._k == pre_k + M);
 
 	{ // randomly assign them to the two clusters
 		long double delta_P_x_z_forRandom = 0.0L;
+		long double proposalProbNew_log2 = 0.0L;
 		for(int m = M-1; m>=0; m--) {
 			const int n = randomizedNodeIDs.at(m);
 			cout << "randomly assign " << n << endl;
@@ -305,7 +320,23 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 			const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
 			PP2(toTheLeft, toTheRight);
 
-			const int randomClusterId = drand48() < 0.5 ? left : right;
+			// choose left or right randomly, weighted by toTheLeft and toTheRight
+			const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
+			const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
+			assert(toTheLeft__ <= 0.0L);
+			assert(toTheRight__ <= 0.0L);
+			PP2(toTheLeft__, toTheRight__);
+			const long double toTheLeft____  = exp2l(toTheLeft__);
+			const long double toTheRight____ = exp2l(toTheRight__);
+			PP2(toTheLeft____, toTheRight____);
+			const long double totalProb____ = toTheLeft____ + toTheRight____;
+			const long double u = drand48() * totalProb____;
+			PP3(toTheLeft____ , u , toTheRight____);
+			const int randomClusterId = (u < toTheLeft____) ? left : right;
+			proposalProbNew_log2 +=          (u < toTheLeft____) ? toTheLeft__ : toTheRight__;
+			proposalProbNew_log2 -=          log2l(totalProb____);
+			PP3(left, randomClusterId, right);
+			PP(bool(randomClusterId == right));
 			const int isolatedCluster_verify = s.moveNodeAndInformOfEdges(n, randomClusterId);
 			s.deleteClusterFromTheEnd();
 			assert(s._k == isolatedCluster_verify);
@@ -320,8 +351,12 @@ void M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * c
 		PP2(preRandom_P_x_z, postRandom_P_x_z);
 		PP2(sumToOrig, delta_P_x_z_forRandom);
 		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom);
-		assert(VERYCLOSE(preRandom_P_x_z , postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom));
+		assert(VERYCLOSE(preRandom_P_x_z + delta_P_x_z_forRandom - sumToOrig, postRandom_P_x_z));
 #endif
+
+		cout << "Did it randomly find a good one?" << endl;
+		PP(delta_P_x_z_forRandom - sumToOrig);
+		PP2(proposalProbOld_log2, proposalProbNew_log2);
 	}
 	cout << "Put everything back the way it was" << endl;
 	for(int i = M-1; i>=0; i--) { // regardless of whether the nodes are still isolated, or have already been assigned randomly, this will put everything back the way it was.
