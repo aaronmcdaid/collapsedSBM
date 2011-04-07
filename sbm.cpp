@@ -247,7 +247,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	assert(s._k >= 2);
 
 // #define M3_debugPrinting
-#define M3_Paranoid
+// #define M3_Paranoid
 #ifdef M3_Paranoid
 	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
 	const long double preRandom_P_zK_x = s.pmf_slow(obj);
@@ -1187,7 +1187,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_M3("M3");
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
-	for(int i=1; i<=4000; i++) {
+	for(int i=1; i<=400000; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
