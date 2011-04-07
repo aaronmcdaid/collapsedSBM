@@ -241,10 +241,12 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR) {
 	// 1. Choose two clusters at random
 
-	if(s._k < 7) {
+	if(s._k < 2) {
 		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
+	assert(s._k >= 2);
 
+// #define M3_debugPrinting
 #define M3_Paranoid
 #ifdef M3_Paranoid
 	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
@@ -256,7 +258,9 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	const int left = drand48() * s._k;
 	int right_; do { right_ = drand48() * s._k; } while (left==right_);
 	const int right = right_;
+#ifdef M3_debugPrinting
 	PP3(s._k, left,right);
+#endif
 
 	vector<int> randomizedNodeIDs; // the nodes in both clusters. Will be considered in a random order
 	const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
@@ -265,7 +269,6 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	forEach(int n, amd :: mk_range(rCluster->members)) { randomizedNodeIDs.push_back(n); }
 
 	const int M = randomizedNodeIDs.size();
-	PP(M);
 	assert(M == lCluster->order() + rCluster->order());
 
 	random_shuffle(randomizedNodeIDs.begin(), randomizedNodeIDs.end());
@@ -283,14 +286,12 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		const int nToRemove = randomizedNodeIDs.at(m);
 		const int origClusterID = clusterIDs.at(m);
 		assert(origClusterID == left || origClusterID == right);
-		PP2(nToRemove, origClusterID);
 		const int isolatedClusterId = s.appendEmptyCluster();
 		const int origClusterID_verify = s.moveNodeAndInformOfEdges(nToRemove, isolatedClusterId);
 		assert(origClusterID == origClusterID_verify);
 		const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
 		const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
 		const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
-		PP2(toTheLeft, toTheRight);
 		const long double toOrig = origClusterID == left ? toTheLeft : toTheRight;
 		sumToOrig += toOrig;
 
@@ -299,10 +300,14 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
 		assert(toTheLeft__ <= 0.0L);
 		assert(toTheRight__ <= 0.0L);
-		PP2(toTheLeft__, toTheRight__);
 		const long double toTheLeft____  = exp2l(toTheLeft__);
 		const long double toTheRight____ = exp2l(toTheRight__);
+#ifdef M3_debugPrinting
+		PP2(nToRemove, origClusterID);
+		PP2(toTheLeft, toTheRight);
+		PP2(toTheLeft__, toTheRight__);
 		PP2(toTheLeft____, toTheRight____);
+#endif
 		const long double totalProb____ = toTheLeft____ + toTheRight____;
 		proposalProbOld_log2 +=          toOrig - max(toTheLeft, toTheRight);
 		proposalProbOld_log2 -=          log2l(totalProb____);
@@ -314,32 +319,34 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	// randomly assign them to the two clusters
 		for(int m = M-1; m>=0; m--) {
 			const int n = randomizedNodeIDs.at(m);
-			cout << "randomly assign " << n << endl;
+			// cout << "randomly assign " << n << endl;
 
 			const int isolatedClusterId = s.labelling.cluster_id.at(n);
 			assert(isolatedClusterId == s._k-1);
 			const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
 			const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
 			const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
-			PP2(toTheLeft, toTheRight);
 
 			// choose left or right randomly, weighted by toTheLeft and toTheRight
 			const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
 			const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
 			assert(toTheLeft__ <= 0.0L);
 			assert(toTheRight__ <= 0.0L);
-			PP2(toTheLeft__, toTheRight__);
 			const long double toTheLeft____  = exp2l(toTheLeft__);
 			const long double toTheRight____ = exp2l(toTheRight__);
-			PP2(toTheLeft____, toTheRight____);
 			const long double totalProb____ = toTheLeft____ + toTheRight____;
 			const long double u = drand48() * totalProb____;
-			PP3(toTheLeft____ , u , toTheRight____);
 			const int randomClusterId = (u < toTheLeft____) ? left : right;
 			proposalProbNew_log2 +=          (u < toTheLeft____) ? toTheLeft__ : toTheRight__;
 			proposalProbNew_log2 -=          log2l(totalProb____);
+#ifdef M3_debugPrinting
+			PP2(toTheLeft, toTheRight);
+			PP2(toTheLeft__, toTheRight__);
+			PP2(toTheLeft____, toTheRight____);
+			PP3(toTheLeft____ , u , toTheRight____);
 			PP3(left, randomClusterId, right);
 			PP(bool(randomClusterId == right));
+#endif
 			const int isolatedCluster_verify = s.moveNodeAndInformOfEdges(n, randomClusterId);
 			s.deleteClusterFromTheEnd();
 			assert(s._k == isolatedCluster_verify);
@@ -359,20 +366,21 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		assert(VERYCLOSE(preRandom_P_x_z + delta_P_x_z_forRandom - sumToOrig, postRandom_P_x_z));
 		PP2(preRandom_P_zK_x , postRandom_P_zK_x);
 		PP(delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
-		assert( -preRandom_P_zK_x + postRandom_P_zK_x == delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
-#endif
+		assert(VERYCLOSE( -preRandom_P_zK_x + postRandom_P_zK_x , delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K));
 
 		cout << "Did it randomly find a good one?" << endl;
 		PP(delta_P_x_z_forRandom - sumToOrig);
 		PP2(proposalProbOld_log2, proposalProbNew_log2);
+#endif
 
 	const long double delta_P_zK = delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K;
-	assert(delta_P_zK == postRandom_P_zK_x - preRandom_P_zK_x);
+#ifdef M3_Paranoid
+	assert(VERYCLOSE(delta_P_zK , postRandom_P_zK_x - preRandom_P_zK_x));
+#endif
 	const long double acceptanceProbability =
 		+ delta_P_zK
 		- proposalProbNew_log2 + proposalProbOld_log2
 		;
-	PP(acceptanceProbability);
 
 	if(acceptTest(acceptanceProbability, AR)) {
 		assert(pre_k == s._k);
@@ -380,7 +388,6 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	}
 	else
 	{
-	cout << "Put everything back the way it was" << endl;
 	for(int i = M-1; i>=0; i--) { // regardless of whether the nodes are still isolated, or have already been assigned randomly, this will put everything back the way it was.
 		const int nToPutBack = randomizedNodeIDs.at(i);
 		const int currentClusterID = s.labelling.cluster_id.at(nToPutBack);
