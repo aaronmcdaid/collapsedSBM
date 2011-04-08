@@ -247,12 +247,12 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	assert(s._k >= 2);
 
 // #define M3_debugPrinting
-// #define M3_Paranoid
+#define M3_Paranoid
 #ifdef M3_Paranoid
 	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
 	const long double preRandom_P_zK_x = s.pmf_slow(obj);
 #endif
-	const long double preRandom_P_z_K = s.P_z_orders();
+	// const long double preRandom_P_z_K = s.P_z_orders();
 	assert(AR);
 	const int pre_k = s._k;
 	const int left = drand48() * s._k;
@@ -290,8 +290,24 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		const int origClusterID_verify = s.moveNodeAndInformOfEdges(nToRemove, isolatedClusterId);
 		assert(origClusterID == origClusterID_verify);
 		const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
-		const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
-		const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
+
+			const long double pre_z_K = s.P_z_orders();
+			s.moveNode(nToRemove, left);
+			const long double post_z_K_left = s.P_z_orders();
+			s.moveNode(nToRemove, isolatedClusterId);
+			assert(pre_z_K == s.P_z_orders());
+			const long double delta_z_K_left = post_z_K_left - pre_z_K;
+			assert(isfinite(delta_z_K_left));
+			s.moveNode(nToRemove, right);
+			const long double post_z_K_right = s.P_z_orders();
+			s.moveNode(nToRemove, isolatedClusterId);
+			assert(pre_z_K == s.P_z_orders());
+			const long double delta_z_K_right = post_z_K_right - pre_z_K;
+			assert(isfinite(delta_z_K_right));
+			// PP2(delta_z_K_left,delta_z_K_right);
+
+		const long double toTheLeft = delta_z_K_left  + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
+		const long double toTheRight= delta_z_K_right + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
 		const long double toOrig = origClusterID == left ? toTheLeft : toTheRight;
 		sumToOrig += toOrig;
 
@@ -314,7 +330,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	}
 	assert(s._k == pre_k + M);
 
-	long double delta_P_x_z_forRandom = 0.0L;
+	long double delta_P_z_x_forRandom = 0.0L;
 	long double proposalProbNew_log2 = 0.0L;
 	// randomly assign them to the two clusters
 		for(int m = M-1; m>=0; m--) {
@@ -324,8 +340,24 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 			const int isolatedClusterId = s.labelling.cluster_id.at(n);
 			assert(isolatedClusterId == s._k-1);
 			const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
-			const long double toTheLeft = delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
-			const long double toTheRight= delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
+
+			const long double pre_z_K = s.P_z_orders();
+			s.moveNode(n, left);
+			const long double post_z_K_left = s.P_z_orders();
+			s.moveNode(n, isolatedClusterId);
+			assert(pre_z_K == s.P_z_orders());
+			const long double delta_z_K_left = post_z_K_left - pre_z_K;
+			assert(isfinite(delta_z_K_left));
+			s.moveNode(n, right);
+			const long double post_z_K_right = s.P_z_orders();
+			s.moveNode(n, isolatedClusterId);
+			assert(pre_z_K == s.P_z_orders());
+			const long double delta_z_K_right = post_z_K_right - pre_z_K;
+			assert(isfinite(delta_z_K_right));
+			// PP2(delta_z_K_left,delta_z_K_right);
+
+			const long double toTheLeft = delta_z_K_left  + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
+			const long double toTheRight= delta_z_K_right + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
 
 			// choose left or right randomly, weighted by toTheLeft and toTheRight
 			const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
@@ -351,29 +383,29 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 			s.deleteClusterFromTheEnd();
 			assert(s._k == isolatedCluster_verify);
 
-			delta_P_x_z_forRandom += randomClusterId == left ? toTheLeft : toTheRight;
+			delta_P_z_x_forRandom += randomClusterId == left ? toTheLeft : toTheRight;
 		}
 		assert(s._k == pre_k);
 
 		// must assert that the delta_P_x_z is as was expected
-		const long double postRandom_P_z_K = s.P_z_orders();
+		// const long double postRandom_P_z_K = s.P_z_orders();
 #ifdef M3_Paranoid
 		const long double postRandom_P_zK_x = s.pmf_slow(obj);
-		const long double postRandom_P_x_z = s.P_edges_given_z_slow(obj);
+		const long double postRandom_P_x_z = s.P_edges_given_z_slow(obj) + s.P_z_orders();
 		PP2(preRandom_P_x_z, postRandom_P_x_z);
-		PP2(sumToOrig, delta_P_x_z_forRandom);
-		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_x_z_forRandom);
-		assert(VERYCLOSE(preRandom_P_x_z + delta_P_x_z_forRandom - sumToOrig, postRandom_P_x_z));
-		PP2(preRandom_P_zK_x , postRandom_P_zK_x);
-		PP(delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
-		assert(VERYCLOSE( -preRandom_P_zK_x + postRandom_P_zK_x , delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K));
+		PP2(sumToOrig, delta_P_z_x_forRandom);
+		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_z_x_forRandom);
+		assert(VERYCLOSE(preRandom_P_zK_x + delta_P_z_x_forRandom - sumToOrig, postRandom_P_zK_x));
+		// PP2(preRandom_P_zK_x , postRandom_P_zK_x);
+		// PP(delta_P_z_x_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
+		// assert(VERYCLOSE( -preRandom_P_zK_x + postRandom_P_zK_x , delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K));
 
 		cout << "Did it randomly find a good one?" << endl;
-		PP(delta_P_x_z_forRandom - sumToOrig);
+		PP(delta_P_z_x_forRandom - sumToOrig);
 		PP2(proposalProbOld_log2, proposalProbNew_log2);
 #endif
 
-	const long double delta_P_zK = delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K;
+	const long double delta_P_zK = delta_P_z_x_forRandom - sumToOrig; // + postRandom_P_z_K - preRandom_P_z_K;
 #ifdef M3_Paranoid
 	assert(VERYCLOSE(delta_P_zK , postRandom_P_zK_x - preRandom_P_zK_x));
 #endif
@@ -1216,7 +1248,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// cout << endl;
 		if(i%1000 == 0)
 			cerr << "i:" << i << endl;
-		if(i%100 == 0) {
+		if(i%10 == 0) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);
