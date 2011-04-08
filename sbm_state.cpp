@@ -551,10 +551,13 @@ namespace sbm {
 			assert(cl);
 			perCluster_bits += LOG2GAMMA(cl->order() + this->_alpha);
 		}
-		assert(perCluster_bits == P_z_orders());
 		if(VERYCLOSE(perCluster_bits, 0.0L)) {
 			perCluster_bits = 0.0L;
 		}
+		if(VERYCLOSE(perCluster_bits, this->P_z_orders())) {
+			perCluster_bits = this->P_z_orders();
+		}
+		assert(perCluster_bits == this->P_z_orders());
 		return assertNonPositiveFinite(K_prior + perCluster_bits);
 	}
 	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
