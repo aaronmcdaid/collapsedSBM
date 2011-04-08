@@ -513,6 +513,7 @@ ReadableShmGraphTemplate<T> * loadEdgeList(const char *graphTextFileName, const 
 
 			edge_details.new_rel(relId, edgeAsIds, weight);
 
+			if(0)
 			cout << "line:"
 				<< "\t" << relId
 				<< "\t" << edgeAsIds.first << '"' << l << '"'
