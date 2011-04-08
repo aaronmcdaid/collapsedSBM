@@ -181,21 +181,16 @@ int main(int argc, char **argv) {
 void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
 	assert(s._k <= K);
 	assert(K >= 1);
-	for(int i=0; i<1000 || s._k < K; i++) {
-		int n;
-		do {
-			n = drand48() * s._N;
-			//cout << endl << "Moving node: " << n << " move# " << i << endl;
-			s.isolateNode(n);
-		} while (s._k <= K);
-		const int newClusterID = drand48() * (s._k-1); // -1 because we must move the node from the "temporary" community
-		// s.shortSummary(); s.summarizeEdgeCounts();
-
-		s.unIsolateTempNode(n, newClusterID);
-		assert(s._k <= K);
-		// s.shortSummary(); s.summarizeEdgeCounts();
-		s.internalCheck();
+	while(s._k < K) {
+		s.appendEmptyCluster();
 	}
+	for(int n=0; n<s._N; n++) {
+		const int newCluster = drand48() * s._k;
+		if(newCluster != s.labelling.cluster_id.at(n))
+			s.moveNodeAndInformOfEdges(n, newCluster);
+	}
+	cout << "Randomizing.. ";
+	PP2(s._k, s.labelling.NonEmptyClusters);
 	assert(s._k == K);
 	s.internalCheck();
 }
