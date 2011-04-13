@@ -242,7 +242,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	assert(s._k >= 2);
 
 // #define M3_debugPrinting
-#define M3_Paranoid
+// #define M3_Paranoid
 #ifdef M3_Paranoid
 	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
 	const long double preRandom_P_zK_x = s.pmf_slow(obj);
@@ -1232,7 +1232,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// PP(i);
 		// const long double pre = s.pmf(obj);
 		// pmf_track += MoneNode(s, obj, &AR_metro1Node);
-		// pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
 		pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
