@@ -39,6 +39,8 @@ const char *gengetopt_args_info_help[] = {
   "  -s, --selfloop          selfloops allowed  (default=off)",
   "      --seed=INT          seed to drand48()  (default=`0')",
   "      --GT.vector=STRING  The ground truth. a file with N lines. Starts from \n                            ZERO.",
+  "      --algo.gibbs=INT    Use the simple Gibbs in the algorithm  (default=`1')",
+  "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
     0
 };
 
@@ -75,6 +77,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->selfloop_given = 0 ;
   args_info->seed_given = 0 ;
   args_info->GT_vector_given = 0 ;
+  args_info->algo_gibbs_given = 0 ;
+  args_info->algo_m3_given = 0 ;
 }
 
 static
@@ -92,6 +96,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->seed_orig = NULL;
   args_info->GT_vector_arg = NULL;
   args_info->GT_vector_orig = NULL;
+  args_info->algo_gibbs_arg = 1;
+  args_info->algo_gibbs_orig = NULL;
+  args_info->algo_m3_arg = 1;
+  args_info->algo_m3_orig = NULL;
   
 }
 
@@ -111,6 +119,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->selfloop_help = gengetopt_args_info_help[8] ;
   args_info->seed_help = gengetopt_args_info_help[9] ;
   args_info->GT_vector_help = gengetopt_args_info_help[10] ;
+  args_info->algo_gibbs_help = gengetopt_args_info_help[11] ;
+  args_info->algo_m3_help = gengetopt_args_info_help[12] ;
   
 }
 
@@ -196,6 +206,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->seed_orig));
   free_string_field (&(args_info->GT_vector_arg));
   free_string_field (&(args_info->GT_vector_orig));
+  free_string_field (&(args_info->algo_gibbs_orig));
+  free_string_field (&(args_info->algo_m3_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -252,6 +264,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "seed", args_info->seed_orig, 0);
   if (args_info->GT_vector_given)
     write_into_file(outfile, "GT.vector", args_info->GT_vector_orig, 0);
+  if (args_info->algo_gibbs_given)
+    write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
+  if (args_info->algo_m3_given)
+    write_into_file(outfile, "algo.m3", args_info->algo_m3_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -511,6 +527,8 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "selfloop",	0, NULL, 's' },
         { "seed",	1, NULL, 0 },
         { "GT.vector",	1, NULL, 0 },
+        { "algo.gibbs",	1, NULL, 0 },
+        { "algo.m3",	1, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -630,6 +648,34 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                 &(local_args_info.GT_vector_given), optarg, 0, 0, ARG_STRING,
                 check_ambiguity, override, 0, 0,
                 "GT.vector", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Use the simple Gibbs in the algorithm.  */
+          else if (strcmp (long_options[option_index].name, "algo.gibbs") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_gibbs_arg), 
+                 &(args_info->algo_gibbs_orig), &(args_info->algo_gibbs_given),
+                &(local_args_info.algo_gibbs_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.gibbs", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Use M3 in the algorithm.  */
+          else if (strcmp (long_options[option_index].name, "algo.m3") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_m3_arg), 
+                 &(args_info->algo_m3_orig), &(args_info->algo_m3_given),
+                &(local_args_info.algo_m3_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.m3", '-',
                 additional_error))
               goto failure;
           

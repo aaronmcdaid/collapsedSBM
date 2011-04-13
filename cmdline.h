@@ -55,6 +55,12 @@ struct gengetopt_args_info
   char * GT_vector_arg;	/**< @brief The ground truth. a file with N lines. Starts from ZERO..  */
   char * GT_vector_orig;	/**< @brief The ground truth. a file with N lines. Starts from ZERO. original value given at command line.  */
   const char *GT_vector_help; /**< @brief The ground truth. a file with N lines. Starts from ZERO. help description.  */
+  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
+  char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
+  const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
+  int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
+  char * algo_m3_orig;	/**< @brief Use M3 in the algorithm original value given at command line.  */
+  const char *algo_m3_help; /**< @brief Use M3 in the algorithm help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -67,6 +73,8 @@ struct gengetopt_args_info
   unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
   unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
+  unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
+  unsigned int algo_m3_given ;	/**< @brief Whether algo.m3 was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

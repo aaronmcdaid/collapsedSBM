@@ -7,7 +7,7 @@ using namespace std;
 #include <unistd.h>
 #include <libgen.h>
 #include <float.h>
-#include <gsl/gsl_sf.h>
+// #include <gsl/gsl_sf.h>
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
@@ -25,7 +25,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const bool algo_gibbs, const bool algo_m3);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 // static
@@ -113,6 +113,8 @@ int main(int argc, char **argv) {
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
 	PP(args_info.seed_arg);
+	PP(args_info.algo_gibbs_arg);
+	PP(args_info.algo_m3_arg);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -172,7 +174,7 @@ int main(int argc, char **argv) {
 	}
 
 	srand48(args_info.seed_arg);
-	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth);
+	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
 	assert(edge_details_.get());
 	assert(g.get());
 	assert(obj);
@@ -1202,7 +1204,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth) {
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const bool algo_gibbs, const bool algo_m3) {
 	sbm::State s(g, edge_details);
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
@@ -1254,8 +1256,10 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 		// PP(i);
 		// const long double pre = s.pmf(obj);
 		// pmf_track += MoneNode(s, obj, &AR_metro1Node);
-		pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
-		pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+		if(algo_gibbs)
+			pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+		if(algo_m3)
+			pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)
