@@ -202,21 +202,42 @@ bool fiftyfifty() {
 		return false;
 }
 struct AcceptanceRate {
+	vector<bool> acc;
+	map<int,int> mostRecent; // in order to do a moving average
 	int n;
 	int a; // a/n is the acceptance rate
 	const string _name;
 	AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
+		mostRecent.insert(make_pair(100,0));
+		mostRecent.insert(make_pair(1000,0));
+		mostRecent.insert(make_pair(10000,0));
+		mostRecent.insert(make_pair(100000,0));
 	}
 	void notify(bool accepted) {
+		this->acc.push_back(accepted);
 		this->n++;
+		assert(this->n == (int)this->acc.size());
 		if(accepted)
 			this->a++;
+		forEach(typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
+			x.second += accepted ? 1 : 0;
+			if(this->n > x.first) {
+				x.second -= this->acc.at(this->n - x.first - 1) ? 1 : 0;
+			}
+			assert(x.second >= 0);
+			assert(x.second <= x.first);
+		}
 	}
 	void dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
 		cout << double(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
 		cout << endl;
+		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
+			if(this->n >= x.first) {
+				cout << '\t' << x.first << " // \t" << x.second << "\t % " << double(x.second)/x.first << endl;
+			}
+		}
 	}
 };
 static
