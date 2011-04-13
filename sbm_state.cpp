@@ -363,6 +363,9 @@ namespace sbm {
 		}
 		assert(isfinite(mutual_information));
 		const long double normalization = std :: max(H_left, H_top);
+		if(VERYCLOSE(mutual_information, 0.0L)) {
+			mutual_information = 0.0;
+		}
 		assert(mutual_information >= 0.0);
 		assert(mutual_information <= normalization);
 
