@@ -112,6 +112,7 @@ int main(int argc, char **argv) {
 	PP(args_info.directed_flag);
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
+	PP(args_info.seed_arg);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
