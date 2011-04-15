@@ -25,7 +25,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const bool algo_gibbs, const bool algo_m3);
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 // static
@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
 	PP(args_info.weighted_flag);
 	PP(args_info.selfloop_flag);
 	PP(args_info.seed_arg);
+	PP(args_info.iterations_arg);
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_m3_arg);
 	if(args_info.GT_vector_given)
@@ -174,7 +175,7 @@ int main(int argc, char **argv) {
 	}
 
 	srand48(args_info.seed_arg);
-	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
+	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
 	assert(edge_details_.get());
 	assert(g.get());
 	assert(obj);
@@ -1204,7 +1205,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const bool algo_gibbs, const bool algo_m3) {
+void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3) {
 	sbm::State s(g, edge_details);
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
@@ -1238,7 +1239,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	AcceptanceRate AR_M3("M3");
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
-	for(int i=1; i<=40000; i++) {
+	for(int i=1; i<=iterations; i++) {
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{

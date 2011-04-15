@@ -41,6 +41,7 @@ const char *gengetopt_args_info_help[] = {
   "      --GT.vector=STRING  The ground truth. a file with N lines. Starts from \n                            ZERO.",
   "      --algo.gibbs=INT    Use the simple Gibbs in the algorithm  (default=`1')",
   "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
+  "  -i, --iterations=INT    How many iterations  (default=`40000')",
     0
 };
 
@@ -79,6 +80,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->GT_vector_given = 0 ;
   args_info->algo_gibbs_given = 0 ;
   args_info->algo_m3_given = 0 ;
+  args_info->iterations_given = 0 ;
 }
 
 static
@@ -100,6 +102,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_orig = NULL;
   args_info->algo_m3_arg = 1;
   args_info->algo_m3_orig = NULL;
+  args_info->iterations_arg = 40000;
+  args_info->iterations_orig = NULL;
   
 }
 
@@ -121,6 +125,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->GT_vector_help = gengetopt_args_info_help[10] ;
   args_info->algo_gibbs_help = gengetopt_args_info_help[11] ;
   args_info->algo_m3_help = gengetopt_args_info_help[12] ;
+  args_info->iterations_help = gengetopt_args_info_help[13] ;
   
 }
 
@@ -208,6 +213,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->GT_vector_orig));
   free_string_field (&(args_info->algo_gibbs_orig));
   free_string_field (&(args_info->algo_m3_orig));
+  free_string_field (&(args_info->iterations_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -268,6 +274,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
   if (args_info->algo_m3_given)
     write_into_file(outfile, "algo.m3", args_info->algo_m3_orig, 0);
+  if (args_info->iterations_given)
+    write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -529,10 +537,11 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "GT.vector",	1, NULL, 0 },
         { "algo.gibbs",	1, NULL, 0 },
         { "algo.m3",	1, NULL, 0 },
+        { "iterations",	1, NULL, 'i' },
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvmK:dws", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvmK:dwsi:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -606,6 +615,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->selfloop_flag), 0, &(args_info->selfloop_given),
               &(local_args_info.selfloop_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "selfloop", 's',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'i':	/* How many iterations.  */
+        
+        
+          if (update_arg( (void *)&(args_info->iterations_arg), 
+               &(args_info->iterations_orig), &(args_info->iterations_given),
+              &(local_args_info.iterations_given), optarg, 0, "40000", ARG_INT,
+              check_ambiguity, override, 0, 0,
+              "iterations", 'i',
               additional_error))
             goto failure;
         
