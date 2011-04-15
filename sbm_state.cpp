@@ -506,6 +506,12 @@ namespace sbm {
 		this->informNodeMove(n, oldClusterID, newcl);
 		return oldClusterID;
 	}
+	int State:: moveNodeAndInformOfEdges2(const int n, const int newcl) {
+		const int oldClusterID = this->labelling.cluster_id.at(n);
+		if(oldClusterID != newcl)
+			return this->moveNodeAndInformOfEdges(n, newcl);
+		return oldClusterID;
+	}
 	void Labelling :: swapClusters(const int cl1, const int cl2) {
 		assert(cl1 != cl2);
 		// PP2(cl1,cl2);

@@ -90,6 +90,7 @@ struct State {
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 	int moveNodeAndInformOfEdges(const int n, const int newcl);
+	int moveNodeAndInformOfEdges2(const int n, const int newcl);
 	EdgeCounts _edgeCounts;
 
 	// pmf - probability mass function to guide sampling

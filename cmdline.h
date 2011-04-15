@@ -64,6 +64,8 @@ struct gengetopt_args_info
   int iterations_arg;	/**< @brief How many iterations (default='40000').  */
   char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
   const char *iterations_help; /**< @brief How many iterations help description.  */
+  int initGT_flag;	/**< @brief Initialize to the ground truth (default=off).  */
+  const char *initGT_help; /**< @brief Initialize to the ground truth help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -79,6 +81,7 @@ struct gengetopt_args_info
   unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
   unsigned int algo_m3_given ;	/**< @brief Whether algo.m3 was given.  */
   unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
+  unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

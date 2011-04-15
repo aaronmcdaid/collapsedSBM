@@ -25,7 +25,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3);
+void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 // static
@@ -116,6 +116,7 @@ int main(int argc, char **argv) {
 	PP(args_info.iterations_arg);
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_m3_arg);
+	PP(args_info.initGT_flag);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -184,7 +185,7 @@ int main(int argc, char **argv) {
 	}
 
 	srand48(args_info.seed_arg);
-	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
+	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
 	assert(edge_details_.get());
 	assert(g.get());
 	assert(obj);
@@ -200,7 +201,7 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 	for(int n=0; n<s._N; n++) {
 		const int newCluster = drand48() * s._k;
 		if(newCluster != s.labelling.cluster_id.at(n))
-			s.moveNodeAndInformOfEdges(n, newCluster);
+			s.moveNodeAndInformOfEdges2(n, newCluster);
 	}
 	cout << "Randomizing.. ";
 	PP2(s._k, s.labelling.NonEmptyClusters);
@@ -1214,7 +1215,7 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeDetailsInterface *edge_details, sbm:: ObjectiveFunction *obj, const vector<int> *groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3) {
+void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3) {
 	sbm::State s(g, edge_details);
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
@@ -1229,12 +1230,22 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, shmGraphRaw:: EdgeD
 	PP(s.pmf());
 
 	*/
-	if(commandLineK != -1)
-		randomize(s, commandLineK);
-	else {
-		randomize(s, 2);
-		// for(int n=0; n+1<s._N; n++) s.isolateNode(n);
-		// assert(s._k == s._N);
+	if(groundTruth && initializeToGT) {
+		for(int v = 0; v < g->numNodes(); v++ ) {
+			const int z_i = groundTruth->at(v);
+			while(z_i >= s._k) {
+				s.appendEmptyCluster();
+			}
+			s.moveNodeAndInformOfEdges2(v, z_i);
+		}
+	} else {
+		if(commandLineK != -1)
+			randomize(s, commandLineK);
+		else {
+			randomize(s, 2);
+			// for(int n=0; n+1<s._N; n++) s.isolateNode(n);
+			// assert(s._k == s._N);
+		}
 	}
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();

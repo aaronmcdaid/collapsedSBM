@@ -42,6 +42,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.gibbs=INT    Use the simple Gibbs in the algorithm  (default=`1')",
   "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
   "  -i, --iterations=INT    How many iterations  (default=`40000')",
+  "      --initGT            Initialize to the ground truth  (default=off)",
     0
 };
 
@@ -81,6 +82,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_given = 0 ;
   args_info->algo_m3_given = 0 ;
   args_info->iterations_given = 0 ;
+  args_info->initGT_given = 0 ;
 }
 
 static
@@ -104,6 +106,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_m3_orig = NULL;
   args_info->iterations_arg = 40000;
   args_info->iterations_orig = NULL;
+  args_info->initGT_flag = 0;
   
 }
 
@@ -126,6 +129,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_help = gengetopt_args_info_help[11] ;
   args_info->algo_m3_help = gengetopt_args_info_help[12] ;
   args_info->iterations_help = gengetopt_args_info_help[13] ;
+  args_info->initGT_help = gengetopt_args_info_help[14] ;
   
 }
 
@@ -276,6 +280,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.m3", args_info->algo_m3_orig, 0);
   if (args_info->iterations_given)
     write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
+  if (args_info->initGT_given)
+    write_into_file(outfile, "initGT", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -538,6 +544,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "algo.gibbs",	1, NULL, 0 },
         { "algo.m3",	1, NULL, 0 },
         { "iterations",	1, NULL, 'i' },
+        { "initGT",	0, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -697,6 +704,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                 &(local_args_info.algo_m3_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.m3", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Initialize to the ground truth.  */
+          else if (strcmp (long_options[option_index].name, "initGT") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->initGT_flag), 0, &(args_info->initGT_given),
+                &(local_args_info.initGT_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "initGT", '-',
                 additional_error))
               goto failure;
           
