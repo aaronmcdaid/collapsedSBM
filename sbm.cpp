@@ -156,15 +156,24 @@ int main(int argc, char **argv) {
 
 	vector<int> groundTruth;
 	if(args_info.GT_vector_given) { //populate groundTruth based on the --GT.vector option
+		const int N = g->numNodes();
+		groundTruth.resize(N);
 		std :: ifstream GTvectorStream(args_info.GT_vector_arg);
-		for(int i=0; ; i++) {
+		set<int> nodeNamesInOrder__;
+		for(int v=0; v<N; v++) {
+			const bool wasInserted = nodeNamesInOrder__.insert( atoi(g->NodeAsString(v))).second;
+			assert(wasInserted);
+		}
+		assert((int)nodeNamesInOrder__.size() == N);
+		forEach(const int nodeName, amd :: mk_range(nodeNamesInOrder__)) {
 			if(!GTvectorStream.is_open())
 				break;
 			int z_i;
 			GTvectorStream >> z_i;
 			if(GTvectorStream.eof())
 				break;
-			groundTruth.push_back(z_i);
+			const int i = g->StringToNodeId(printfstring("%d", nodeName).c_str());
+			groundTruth.at(i) = z_i;
 		}
 		if((int) groundTruth.size() != g->numNodes()) {
 			cerr << "Error: the GT.vector file \"" << args_info.GT_vector_arg << "\" has " << groundTruth.size() << " lines. "
