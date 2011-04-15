@@ -286,7 +286,7 @@ public:
 
 #define forEach(DECL, RANGE_TO_FOREACH)                                       \
 		for(auto_ptrWithPairedBool< typeof(*(RANGE_TO_FOREACH)) > crazy234identifier ((RANGE_TO_FOREACH).release()); !crazy234identifier.interrupted && !(crazy234identifier)->empty() ; ({ if(!crazy234identifier.interrupted) crazy234identifier->popFront() ; }) )  /* break (and continue) work as expected */        \
-		if((crazy234identifier.interrupted = true))           \
+		if(!(crazy234identifier.interrupted = true)) {} else   \
 		for(DECL = (crazy234identifier)->front() ; crazy234identifier.interrupted ; crazy234identifier.interrupted=false)
 
 #endif // _RANGE_HPP_
