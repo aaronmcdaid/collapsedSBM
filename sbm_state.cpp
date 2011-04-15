@@ -404,13 +404,13 @@ namespace sbm {
 		cout << endl;
 		if(groundTruth) {
 			assert(!groundTruth->empty());
-			vector<int> z_vector;
+			vector<int> z_vector(this->_N);
 			forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
 			{
 				const int n = this->_g->StringToNodeId(printfstring("%d", node_name).c_str());
 				cout << groundTruth->at(n);
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
-				z_vector.push_back(id_of_cluster);
+				z_vector.at(n) = id_of_cluster;
 			}
 			assert(z_vector.size() == groundTruth->size());
 			cout << " ground truth. NMI=";
