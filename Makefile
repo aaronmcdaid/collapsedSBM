@@ -5,7 +5,7 @@ BITS=
 
 MAIN=sbm
 
-all: boost_1_41_0 ${MAIN}
+all: tags boost_1_41_0 ${MAIN}
 
 clean:
 	-rm tags ${MAIN} *.o
