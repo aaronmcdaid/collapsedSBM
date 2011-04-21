@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_cdf.h>
 #include "aaron_utils.hpp"
 #include "scf.hpp"
 #include "sbm.hpp"
@@ -17,6 +18,8 @@ static void SCFiteration(const gsl_rng * r, sbm :: State &s, const sbm:: Objecti
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals);
 static bool metroNode(const gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals, AcceptanceRate *AR_metro);
 static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals);
+static long double my_gsl_cdf_beta_Pinv (const long double P, const long double a, const long double b);
+static long double my_gsl_cdf_beta_Qinv (const long double P, const long double a, const long double b);
 
 void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const gsl_rng *r) {
 	cout << endl << "Stochastic Community Finding" << endl << endl;
@@ -80,31 +83,41 @@ static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: Ob
 	// draw new values from the posteriors, *independently* of each other.
 	// BUT then reject them all if the constraint isn't satisfied.
 
-	while(1) {
-		const double bBG = gsl_ran_beta(r, 1+bg_edges, 1+bg_pairs-bg_edges);
-		// const double b1  = gsl_ran_beta(r, 1+c1_edges, 1+c1_pairs-c1_edges);
-		// const double b2  = gsl_ran_beta(r, 1+c2_edges, 1+c2_pairs-c2_edges);
-		const double b12  = gsl_ran_beta(r, 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
-		assert(isfinite(bBG));
-		// assert(isfinite(b1));
-		// assert(isfinite(b2));
-		assert(isfinite(b12));
-		// PP2(bBG, b12);
-		// if(bBG < b1 && bBG < b2)
-		if(bBG < b12)
-		{
-			// PP3(bBG, b1, b2);
-			reals.pi_0 = bBG;
-			reals.pi_1 = b12;
-			reals.pi_2 = b12;
-			return;
-		}
-		else {
-			// cout << "reject ";
-			// PP3(bBG, b1, b2);
-			// assert(1==2);
-			continue;
-		}
+	if(1) { // Gibbs on reals.pi_0
+		// we want a beta from gsl_ran_beta(r, 1+bg_edges, 1+bg_pairs-bg_edges);
+		// BUT restricted to 0 < bBG < reals.pi_1
+		// PP(__LINE__);
+		// PP(reals.pi_0);
+		assert(reals.pi_1 == reals.pi_2);
+		const double unif_lbound = gsl_cdf_beta_P(0         , 1+bg_edges, 1+bg_pairs-bg_edges);
+		const double unif_ubound = gsl_cdf_beta_P(reals.pi_1, 1+bg_edges, 1+bg_pairs-bg_edges);
+		// PP2(unif_lbound, unif_ubound);
+		assert(unif_lbound == 0.0);
+		const double unif_cdf = gsl_ran_flat(r, unif_lbound, unif_ubound);
+		// PP(unif_cdf);
+		// PP2(1+bg_edges, 1+bg_pairs-bg_edges);
+		const long double newbBG_ = my_gsl_cdf_beta_Pinv(unif_cdf, 1+bg_edges, 1+bg_pairs-bg_edges);
+		// PP(newbBG_);
+		// const long double newbBG = gsl_cdf_beta_Pinv(unif_cdf, 1+bg_edges, 1+bg_pairs-bg_edges);
+		// PP(newbBG);
+		// assert(newbBG_ == newbBG);
+		reals.pi_0 = newbBG_;
+	}
+	if(1) { // Gibbs on reals.pi_1
+		// we want a beta from gsl_ran_beta(r, 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
+		// BUT restricted to        reals.pi_0  < newpi_1 < 1
+		// PP(__LINE__);
+		// PP(reals.pi_1);
+		assert(reals.pi_1 == reals.pi_2);
+		const double unif_lbound = gsl_cdf_beta_P(reals.pi_0, 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
+		const double unif_ubound = gsl_cdf_beta_P(1         , 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
+		// PP2(unif_lbound, unif_ubound);
+		assert(unif_ubound == 1.0);
+		const double unif_cdf = gsl_ran_flat(r, unif_lbound, unif_ubound);
+		// PP(unif_cdf);
+		const long double new_pi_1 = my_gsl_cdf_beta_Pinv(unif_cdf, 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
+		// PP(new_pi_1);
+		reals.pi_2 = reals.pi_1 = new_pi_1;
 	}
 }
 
@@ -152,4 +165,188 @@ static bool metroNode(const gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveF
 		AR_metro->notify(false);
 		return false;
 	}
+}
+
+static long double 
+bisect (long double x, long double P, long double a, long double b, long double xtol, long double Ptol)
+{
+  long double x0 = 0, x1 = 1, Px;
+
+  while (fabsl(x1 - x0) > xtol) {
+    Px = gsl_cdf_beta_P (x, a, b);
+    if (fabsl(Px - P) < Ptol) {
+      /* return as soon as approximation is good enough, including on
+         the first iteration */
+      return x;  
+    } else if (Px < P) {
+      x0 = x;
+    } else if (Px > P) {
+      x1 = x;
+    }
+    x = 0.5L * (x0 + x1);
+  }
+  return x;
+}  
+#define CDF_ERROR(s, y) do { cerr << s << endl; exit(1); } while (0)
+
+#include <gsl/gsl_math.h>
+static long double my_gsl_cdf_beta_Pinv (const long double P, const long double a, const long double b)
+{
+	// PP3(P,a,b);
+  long double x, mean;
+
+  if (P < 0.0L || P > 1.0L)
+    {
+      CDF_ERROR ("P must be in range 0 < P < 1", GSL_EDOM);
+    }
+
+  if (a < 0.0L)
+    {
+      CDF_ERROR ("a < 0", GSL_EDOM);
+    }
+
+  if (b < 0.0L)
+    {
+      CDF_ERROR ("b < 0", GSL_EDOM);
+    }
+
+  if (P == 0.0L)
+    {
+      return 0.0L;
+    }
+
+  if (P == 1.0L)
+    {
+      return 1.0L;
+    }
+
+  if (P > 0.5L)
+    {
+      return my_gsl_cdf_beta_Qinv (1.0L - P, a, b);
+    }
+
+  mean = a / (a + b);
+
+  if (P < 0.1)
+    {
+      /* small x */
+
+      long double lg_ab = gsl_sf_lngamma (a + b);
+      long double lg_a = gsl_sf_lngamma (a);
+      long double lg_b = gsl_sf_lngamma (b);
+
+      long double lx = (logl (a) + lg_a + lg_b - lg_ab + logl (P)) / a;
+      if (lx <= 0) {
+        x = expl (lx);             /* first approximation */
+        x *= pow (1 - x, -(b - 1) / a);   /* second approximation */
+      } else {
+        x = mean;
+      }
+
+      if (x > mean)
+        x = mean;
+    }
+  else
+    {
+      /* Use expected value as first guess */
+      x = mean;
+    }
+
+  /* Do bisection to get closer */
+  x = bisect (x, P, a, b, 0.01, 0.01);
+
+  {
+    long double lambda, dP, phi;
+    unsigned int n = 0;
+
+  start:
+    dP = P - gsl_cdf_beta_P (x, a, b);
+    phi = gsl_ran_beta_pdf (x, a, b);
+
+    if (dP == 0.0L || n++ > 64) {
+      goto end;
+    }
+
+    lambda = dP / GSL_MAX (2 * fabsl (dP / x), phi);
+
+    {
+      long double step0 = lambda;
+      long double step1 = -((a - 1) / x - (b - 1) / (1 - x)) * lambda * lambda / 2;
+
+      long double step = step0;
+
+      if (fabsl (step1) < fabsl (step0))
+        {
+          step += step1;
+        }
+      else
+        {
+          /* scale back step to a reasonable size when too large */
+          step *= 2 * fabsl (step0 / step1);
+        };
+
+      if (x + step > 0 && x + step < 1)
+        {
+          x += step;
+        }
+      else
+        {
+          x = sqrtl (x) * sqrtl (mean);   /* try a new starting point */
+        }
+
+      if (fabsl (step0) > 1e-10L * x)
+        goto start;
+    }
+
+  end:
+
+    if (0 && fabsl(dP) > GSL_SQRT_DBL_EPSILON * P)
+      {
+	      // PP3(dP, n, x);
+	      // PP(gsl_cdf_beta_P(x, a, b));
+        GSL_ERROR_VAL("inverse failed to converge", GSL_EFAILED, GSL_NAN);
+      }
+
+    return x;
+  }
+}
+
+static long double
+my_gsl_cdf_beta_Qinv (const long double Q, const long double a, const long double b)
+{
+	// PP3(Q,a,b);
+
+  if (Q < 0.0L || Q > 1.0L)
+    {
+      CDF_ERROR ("Q must be inside range 0 < Q < 1", GSL_EDOM);
+    }
+
+  if (a < 0.0L)
+    {
+      CDF_ERROR ("a < 0", GSL_EDOM);
+    }
+
+  if (b < 0.0L)
+    {
+      CDF_ERROR ("b < 0", GSL_EDOM);
+    }
+
+  if (Q == 0.0L)
+    {
+      return 1.0L;
+    }
+
+  if (Q == 1.0L)
+    {
+      return 0.0L;
+    }
+
+  if (Q > 0.5L)
+    {
+      return my_gsl_cdf_beta_Pinv (1 - Q, a, b);
+    }
+  else
+    {
+      return 1 - my_gsl_cdf_beta_Pinv (Q, b, a);
+    };
 }
