@@ -50,7 +50,7 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	AcceptanceRate AR_metro("metro");
 	for(int iter=1; iter<=iterations; iter++) {
 		SCFiteration(r, s, obj, reals, &AR_metro);
-		if(iter % 100 == 0) {
+		if(iter % 10 == 0) {
 			cout << endl;
 			PP(iter);
 			s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj); s.internalCheck();
