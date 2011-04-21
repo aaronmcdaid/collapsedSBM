@@ -1,2 +1,2 @@
-"SCF: Stochastic Community Finding. Internal density is to be higher."
+"SCF: metroNode"
 "\n"

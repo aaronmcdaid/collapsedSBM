@@ -13,8 +13,9 @@ struct SCFreals { // the real valued parameters, the community densities
 	}
 };
 
-static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals);
+static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals, AcceptanceRate *AR_metro);
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals);
+static bool metroNode(const gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals, AcceptanceRate *AR_metro);
 static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals);
 
 void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations) {
@@ -48,18 +49,22 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
 
 	SCFreals reals;
+	AcceptanceRate AR_metro("metro");
 	for(int iter=0; iter<10000; iter++) {
 		cout << endl;
 		PP(iter);
 		PP(pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow());
 		s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj); s.internalCheck();
 		PP3(reals.pi_0, reals.pi_1, reals.pi_2);
-		SCFiteration(r, s, obj, reals);
+		SCFiteration(r, s, obj, reals, &AR_metro);
+		AR_metro.dump();
 	}
 }
 
-static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals) {
+static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals, AcceptanceRate *AR_metro) {
 	newSCFreals(r, s, obj, reals);
+	bool accepted = metroNode(r, s, obj, reals, AR_metro);
+	PP(accepted);
 }
 
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals) {
@@ -123,4 +128,30 @@ static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm:: Objectiv
 	if(verbose) PP(x1_z);
 	if(verbose) PP(x2_z);
 	return x0_z + x1_z + x2_z;
+}
+
+static bool metroNode(const gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals, AcceptanceRate *AR_metro) {
+	assert(s._k==2);
+	const long double pre = pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow();
+	const int randomNode = drand48() * s._N;
+	const int oldCluster = s.labelling.cluster_id.at(randomNode);
+	const int newCluster = 1 - oldCluster;
+	// PP(pre);
+	// PP(randomNode);
+	// PP2(oldCluster, newCluster);
+	s.moveNodeAndInformOfEdges(randomNode, newCluster);
+	const long double post = pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow();
+	// PP(post);
+
+	// const long double u = drand48();
+	if(log2l(drand48()) < post - pre) {
+		cout << "Accept metroNode" << endl;
+		AR_metro->notify(true);
+		return true;
+	} else {
+		s.moveNodeAndInformOfEdges(randomNode, oldCluster);
+		assert(pre == pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow()); // TODO VERYCLOSE
+		AR_metro->notify(false);
+		return false;
+	}
 }
