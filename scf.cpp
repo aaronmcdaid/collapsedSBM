@@ -48,7 +48,7 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 
 	SCFreals reals;
 	AcceptanceRate AR_metro("metro");
-	for(int iter=0; iter<10000; iter++) {
+	for(int iter=1; iter<=iterations; iter++) {
 		cout << endl;
 		PP(iter);
 		PP(pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow());
