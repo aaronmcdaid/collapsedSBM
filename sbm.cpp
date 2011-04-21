@@ -1288,8 +1288,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	
 		// PP(s.pmf());
 		// cout << endl;
-		if(i%1000 == 0)
-			cerr << "i:" << i << endl;
+		// if(i%1000 == 0)
+			// cerr << "i:" << i << endl;
 		if(i%10 == 0) {
 			cout << endl;
 			PP(i);
