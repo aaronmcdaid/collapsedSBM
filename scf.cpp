@@ -59,34 +59,43 @@ static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunc
 }
 
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals) {
-	PP3(reals.pi_0, reals.pi_1, reals.pi_2);
+	// PP3(reals.pi_0, reals.pi_1, reals.pi_2);
 	const int bg_pairs = obj->numberOfPairsInBlock(0,1, &s.labelling);
 	const int bg_edges = s._edgeCounts.read(0,1) + s._edgeCounts.read(1,0);
 	const int c1_pairs = obj->numberOfPairsInBlock(0,0, &s.labelling);
 	const int c1_edges = s._edgeCounts.read(0,0);
 	const int c2_pairs = obj->numberOfPairsInBlock(1,1, &s.labelling);
 	const int c2_edges = s._edgeCounts.read(1,1);
-	PP2(bg_edges, bg_pairs);
-	PP2(c1_edges, c1_pairs);
-	PP2(c2_edges, c2_pairs);
+	// PP2(bg_edges, bg_pairs);
+	// PP2(c1_edges, c1_pairs);
+	// PP2(c2_edges, c2_pairs);
 	// draw new values from the posteriors, *independently* of each other.
 	// BUT then reject them all if the constraint isn't satisfied.
 
-	const double bBG = gsl_ran_beta(r, 1+bg_edges, 1+bg_pairs-bg_edges);
-	const double b1  = gsl_ran_beta(r, 1+c1_edges, 1+c1_pairs-c1_edges);
-	const double b2  = gsl_ran_beta(r, 1+c2_edges, 1+c2_pairs-c2_edges);
 	while(1) {
-		if(bBG < b1 && bBG < b2) {
-			PP3(bBG, b1, b2);
+		const double bBG = gsl_ran_beta(r, 1+bg_edges, 1+bg_pairs-bg_edges);
+		// const double b1  = gsl_ran_beta(r, 1+c1_edges, 1+c1_pairs-c1_edges);
+		// const double b2  = gsl_ran_beta(r, 1+c2_edges, 1+c2_pairs-c2_edges);
+		const double b12  = gsl_ran_beta(r, 1+c1_edges+c2_edges, 1+c1_pairs+c2_pairs-c1_edges-c2_edges);
+		assert(isfinite(bBG));
+		// assert(isfinite(b1));
+		// assert(isfinite(b2));
+		assert(isfinite(b12));
+		// PP2(bBG, b12);
+		// if(bBG < b1 && bBG < b2)
+		if(bBG < b12)
+		{
+			// PP3(bBG, b1, b2);
 			reals.pi_0 = bBG;
-			reals.pi_1 = b1;
-			reals.pi_2 = b2;
+			reals.pi_1 = b12;
+			reals.pi_2 = b12;
 			return;
 		}
 		else {
-			cout << "reject ";
-			PP3(bBG, b1, b2);
-			assert(1==2);
+			// cout << "reject ";
+			// PP3(bBG, b1, b2);
+			// assert(1==2);
+			continue;
 		}
 	}
 }
