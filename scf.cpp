@@ -15,6 +15,7 @@ struct SCFreals { // the real valued parameters, the community densities
 
 static void SCFiteration(gsl_rng * r, sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals);
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: ObjectiveFunction *obj, SCFreals &reals);
+static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals);
 
 void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations) {
 	cout << endl << "Stochastic Community Finding" << endl << endl;
@@ -47,10 +48,13 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
 
 	SCFreals reals;
-	for(int iters=0; iters<1; iters++) {
-		SCFiteration(r, s, obj, reals);
+	for(int iter=0; iter<10000; iter++) {
+		cout << endl;
+		PP(iter);
+		PP(pmf_scf_x_given_z(s, obj, reals) + s.P_z_slow());
 		s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj); s.internalCheck();
 		PP3(reals.pi_0, reals.pi_1, reals.pi_2);
+		SCFiteration(r, s, obj, reals);
 	}
 }
 
@@ -98,4 +102,25 @@ static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm:: Ob
 			continue;
 		}
 	}
+}
+
+static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm:: ObjectiveFunction *obj, const SCFreals &reals) {
+	const bool verbose = false;
+	assert(s._k==2);
+	const int bg_pairs = obj->numberOfPairsInBlock(0,1, &s.labelling);
+	const int bg_edges = s._edgeCounts.read(0,1) + s._edgeCounts.read(1,0);
+	const int c1_pairs = obj->numberOfPairsInBlock(0,0, &s.labelling);
+	const int c1_edges = s._edgeCounts.read(0,0);
+	const int c2_pairs = obj->numberOfPairsInBlock(1,1, &s.labelling);
+	const int c2_edges = s._edgeCounts.read(1,1);
+	if(verbose) PP2(bg_edges, bg_pairs);
+	if(verbose) PP2(c1_edges, c1_pairs);
+	if(verbose) PP2(c2_edges, c2_pairs);
+	const long double x0_z = bg_edges * log2l(reals.pi_0) + (bg_pairs-bg_edges) * log2l(1.0L-reals.pi_0);
+	const long double x1_z = c1_edges * log2l(reals.pi_1) + (c1_pairs-c1_edges) * log2l(1.0L-reals.pi_1);
+	const long double x2_z = c2_edges * log2l(reals.pi_2) + (c2_pairs-c2_edges) * log2l(1.0L-reals.pi_2);
+	if(verbose) PP(x0_z);
+	if(verbose) PP(x1_z);
+	if(verbose) PP(x2_z);
+	return x0_z + x1_z + x2_z;
 }
