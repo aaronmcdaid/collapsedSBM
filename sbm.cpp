@@ -14,6 +14,7 @@ using namespace std;
 #include "sbm_state.hpp"
 #include "mmsb_state.hpp"
 #include "scf.hpp"
+#include "sbm.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"

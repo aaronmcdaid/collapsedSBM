@@ -3,6 +3,7 @@
 #include <gsl/gsl_randist.h>
 #include "aaron_utils.hpp"
 #include "scf.hpp"
+#include "sbm.hpp"
 using namespace std;
 struct SCFreals { // the real valued parameters, the community densities
 	long double pi_0; // background
@@ -34,7 +35,12 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			}
 			s.moveNodeAndInformOfEdges2(v, z_i);
 		}
+	} else {
+		if(commandLineK != -1)
+			randomize(s, commandLineK);
 	}
+
+	assert(s._k == 2);
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj); s.internalCheck();
 
