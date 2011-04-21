@@ -229,19 +229,13 @@ bool fiftyfifty() {
 	else
 		return false;
 }
-struct AcceptanceRate {
-	vector<bool> acc;
-	map<int,int> mostRecent; // in order to do a moving average
-	int n;
-	int a; // a/n is the acceptance rate
-	const string _name;
-	AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
+	AcceptanceRate :: AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
 		mostRecent.insert(make_pair(100,0));
 		mostRecent.insert(make_pair(1000,0));
 		mostRecent.insert(make_pair(10000,0));
 		mostRecent.insert(make_pair(100000,0));
 	}
-	void notify(bool accepted) {
+	void AcceptanceRate :: notify(bool accepted) {
 		this->acc.push_back(accepted);
 		this->n++;
 		assert(this->n == (int)this->acc.size());
@@ -256,7 +250,7 @@ struct AcceptanceRate {
 			assert(x.second <= x.first);
 		}
 	}
-	void dump() const {
+	void AcceptanceRate :: dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
 		cout << double(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
@@ -267,7 +261,7 @@ struct AcceptanceRate {
 			}
 		}
 	}
-};
+
 static
 bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 	bool b;
