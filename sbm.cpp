@@ -8,6 +8,7 @@ using namespace std;
 #include <libgen.h>
 #include <float.h>
 // #include <gsl/gsl_sf.h>
+#include <gsl/gsl_rng.h>
 
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
@@ -196,7 +197,9 @@ int main(int argc, char **argv) {
 
 	srand48(args_info.seed_arg);
 	if(args_info.model_scf_flag) {
-		runSCF(g.get(), args_info.K_arg, edge_details_.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg);
+		gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
+		gsl_rng_set(r, args_info.seed_arg);
+		runSCF(g.get(), args_info.K_arg, edge_details_.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
 		runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
 	}
