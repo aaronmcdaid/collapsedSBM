@@ -9,7 +9,7 @@ struct SCFreals { // the real valued parameters, the community densities
 	long double pi_0; // background
 	long double pi_1; // community 1
 	long double pi_2; // community 2
-	SCFreals() : pi_0(drand48()), pi_1(drand48()), pi_2(drand48()) {
+	SCFreals() : pi_0(drand48()), pi_1(drand48()), pi_2(pi_1) {
 	}
 };
 
