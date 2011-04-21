@@ -43,6 +43,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
   "  -i, --iterations=INT    How many iterations  (default=`40000')",
   "      --initGT            Initialize to the ground truth  (default=off)",
+  "      --model.scf         Stochastic community finding  (default=off)",
     0
 };
 
@@ -83,6 +84,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_m3_given = 0 ;
   args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
+  args_info->model_scf_given = 0 ;
 }
 
 static
@@ -107,6 +109,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->iterations_arg = 40000;
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
+  args_info->model_scf_flag = 0;
   
 }
 
@@ -130,6 +133,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_m3_help = gengetopt_args_info_help[12] ;
   args_info->iterations_help = gengetopt_args_info_help[13] ;
   args_info->initGT_help = gengetopt_args_info_help[14] ;
+  args_info->model_scf_help = gengetopt_args_info_help[15] ;
   
 }
 
@@ -282,6 +286,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "iterations", args_info->iterations_orig, 0);
   if (args_info->initGT_given)
     write_into_file(outfile, "initGT", 0, 0 );
+  if (args_info->model_scf_given)
+    write_into_file(outfile, "model.scf", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -545,6 +551,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "algo.m3",	1, NULL, 0 },
         { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
+        { "model.scf",	0, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -716,6 +723,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             if (update_arg((void *)&(args_info->initGT_flag), 0, &(args_info->initGT_given),
                 &(local_args_info.initGT_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "initGT", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Stochastic community finding.  */
+          else if (strcmp (long_options[option_index].name, "model.scf") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->model_scf_flag), 0, &(args_info->model_scf_given),
+                &(local_args_info.model_scf_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "model.scf", '-',
                 additional_error))
               goto failure;
           

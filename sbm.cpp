@@ -13,6 +13,7 @@ using namespace std;
 #include "shmGraphRaw.hpp"
 #include "sbm_state.hpp"
 #include "mmsb_state.hpp"
+#include "scf.hpp"
 
 const char gitstatus[] = 
 #include "comment.txt"
@@ -121,6 +122,14 @@ int main(int argc, char **argv) {
 		PP(args_info.GT_vector_arg);
 	else
 		cout << "args_info.GT_vector_arg:<undefined>";
+	PP(args_info.model_scf_flag);
+
+	if(args_info.model_scf_flag) {
+		unless(args_info.K_arg == 2) {
+			cerr << "Usage error: Currently, the stochastic community finding model (uncollapsed) requires -K 2 as and argument. Exiting." << endl;
+			exit(1);
+		};
+	}
 
 	sbm:: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g;
@@ -185,7 +194,11 @@ int main(int argc, char **argv) {
 	}
 
 	srand48(args_info.seed_arg);
-	runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
+	if(args_info.model_scf_flag) {
+		runSCF(g.get(), args_info.K_arg, edge_details_.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg);
+	} else {
+		runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
+	}
 	assert(edge_details_.get());
 	assert(g.get());
 	assert(obj);

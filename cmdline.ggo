@@ -14,3 +14,4 @@ option  "algo.gibbs"         - "Use the simple Gibbs in the algorithm"          
 option  "algo.m3"            - "Use M3 in the algorithm"                        int       default="1" no
 option  "iterations"         i "How many iterations"                 int       default="40000" no
 option  "initGT"             - "Initialize to the ground truth"      flag       off
+option  "model.scf"          - "Stochastic community finding"        flag       off
