@@ -23,6 +23,7 @@ static long double my_gsl_cdf_beta_Qinv (const long double P, const long double 
 
 void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const gsl_rng *r) {
 	cout << endl << "Stochastic Community Finding" << endl << endl;
+	PP2(g->numNodes(), g->numRels());
 	assert(commandLineK == 2);
 
 	sbm::State s(g, edge_details);

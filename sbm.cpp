@@ -260,7 +260,7 @@ bool fiftyfifty() {
 		cout << endl;
 		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
 			if(this->n >= x.first) {
-				cout << '\t' << x.first << " // \t" << x.second << "\t % " << double(x.second)/x.first << endl;
+				cout << '\t' << x.first << " // \t" << x.second << "\t " << setw(4) << setprecision(1) << fixed << 100.0L * double(x.second)/x.first << " %" << endl; cout.unsetf(ios_base :: floatfield);
 			}
 		}
 	}
