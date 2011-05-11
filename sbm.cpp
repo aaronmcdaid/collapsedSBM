@@ -232,6 +232,9 @@ bool fiftyfifty() {
 	else
 		return false;
 }
+
+amd :: FormatFlagStack stack;
+
 	AcceptanceRate :: AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
 		mostRecent.insert(make_pair(100,0));
 		mostRecent.insert(make_pair(1000,0));
@@ -255,12 +258,12 @@ bool fiftyfifty() {
 	}
 	void AcceptanceRate :: dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
-		cout << double(this->a)/this->n;
+		cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
 		cout << endl;
 		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
 			if(this->n >= x.first) {
-				cout << '\t' << x.first << " // \t" << x.second << "\t " << setw(4) << setprecision(1) << fixed << 100.0L * double(x.second)/x.first << " %" << endl; cout.unsetf(ios_base :: floatfield);
+				cout << '\t' << setw(7) << x.first << " // " << setw(7) << x.second << "\t " << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(x.second)/x.first << " %" << endl << stack.pop;
 			}
 		}
 	}
