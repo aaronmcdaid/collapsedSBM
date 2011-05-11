@@ -1287,17 +1287,23 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 				}
 			}
 		}
-		if(commandLineK == -1) {
-			pmf_track += MetropolisOnK(s, obj, &AR_metroK);
-		} else
-			assert(commandLineK == s._k);
+		switch( int(drand48() * 3) ) {
+			break; case 0:
+				if(commandLineK == -1) {
+					pmf_track += MetropolisOnK(s, obj, &AR_metroK);
+				} else
+					assert(commandLineK == s._k);
+			break; case 1:
+				if(algo_gibbs)
+					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+			break; case 2:
+				if(algo_m3)
+					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+		}
+
 		// PP(i);
 		// const long double pre = s.pmf(obj);
 		// pmf_track += MoneNode(s, obj, &AR_metro1Node);
-		if(algo_gibbs)
-			pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
-		if(algo_m3)
-			pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		// const long double post = s.pmf(obj);
 		// assert(pre + delta == post);
 		// if(i%50 == 0)

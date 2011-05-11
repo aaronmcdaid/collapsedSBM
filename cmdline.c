@@ -41,7 +41,7 @@ const char *gengetopt_args_info_help[] = {
   "      --GT.vector=STRING  The ground truth. a file with N lines. Starts from \n                            ZERO.",
   "      --algo.gibbs=INT    Use the simple Gibbs in the algorithm  (default=`1')",
   "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
-  "  -i, --iterations=INT    How many iterations  (default=`40000')",
+  "  -i, --iterations=INT    How many iterations  (default=`120000')",
   "      --initGT            Initialize to the ground truth  (default=off)",
   "      --model.scf         Stochastic community finding  (default=off)",
     0
@@ -106,7 +106,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_orig = NULL;
   args_info->algo_m3_arg = 1;
   args_info->algo_m3_orig = NULL;
-  args_info->iterations_arg = 40000;
+  args_info->iterations_arg = 120000;
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
@@ -638,7 +638,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         
           if (update_arg( (void *)&(args_info->iterations_arg), 
                &(args_info->iterations_orig), &(args_info->iterations_given),
-              &(local_args_info.iterations_given), optarg, 0, "40000", ARG_INT,
+              &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "iterations", 'i',
               additional_error))

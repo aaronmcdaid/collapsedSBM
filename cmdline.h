@@ -61,7 +61,7 @@ struct gengetopt_args_info
   int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
   char * algo_m3_orig;	/**< @brief Use M3 in the algorithm original value given at command line.  */
   const char *algo_m3_help; /**< @brief Use M3 in the algorithm help description.  */
-  int iterations_arg;	/**< @brief How many iterations (default='40000').  */
+  int iterations_arg;	/**< @brief How many iterations (default='120000').  */
   char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
   const char *iterations_help; /**< @brief How many iterations help description.  */
   int initGT_flag;	/**< @brief Initialize to the ground truth (default=off).  */
