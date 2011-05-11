@@ -1230,6 +1230,40 @@ static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *o
 	}
 }
 
+struct CountSharedCluster { // for each *pair* of nodes, how often they share the same cluster
+	const int N;
+	int denominator;
+	vector<int> shared;
+	CountSharedCluster(const int _N) : N(_N), denominator(0), shared(_N*_N) {}
+	void consume(const vector<int> & cluster_id) {
+		assert((int)cluster_id.size() == N);
+		++denominator;
+		for(int n=0; n<N; n++) {
+			for(int m=n; m<N; m++) {
+				if(cluster_id.at(n) == cluster_id.at(m)) {
+					++ shared.at(n*N+m);
+					if(n!=m)
+					++ shared.at(m*N+n);
+				}
+			}
+		}
+	}
+	void dump() const {
+		if(this->denominator == 0)
+			return;
+		cout << "  CountSharedCluster(" << this->denominator << ")" << endl;
+		for(int n=0; n<N; n++) {
+			for(int m=0; m<N; m++) {
+				if(n==m)
+					cout << "    ";
+				else
+					cout << stack.push << setw(4) << int(100.0 * double(shared.at(n*N+m)) / denominator + 0.5) << stack.pop;
+			}
+			cout << endl;
+		}
+	}
+};
+
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
 void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3) {
@@ -1237,6 +1271,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
+
+	CountSharedCluster count_shared_cluster(g->numNodes());
 
 	/*
 	s.isolateNode(0);
@@ -1300,6 +1336,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 				if(algo_m3)
 					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		}
+		if(i > 30000)
+		count_shared_cluster.consume(s.labelling.cluster_id);
 
 		// PP(i);
 		// const long double pre = s.pmf(obj);
@@ -1325,6 +1363,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			AR_M3little.dump();
 			AR_M3very.dump();
 			s.blockDetail(obj);
+			count_shared_cluster.dump();
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
