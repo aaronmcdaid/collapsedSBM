@@ -235,6 +235,35 @@ typename C::value_type constAt(const C &c, int i) {
 struct NotImplemented {
 };
 
+struct FormatFlagStack {
+	vector<ios_base :: fmtflags> the_stack;
+	struct PushT {
+		FormatFlagStack * const parent_stack;
+		PushT (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+	} push;
+	struct PopT {
+		FormatFlagStack * const parent_stack;
+		PopT  (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+	} pop;
+	FormatFlagStack() : push(this),pop(this) {}
+	void do_push(ostream &str) {
+		this->the_stack.push_back( str.flags() );
+	}
+	void do_pop(ostream &str) {
+		assert(!this->the_stack.empty());
+		str.flags( this->the_stack.back() );
+		this->the_stack.pop_back();
+	}
+};
+ostream & operator<< (ostream &str, const FormatFlagStack :: PushT & pusher) {
+	pusher.parent_stack->do_push(str);
+	return str;
+}
+ostream & operator<< (ostream &str, const FormatFlagStack :: PopT  & pusher) {
+	pusher.parent_stack->do_pop (str);
+	return str;
+}
+
 } // namespace amd
 
 #define VERYCLOSE(a,b) (1e-10 > fabs((a)-(b)))
