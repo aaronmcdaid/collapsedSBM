@@ -60,4 +60,28 @@ void amd::DebugCounter::operator++ () {
 		cout << s << ":" << count << endl;
 }
 
+ostream & amd :: operator<< (ostream &str, const amd :: FormatFlagStack :: PushT & pusher) {
+	pusher.parent_stack->do_push(str);
+	return str;
+}
+ostream & amd :: operator<< (ostream &str, const amd :: FormatFlagStack :: PopT  & pusher) {
+	pusher.parent_stack->do_pop (str);
+	return str;
+}
+amd :: FormatFlagStack :: PushT :: PushT(FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+amd :: FormatFlagStack :: PopT  :: PopT (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+amd :: FormatFlagStack :: FormatFlagStack() : push(this),pop(this) {}
+void amd :: FormatFlagStack :: do_push(ostream &str) {
+		this->the_stack.push_back( str.flags() );
+		this->the_stack_of_precision.push_back( str.precision() );
+}
+void amd :: FormatFlagStack :: do_pop(ostream &str) {
+		assert(!this->the_stack.empty());
+		assert(this->the_stack.size() == this->the_stack_of_precision.size());
+		str.flags     ( this->the_stack.back() );
+		str.precision ( this->the_stack_of_precision.back() );
+		this->the_stack.pop_back();
+		this->the_stack_of_precision.pop_back();
+}
+
 

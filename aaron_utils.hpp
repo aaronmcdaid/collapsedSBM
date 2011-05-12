@@ -10,6 +10,7 @@ using namespace std;
 #include <stdlib.h>
 #include <sys/time.h>
 #include <map>
+#include <vector>
 #include "Range.hpp"
 
 typedef long long int64;
@@ -240,34 +241,18 @@ struct FormatFlagStack {
 	std :: vector< std      :: streamsize > the_stack_of_precision; // setprecision(...)
 	struct PushT {
 		FormatFlagStack * const parent_stack;
-		PushT (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+		PushT (FormatFlagStack *parent_stack_);
 	} push;
 	struct PopT {
 		FormatFlagStack * const parent_stack;
-		PopT  (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
+		PopT  (FormatFlagStack *parent_stack_);
 	} pop;
-	FormatFlagStack() : push(this),pop(this) {}
-	void do_push(ostream &str) {
-		this->the_stack.push_back( str.flags() );
-		this->the_stack_of_precision.push_back( str.precision() );
-	}
-	void do_pop(ostream &str) {
-		assert(!this->the_stack.empty());
-		assert(this->the_stack.size() == this->the_stack_of_precision.size());
-		str.flags     ( this->the_stack.back() );
-		str.precision ( this->the_stack_of_precision.back() );
-		this->the_stack.pop_back();
-		this->the_stack_of_precision.pop_back();
-	}
+	FormatFlagStack();
+	void do_push(ostream &str);
+	void do_pop(ostream &str);
 };
-ostream & operator<< (ostream &str, const FormatFlagStack :: PushT & pusher) {
-	pusher.parent_stack->do_push(str);
-	return str;
-}
-ostream & operator<< (ostream &str, const FormatFlagStack :: PopT  & pusher) {
-	pusher.parent_stack->do_pop (str);
-	return str;
-}
+ostream & operator<< (ostream &str, const FormatFlagStack :: PushT & pusher);
+ostream & operator<< (ostream &str, const FormatFlagStack :: PopT  & pusher);
 
 } // namespace amd
 
