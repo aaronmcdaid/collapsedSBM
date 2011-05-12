@@ -258,12 +258,18 @@ amd :: FormatFlagStack stack;
 	}
 	void AcceptanceRate :: dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
-		cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
+		 cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
 		cout << endl;
 		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
 			if(this->n >= x.first) {
-				cout << '\t' << setw(7) << x.first << " // " << setw(7) << x.second << "\t " << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(x.second)/x.first << " %" << endl << stack.pop;
+				cout << stack.push
+					<< '\t' << setw(7) << x.first << " // " << setw(7) << x.second << "\t "
+					<< fixed
+					<< setw(4)
+					<< setprecision(1)
+					<< 100.0L * double(x.second)/x.first << " %" << endl
+				<< stack.pop ;
 			}
 		}
 	}
