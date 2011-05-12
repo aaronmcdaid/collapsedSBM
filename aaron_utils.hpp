@@ -236,7 +236,8 @@ struct NotImplemented {
 };
 
 struct FormatFlagStack {
-	vector<ios_base :: fmtflags> the_stack;
+	std :: vector< ios_base :: fmtflags> the_stack;
+	std :: vector< std      :: streamsize > the_stack_of_precision; // setprecision(...)
 	struct PushT {
 		FormatFlagStack * const parent_stack;
 		PushT (FormatFlagStack *parent_stack_) : parent_stack(parent_stack_) {}
@@ -248,11 +249,15 @@ struct FormatFlagStack {
 	FormatFlagStack() : push(this),pop(this) {}
 	void do_push(ostream &str) {
 		this->the_stack.push_back( str.flags() );
+		this->the_stack_of_precision.push_back( str.precision() );
 	}
 	void do_pop(ostream &str) {
 		assert(!this->the_stack.empty());
-		str.flags( this->the_stack.back() );
+		assert(this->the_stack.size() == this->the_stack_of_precision.size());
+		str.flags     ( this->the_stack.back() );
+		str.precision ( this->the_stack_of_precision.back() );
 		this->the_stack.pop_back();
+		this->the_stack_of_precision.pop_back();
 	}
 };
 ostream & operator<< (ostream &str, const FormatFlagStack :: PushT & pusher) {
