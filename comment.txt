@@ -1,2 +1,2 @@
-"SBM: Gamma(3,2) prior for Poisson"
+"SBM: Gamma(0,infty) prior for Poisson"
 "\n"

@@ -737,8 +737,8 @@ namespace sbm {
 		assert(isfinite(y_b));
 		// assert(y_b == floor(y_b));
 		assert(y_b >= 0);
-		const long double s = 3.0L;
-		const long double theta = 2.0L;
+		const long double s = ObjectiveFunction_Poisson :: s;
+		const long double theta = ObjectiveFunction_Poisson :: theta;
 		const long double log2p = LOG2GAMMA(s + y_b) + ( s+y_b) * -log2(p_b + 1.0L/theta) 
 		       	-   LOG2GAMMA(s)  - s*log2(theta) // this denominator is important because it depends on the number of blocks.
 			;

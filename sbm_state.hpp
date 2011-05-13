@@ -128,6 +128,8 @@ struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
 };
 struct ObjectiveFunction_Poisson : public ObjectiveFunction {
+	static const long double s = 1.0L;
+	static const long double theta = 1000.0L;
 	ObjectiveFunction_Poisson(const bool s, const bool d, const bool w);
 	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
 };

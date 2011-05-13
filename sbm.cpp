@@ -132,6 +132,8 @@ int main(int argc, char **argv) {
 			exit(1);
 		};
 	}
+	PP(sbm :: ObjectiveFunction_Poisson :: s);
+	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
 	sbm:: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g;
