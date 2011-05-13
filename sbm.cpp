@@ -1244,22 +1244,29 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	void consume(const vector<int> & cluster_id) {
 		assert((int)cluster_id.size() == N);
 		++denominator;
-		for(int n=0; n<N; n++) {
-			for(int m=n; m<N; m++) {
+		for(int n=0; n<this->N; n++) {
+			for(int m=n; m<this->N; m++) {
 				if(cluster_id.at(n) == cluster_id.at(m)) {
-					++ shared.at(n*N+m);
+					++ shared.at(n*this->N+m);
 					if(n!=m)
-					++ shared.at(m*N+n);
+					++ shared.at(m*this->N+n);
 				}
 			}
 		}
 	}
-	void dump() const {
+	void dump(const set<int> & nodeNamesInOrder, const shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> * g) const {
 		if(this->denominator == 0)
 			return;
+		assert((int)nodeNamesInOrder.size() == this->N);
 		cout << "  CountSharedCluster(" << this->denominator << ")" << endl;
-		for(int n=0; n<N; n++) {
-			for(int m=0; m<N; m++) {
+		//for(int n=0; n<N; n++)
+		forEach(int node_name, amd::mk_range(nodeNamesInOrder))
+		{
+			const int n = g->StringToNodeId(printfstring("%d", node_name).c_str());
+			//for(int m=0; m<N; m++)
+			forEach(int node_name2, amd::mk_range(nodeNamesInOrder))
+			{
+				const int m = g->StringToNodeId(printfstring("%d", node_name2).c_str());
 				if(n==m)
 					cout << "    ";
 				else
@@ -1369,7 +1376,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			AR_M3little.dump();
 			AR_M3very.dump();
 			s.blockDetail(obj);
-			count_shared_cluster.dump();
+			count_shared_cluster.dump(s.nodeNamesInOrder, s._g);
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
