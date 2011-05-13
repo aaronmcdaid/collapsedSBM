@@ -44,6 +44,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --iterations=INT    How many iterations  (default=`120000')",
   "      --initGT            Initialize to the ground truth  (default=off)",
   "      --model.scf         Stochastic community finding  (default=off)",
+  "      --stringIDs         string IDs in the input  (default=off)",
     0
 };
 
@@ -85,6 +86,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
   args_info->model_scf_given = 0 ;
+  args_info->stringIDs_given = 0 ;
 }
 
 static
@@ -110,6 +112,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
+  args_info->stringIDs_flag = 0;
   
 }
 
@@ -134,6 +137,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->iterations_help = gengetopt_args_info_help[13] ;
   args_info->initGT_help = gengetopt_args_info_help[14] ;
   args_info->model_scf_help = gengetopt_args_info_help[15] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[16] ;
   
 }
 
@@ -288,6 +292,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "initGT", 0, 0 );
   if (args_info->model_scf_given)
     write_into_file(outfile, "model.scf", 0, 0 );
+  if (args_info->stringIDs_given)
+    write_into_file(outfile, "stringIDs", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -552,6 +558,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
         { "model.scf",	0, NULL, 0 },
+        { "stringIDs",	0, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -735,6 +742,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             if (update_arg((void *)&(args_info->model_scf_flag), 0, &(args_info->model_scf_given),
                 &(local_args_info.model_scf_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "model.scf", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* string IDs in the input.  */
+          else if (strcmp (long_options[option_index].name, "stringIDs") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->stringIDs_flag), 0, &(args_info->stringIDs_given),
+                &(local_args_info.stringIDs_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "stringIDs", '-',
                 additional_error))
               goto failure;
           
