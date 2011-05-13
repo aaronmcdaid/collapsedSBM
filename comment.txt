@@ -1,2 +1,2 @@
-"SBM: build-002. CountSharedCluster"
+"SBM: Gamma(3,2) prior for Poisson"
 "\n"
