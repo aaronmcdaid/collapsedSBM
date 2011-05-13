@@ -645,7 +645,9 @@ namespace sbm {
 			PP(- edges_bits);
 		}
 		*/
-		return assertNonPositiveFinite(edges_bits);
+		assert(isfinite(edges_bits));
+		return edges_bits;
+		// return assertNonPositiveFinite(edges_bits); // it doesn't *have* to be finite, just as in our Poisson model (due to the ignoring of x!)
 	}
 	long double State:: P_edges_given_z(const ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow(obj);
@@ -654,7 +656,9 @@ namespace sbm {
 	struct BaseLineNotCorrectException {
 	};
 	long double State:: pmf_slow(const ObjectiveFunction *obj) const {
-		return assertNonPositiveFinite( this->P_edges_given_z_slow(obj) + this->P_z_slow() );
+		const long double t = this->P_edges_given_z_slow(obj) + this->P_z_slow() ;
+		assert(isfinite(t));
+		return t;
 	}
 	long double State:: pmf(const ObjectiveFunction *obj) const {
 		return this->pmf_slow(obj);
