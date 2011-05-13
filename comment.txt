@@ -1,2 +1,2 @@
-"SBM: Gamma(0,infty) prior for Poisson"
+"SBM: respect nodeNamesInOrder"
 "\n"

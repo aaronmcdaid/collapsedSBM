@@ -78,7 +78,7 @@ namespace sbm {
 			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringNumericSorter() );
 		else
 			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringStringSorter() );
-		cout << "nodeNamesInOrder:" << endl;
+		cout << "nodeNamesInOrder:(" << this->_N << " nodes)" << endl;
 		forEach(typeof(pair<string, int>) &node_name, amd :: mk_range(nodeNamesInOrder)) {
 			PP2(node_name.first, node_name.second);
 		}
