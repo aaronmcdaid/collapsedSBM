@@ -51,12 +51,12 @@ struct State {
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
-	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details);
+	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details, const bool numericIDs);
 
 	Labelling	labelling;
 	// the clustering
 	int _k; // the number of clusters (including empty ones)
-	std::set<int> nodeNamesInOrder;
+	std :: vector< std :: pair< std :: string, int> > nodeNamesInOrder; // numeric order by default, will fail if can't extract numbers
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

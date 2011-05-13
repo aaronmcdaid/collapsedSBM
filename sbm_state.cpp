@@ -31,7 +31,30 @@ namespace sbm {
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
 	}
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
+	struct StringNumericSorter {
+		bool operator() (const pair<string,int> &l, const pair<string,int> &r) const {
+			if(l.second == r.second) { // comparing with self
+				assert(l.first == r.first);
+				return false;
+			}
+			assert(l.second != r.second);
+			assert(l.first != r.first);
+			assert( atol(l.first.c_str()) != atol(r.first.c_str()));
+			return atol(l.first.c_str()) < atol(r.first.c_str());
+		}
+	};
+	struct StringStringSorter {
+		bool operator() (const pair<string,int> &l, const pair<string,int> &r) const {
+			if(l.second == r.second) { // comparing with self
+				assert(l.first == r.first);
+				return false;
+			}
+			assert(l.second != r.second);
+			assert(l.first != r.first);
+			return l.first < r.first;
+		}
+	};
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details, const bool numericIDs) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -48,9 +71,17 @@ namespace sbm {
 
 		// to ensure the nodes are dealt with in the order of their integer node name
 		for(int n=0; n<this->_N;n++) {
-			nodeNamesInOrder.insert(atoi(this->_g->NodeAsString(n)));
+			nodeNamesInOrder.push_back( make_pair(this->_g->NodeAsString(n), n));
 		}
 		assert( (int)nodeNamesInOrder.size() == this->_N);
+		if(numericIDs)
+			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringNumericSorter() );
+		else
+			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringStringSorter() );
+		cout << "nodeNamesInOrder:" << endl;
+		forEach(typeof(pair<string, int>) &node_name, amd :: mk_range(nodeNamesInOrder)) {
+			PP2(node_name.first, node_name.second);
+		}
 	}
 	const int Cluster::order() const {
 		return this->members.size();
@@ -388,10 +419,10 @@ namespace sbm {
 		}
 		PP(nonEmptyK);
 		PP(this->pmf(obj));
-		forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
+		forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
 		// for(int n=0; n<this->_N;n++)
 		{
-			const int n = this->_g->StringToNodeId(printfstring("%d", node_name).c_str());
+			const int n = node_name.second;
 			// PP2(n, this->_g->NodeAsString(n));
 			const int id_of_cluster = this->labelling.cluster_id.at(n);
 			if(id_of_cluster<10)
@@ -405,9 +436,9 @@ namespace sbm {
 		if(groundTruth) {
 			assert(!groundTruth->empty());
 			vector<int> z_vector(this->_N);
-			forEach(int node_name, amd::mk_range(this->nodeNamesInOrder))
+			forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
 			{
-				const int n = this->_g->StringToNodeId(printfstring("%d", node_name).c_str());
+				const int n = node_name.second;
 				cout << groundTruth->at(n);
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
 				z_vector.at(n) = id_of_cluster;

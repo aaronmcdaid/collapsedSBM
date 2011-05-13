@@ -26,7 +26,7 @@ void runSCF(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	PP2(g->numNodes(), g->numRels());
 	assert(commandLineK == 2);
 
-	sbm::State s(g, edge_details);
+	sbm::State s(g, edge_details, true);
 
 	sbm:: ObjectiveFunction *obj = new sbm:: ObjectiveFunction_Bernoulli(false, false, false);
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);

@@ -28,7 +28,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3);
+void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
 void runMMSB(const sbm::GraphType *g, const int commandLineK);
 
 // static
@@ -120,6 +120,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_m3_arg);
 	PP(args_info.initGT_flag);
+	PP(args_info.stringIDs_flag);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
 		gsl_rng_set(r, args_info.seed_arg);
 		runSCF(g.get(), args_info.K_arg, edge_details_.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
-		runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg);
+		runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
 	}
 	assert(edge_details_.get());
 	assert(g.get());
@@ -1256,19 +1257,19 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 			}
 		}
 	}
-	void dump(const set<int> & nodeNamesInOrder, const shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> * g) const {
+	void dump(const vector< pair<string,int> > & nodeNamesInOrder, const shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> * g) const {
 		if(this->denominator == 0)
 			return;
 		assert((int)nodeNamesInOrder.size() == this->N);
 		cout << "  CountSharedCluster(" << this->denominator << ")" << endl;
 		//for(int n=0; n<N; n++)
-		forEach(int node_name, amd::mk_range(nodeNamesInOrder))
+		forEach(const typeof(pair<string,int>) & node_name, amd::mk_range(nodeNamesInOrder))
 		{
-			const int n = g->StringToNodeId(printfstring("%d", node_name).c_str());
+			const int n = node_name.second;
 			//for(int m=0; m<N; m++)
-			forEach(int node_name2, amd::mk_range(nodeNamesInOrder))
+			forEach(const typeof(pair<string,int>) & node_name2, amd::mk_range(nodeNamesInOrder))
 			{
-				const int m = g->StringToNodeId(printfstring("%d", node_name2).c_str());
+				const int m = node_name2.second;
 				if(n==m)
 					cout << "    ";
 				else
@@ -1281,8 +1282,8 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3) {
-	sbm::State s(g, edge_details);
+void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+	sbm::State s(g, edge_details, !args_info.stringIDs_flag);
 
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
 	s.internalCheck();
