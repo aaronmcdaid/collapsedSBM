@@ -218,12 +218,12 @@ void randomize(sbm::State &s, const int K) { // randomize the partition and have
 	while(s._k < K) {
 		s.appendEmptyCluster();
 	}
+	cout << "Randomizing.. ";
 	for(int n=0; n<s._N; n++) {
 		const int newCluster = drand48() * s._k;
 		if(newCluster != s.labelling.cluster_id.at(n))
 			s.moveNodeAndInformOfEdges2(n, newCluster);
 	}
-	cout << "Randomizing.. ";
 	PP2(s._k, s.labelling.NonEmptyClusters);
 	assert(s._k == K);
 	s.internalCheck();
@@ -1290,7 +1290,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	sbm::State s(g, edge_details, !args_info.stringIDs_flag);
 
-	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 
 	CountSharedCluster count_shared_cluster(g->numNodes());
@@ -1321,7 +1321,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			// assert(s._k == s._N);
 		}
 	}
-	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 
 	long double pmf_track = s.pmf(obj);
@@ -1390,7 +1390,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			s.internalCheck();
 		}
 	}
-	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
+	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 }
 
