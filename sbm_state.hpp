@@ -34,6 +34,7 @@ struct Labelling {
 	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
 	int NonEmptyClusters;
 	mutable long double SumOfLog2Facts;
+	std :: vector<double> log2GammaAlphaPlus;
 	Labelling(const int _N, const long double _alpha);
 
 

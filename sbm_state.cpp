@@ -11,7 +11,7 @@ namespace sbm {
 		assert(x<=0.0L);
 		return x;
 	}
-	Labelling::Labelling(const int _N, const long double alpha) : _N(_N), _k(1), _alpha(alpha) {
+	Labelling :: Labelling(const int _N, const long double alpha) : _N(_N), _k(1), _alpha(alpha) ,log2GammaAlphaPlus(_N+1) {
 		this->SumOfLog2Facts   = LOG2GAMMA(this->_N + this->_alpha);
 		this->NonEmptyClusters = 1;
 		this->clusters.push_back(new Cluster());
@@ -30,6 +30,10 @@ namespace sbm {
 		assert((int)this->cluster_id.size()==this->_N);
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->members.size()==this->_N);
+
+		for(int i=0; i < this->_N+1; i++) {
+			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
+		}
 	}
 	struct StringNumericSorter {
 		bool operator() (const pair<string,int> &l, const pair<string,int> &r) const {
@@ -149,12 +153,12 @@ namespace sbm {
 		const int   to_order =    cl->order();
 		assert(to_order > 0);
 		this->SumOfLog2Facts +=
-					+ (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()))
-					- (oldcl->order()<0?0.0L:LOG2GAMMA(this->_alpha+oldcl->order()+1))
+					+ (this->log2GammaAlphaPlus.at(oldcl->order()   ))
+					- (this->log2GammaAlphaPlus.at(oldcl->order()+1 ))
 					;
 		this->SumOfLog2Facts +=
-					+ (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()))
-					- (cl->order()<0   ?0.0L:LOG2GAMMA(this->_alpha+cl->order()-1))
+					+ (this->log2GammaAlphaPlus.at(cl->order()      ))
+					- (this->log2GammaAlphaPlus.at(cl->order()-1    ))
 					;
 		assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
