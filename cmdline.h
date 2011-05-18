@@ -70,6 +70,8 @@ struct gengetopt_args_info
   const char *model_scf_help; /**< @brief Stochastic community finding help description.  */
   int stringIDs_flag;	/**< @brief string IDs in the input (default=off).  */
   const char *stringIDs_help; /**< @brief string IDs in the input help description.  */
+  int mega_flag;	/**< @brief dumb down the algorithm for *big* networks (default=off).  */
+  const char *mega_help; /**< @brief dumb down the algorithm for *big* networks help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -88,6 +90,7 @@ struct gengetopt_args_info
   unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
   unsigned int model_scf_given ;	/**< @brief Whether model.scf was given.  */
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
+  unsigned int mega_given ;	/**< @brief Whether mega was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

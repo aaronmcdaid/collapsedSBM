@@ -45,6 +45,7 @@ const char *gengetopt_args_info_help[] = {
   "      --initGT            Initialize to the ground truth  (default=off)",
   "      --model.scf         Stochastic community finding  (default=off)",
   "      --stringIDs         string IDs in the input  (default=off)",
+  "      --mega              dumb down the algorithm for *big* networks  \n                            (default=off)",
     0
 };
 
@@ -87,6 +88,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->initGT_given = 0 ;
   args_info->model_scf_given = 0 ;
   args_info->stringIDs_given = 0 ;
+  args_info->mega_given = 0 ;
 }
 
 static
@@ -113,6 +115,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
   args_info->stringIDs_flag = 0;
+  args_info->mega_flag = 0;
   
 }
 
@@ -138,6 +141,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->initGT_help = gengetopt_args_info_help[14] ;
   args_info->model_scf_help = gengetopt_args_info_help[15] ;
   args_info->stringIDs_help = gengetopt_args_info_help[16] ;
+  args_info->mega_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -294,6 +298,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "model.scf", 0, 0 );
   if (args_info->stringIDs_given)
     write_into_file(outfile, "stringIDs", 0, 0 );
+  if (args_info->mega_given)
+    write_into_file(outfile, "mega", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -559,6 +565,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "initGT",	0, NULL, 0 },
         { "model.scf",	0, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
+        { "mega",	0, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -754,6 +761,18 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             if (update_arg((void *)&(args_info->stringIDs_flag), 0, &(args_info->stringIDs_given),
                 &(local_args_info.stringIDs_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "stringIDs", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* dumb down the algorithm for *big* networks.  */
+          else if (strcmp (long_options[option_index].name, "mega") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->mega_flag), 0, &(args_info->mega_given),
+                &(local_args_info.mega_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "mega", '-',
                 additional_error))
               goto failure;
           
