@@ -614,7 +614,7 @@ namespace sbm {
 	
 	long double State:: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
 		long double edges_bits = 0.0L;
-		int pairsEncountered = 0;
+		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
 		int blocksEncountered = 0; // should be K*K, or 1/2 * K * (K+1)
 		for(int i=0; i<this->_k; i++) {
@@ -661,10 +661,10 @@ namespace sbm {
 		}
 		if(obj->directed) {
 			assert(blocksEncountered == this->_k * this->_k);
-			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
+			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
 		} else {
 			assert(blocksEncountered == this->_k * (this->_k+1) / 2);
-			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
 		}
 		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
 			PP2(total_edge_weight_verification , this->total_edge_weight);
