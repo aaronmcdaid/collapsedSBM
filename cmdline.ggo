@@ -17,3 +17,4 @@ option  "initGT"             - "Initialize to the ground truth"      flag       
 option  "model.scf"          - "Stochastic community finding"        flag       off
 option  "stringIDs"          - "string IDs in the input"             flag       off
 option  "mega"               - "dumb down the algorithm for *big* networks"  flag       off
+option  "printEveryNIters"   - "How often to print an update"        int        default="10" no

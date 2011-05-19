@@ -72,6 +72,9 @@ struct gengetopt_args_info
   const char *stringIDs_help; /**< @brief string IDs in the input help description.  */
   int mega_flag;	/**< @brief dumb down the algorithm for *big* networks (default=off).  */
   const char *mega_help; /**< @brief dumb down the algorithm for *big* networks help description.  */
+  int printEveryNIters_arg;	/**< @brief How often to print an update (default='10').  */
+  char * printEveryNIters_orig;	/**< @brief How often to print an update original value given at command line.  */
+  const char *printEveryNIters_help; /**< @brief How often to print an update help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -91,6 +94,7 @@ struct gengetopt_args_info
   unsigned int model_scf_given ;	/**< @brief Whether model.scf was given.  */
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int mega_given ;	/**< @brief Whether mega was given.  */
+  unsigned int printEveryNIters_given ;	/**< @brief Whether printEveryNIters was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

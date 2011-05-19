@@ -1378,7 +1378,7 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 		// cout << endl;
 		// if(i%1000 == 0)
 			// cerr << "i:" << i << endl;
-		if(i%10 == 0) {
+		if(i % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);

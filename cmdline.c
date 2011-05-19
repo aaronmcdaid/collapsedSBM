@@ -28,24 +28,25 @@ const char *gengetopt_args_info_usage = "Usage: Stochastic Block Models [OPTIONS
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help              Print help and exit",
-  "  -V, --version           Print version and exit",
-  "      --git-version       detailed version description  (default=off)",
-  "  -v, --verbose           detailed debugging  (default=off)",
-  "  -m, --mmsb              Airoldi's MMSB  (default=off)",
-  "  -K, --K=INT             Number of clusters, K  (default=`-1')",
-  "  -d, --directed          directed  (default=off)",
-  "  -w, --weighted          weighted  (default=off)",
-  "  -s, --selfloop          selfloops allowed  (default=off)",
-  "      --seed=INT          seed to drand48()  (default=`0')",
-  "      --GT.vector=STRING  The ground truth. a file with N lines. Starts from \n                            ZERO.",
-  "      --algo.gibbs=INT    Use the simple Gibbs in the algorithm  (default=`1')",
-  "      --algo.m3=INT       Use M3 in the algorithm  (default=`1')",
-  "  -i, --iterations=INT    How many iterations  (default=`120000')",
-  "      --initGT            Initialize to the ground truth  (default=off)",
-  "      --model.scf         Stochastic community finding  (default=off)",
-  "      --stringIDs         string IDs in the input  (default=off)",
-  "      --mega              dumb down the algorithm for *big* networks  \n                            (default=off)",
+  "  -h, --help                  Print help and exit",
+  "  -V, --version               Print version and exit",
+  "      --git-version           detailed version description  (default=off)",
+  "  -v, --verbose               detailed debugging  (default=off)",
+  "  -m, --mmsb                  Airoldi's MMSB  (default=off)",
+  "  -K, --K=INT                 Number of clusters, K  (default=`-1')",
+  "  -d, --directed              directed  (default=off)",
+  "  -w, --weighted              weighted  (default=off)",
+  "  -s, --selfloop              selfloops allowed  (default=off)",
+  "      --seed=INT              seed to drand48()  (default=`0')",
+  "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
+  "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
+  "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
+  "  -i, --iterations=INT        How many iterations  (default=`120000')",
+  "      --initGT                Initialize to the ground truth  (default=off)",
+  "      --model.scf             Stochastic community finding  (default=off)",
+  "      --stringIDs             string IDs in the input  (default=off)",
+  "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
+  "      --printEveryNIters=INT  How often to print an update  (default=`10')",
     0
 };
 
@@ -89,6 +90,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->model_scf_given = 0 ;
   args_info->stringIDs_given = 0 ;
   args_info->mega_given = 0 ;
+  args_info->printEveryNIters_given = 0 ;
 }
 
 static
@@ -116,6 +118,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->model_scf_flag = 0;
   args_info->stringIDs_flag = 0;
   args_info->mega_flag = 0;
+  args_info->printEveryNIters_arg = 10;
+  args_info->printEveryNIters_orig = NULL;
   
 }
 
@@ -142,6 +146,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->model_scf_help = gengetopt_args_info_help[15] ;
   args_info->stringIDs_help = gengetopt_args_info_help[16] ;
   args_info->mega_help = gengetopt_args_info_help[17] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -230,6 +235,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->algo_gibbs_orig));
   free_string_field (&(args_info->algo_m3_orig));
   free_string_field (&(args_info->iterations_orig));
+  free_string_field (&(args_info->printEveryNIters_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -300,6 +306,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "stringIDs", 0, 0 );
   if (args_info->mega_given)
     write_into_file(outfile, "mega", 0, 0 );
+  if (args_info->printEveryNIters_given)
+    write_into_file(outfile, "printEveryNIters", args_info->printEveryNIters_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -566,6 +574,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "model.scf",	0, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
         { "mega",	0, NULL, 0 },
+        { "printEveryNIters",	1, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -773,6 +782,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
             if (update_arg((void *)&(args_info->mega_flag), 0, &(args_info->mega_given),
                 &(local_args_info.mega_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "mega", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* How often to print an update.  */
+          else if (strcmp (long_options[option_index].name, "printEveryNIters") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->printEveryNIters_arg), 
+                 &(args_info->printEveryNIters_orig), &(args_info->printEveryNIters_given),
+                &(local_args_info.printEveryNIters_given), optarg, 0, "10", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "printEveryNIters", '-',
                 additional_error))
               goto failure;
           
