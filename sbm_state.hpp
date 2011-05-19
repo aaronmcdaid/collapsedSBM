@@ -7,11 +7,11 @@
 #include <gsl/gsl_sf.h>
 #include "shmGraphRaw.hpp"
 
-static inline double LOG2GAMMA(double x) {
+static inline double LOG2GAMMA(const double x) {
 	assert(x>0);
 	return M_LOG2E * gsl_sf_lngamma(x);
 }
-static inline double LOG2FACT(double x) {
+static inline double LOG2FACT(const int x) {
 	assert(x>0);
 	return M_LOG2E * gsl_sf_lnfact(x);
 }

@@ -153,7 +153,7 @@ namespace sbm {
 	int Labelling:: moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		const int _k = this->clusters.size();
+		const int _k = int(this->clusters.size());
 		assert(newClusterID >= 0 && newClusterID < _k);
 		assert(oldClusterID >= 0 && oldClusterID < _k);
 		assert(newClusterID != oldClusterID);
@@ -309,7 +309,7 @@ namespace sbm {
 			for(int i=0; i<this->_k; i++)
 			for(int j=0; j<this->_k; j++)
 			{
-				const pair< pair<int,int>, int> x(make_pair(i,j),this->_edgeCounts.read(i,j));
+				pair< pair<int,int>, long double> x(make_pair(i,j),this->_edgeCounts.read(i,j));
 				if(x.second == 0) {
 					// we can ignore this
 				} else {
@@ -371,7 +371,7 @@ namespace sbm {
 	}
 
 	static double NMI(const vector<int> &left, const vector<int> &top) {
-		const int N = left.size();
+		const int N = int(left.size());
 		assert(left.size() == top.size());
 		map< pair<int,int> , int> joint;
 		map< int , int> left_marginal;
