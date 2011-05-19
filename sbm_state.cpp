@@ -214,7 +214,7 @@ namespace sbm {
 		}
 	}
 	void State:: blockDetail(const ObjectiveFunction *obj) const {
-		int pairsEncountered = 0;
+		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
 
 		cout << "    | ";
@@ -229,18 +229,18 @@ namespace sbm {
 		for(int i=0; i<this->_k; i++) {
 			const Cluster *I = this->labelling.clusters.at(i);
 			assert(I);
-			const int ni = I->order();
-			cout << printfstring("%3d", ni) << " | ";
+			const long int ni = I->order();
+			cout << printfstring("%3ld", ni) << " | ";
 			for(int j=0; j<this->_k; j++) {
 				const Cluster *J = this->labelling.clusters.at(j);
 				assert(J);
-				const int nj = J->order();
+				const long int nj = J->order();
 				const long double edges = obj->relevantWeight(i,j, &this->_edgeCounts);
 				{
 					const long double edges_ = this->_edgeCounts.read(i,j) + ( obj->isTwoSided(i,j) ? this->_edgeCounts.read(j,i) : 0);
 					assert(edges==edges_);
 				}
-				int pairs = ni*nj; // if i==j, then ni==nj
+				long int pairs = ni*nj; // if i==j, then ni==nj
 				if (i==j) {
 					assert(ni==nj);
 					if(obj->directed)
@@ -254,14 +254,14 @@ namespace sbm {
 					pairsEncountered += pairs;
 					total_edge_weight_verification += edges;
 				}
-				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%d", edges, pairs).c_str(), edges/double(pairs)) << " | ";
+				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%ld", edges, pairs).c_str(), edges/double(pairs)) << " | ";
 			}
 			cout << endl;
 		}
 		if(obj->directed) {
-			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?0:-1) ));
+			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
 		} else {
-			assert(pairsEncountered == this->_N * (this->_N + (obj->selfloops?1:-1) ) / 2);
+			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
 		}
 		assert(total_edge_weight_verification == this->total_edge_weight);
 	}
