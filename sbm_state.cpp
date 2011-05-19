@@ -633,15 +633,15 @@ namespace sbm {
 				}
 				total_edge_weight_verification += edges;
 
-				const int pairs_ = obj->numberOfPairsInBlock(i,j, &this->labelling);
+				const long int pairs_ = obj->numberOfPairsInBlock(i,j, &this->labelling);
 				{
-					int pairs = 0;
+					long int pairs = 0;
 					const Cluster *I = this->labelling.clusters.at(i);
 					assert(I);
 					const Cluster *J = this->labelling.clusters.at(j);
 					assert(J);
-					const int ni = I->order();
-					const int nj = J->order();
+					const long int ni = I->order();
+					const long int nj = J->order();
 					pairs += ni*nj; // if i==j, then ni==nj
 					if (i==j) {
 						assert(ni==nj);
@@ -723,14 +723,14 @@ namespace sbm {
 		const long double edges = edge_counts->read(i,j) + ( this->isTwoSided(i,j) ? edge_counts->read(j,i) : 0);
 		return edges;
 	}
-	int ObjectiveFunction :: numberOfPairsInBlock(const int i, const int j, const Labelling *labelling) const {
-		int pairs=0;
+	long int ObjectiveFunction :: numberOfPairsInBlock(const int i, const int j, const Labelling *labelling) const {
+		long int pairs=0;
 					const Cluster *I = labelling->clusters.at(i);
 					assert(I);
 					const Cluster *J = labelling->clusters.at(j);
 					assert(J);
-					const int ni = I->order();
-					const int nj = J->order();
+					const long int ni = I->order();
+					const long int nj = J->order();
 					pairs += ni*nj; // if i==j, then ni==nj
 					if (i==j) {
 						assert(ni==nj);
@@ -744,7 +744,7 @@ namespace sbm {
 		return pairs;
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const { // virtual
+	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const { // virtual
 		if(pairs==0)
 			return 0.0L;
 		assert(pairs > 0);
@@ -764,7 +764,7 @@ namespace sbm {
 		return p3;
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const int p_b, bool isDiagonal) const { // virtual
+	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const long int p_b, bool isDiagonal) const { // virtual
 		if(p_b==0)
 			return 0.0L;
 		assert(p_b > 0);

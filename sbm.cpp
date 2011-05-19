@@ -654,8 +654,8 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 								  + s._edgeCounts.read(t, isolatedClusterId)
 								+ isolatedNodesSelfLoop
 								;
-			const int old_p_b = obj->numberOfPairsInBlock(t,t, &s.labelling);
-			const int new_p_b = old_p_b          + s.labelling.clusters.at(t)->order()
+			const long int old_p_b = obj->numberOfPairsInBlock(t,t, &s.labelling);
+			const long int new_p_b = old_p_b          + s.labelling.clusters.at(t)->order()
 					+ ( (obj->directed) ? (s.labelling.clusters.at(t)->order()) : 0)
 					+ ( (obj->selfloops) ? (1) : 0)
 					;
@@ -688,9 +688,9 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 				// PP(obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts));
 				const long double new_weight = old_weight + ( (direction==0) ?  obj->relevantWeight(isolatedClusterId, j, &s._edgeCounts) : obj->relevantWeight(j, isolatedClusterId, &s._edgeCounts)) ;
 
-				const int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
+				const long int old_pairs = obj->numberOfPairsInBlock(t,j, &s.labelling);
 				// PP2(old_weight, old_pairs);
-				const int new_pairs = old_pairs + s.labelling.clusters.at(j)->order();
+				const long int new_pairs = old_pairs + s.labelling.clusters.at(j)->order();
 
 				const long double old_log2 = obj -> log2OneBlock(old_weight, old_pairs, false);
 				const long double new_log2 = obj -> log2OneBlock(new_weight, new_pairs, false);
@@ -723,7 +723,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 #endif
 	const long double pre_z = s.P_z();
 
-	std :: vector < pair< pair<int,int> , pair<long double, int> > > blocksBefore; // all the blocks that'll be modified
+	std :: vector < pair< pair<int,int> , pair<long double, long int> > > blocksBefore; // all the blocks that'll be modified
 	for(int i=0; i<s._k; i++) {
 		for(int j=0; j<s._k; j++) {
 			if(!obj->isValidBlock(i,j))
@@ -732,7 +732,7 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 			if(i == newClusterID || j==newClusterID
 			|| i == oldClusterID || j==oldClusterID) { // this block is of interest
 				const long double w = obj->relevantWeight(i,j, &s._edgeCounts);
-				const int pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
+				const long int pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
 				blocksBefore.push_back (make_pair(  make_pair(i,j), make_pair(w,       pairs     )));
 			}
 		}
@@ -744,14 +744,14 @@ long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate
 	long double delta_x_z = 0.0L;
 	{ // now to calculate those that have changed
 		// cout << "  delta x|z" << endl;
-		forEach( typeof(pair< pair<int,int> , pair<long double,int> >) & block, amd :: mk_range(blocksBefore)) {
+		forEach( typeof(pair< pair<int,int> , pair<long double,long int> >) & block, amd :: mk_range(blocksBefore)) {
 			const int i = block.first.first;
 			const int j = block.first.second;
 			// PP2(i,j);
 			const long double old_weight = block.second.first;
-			const long double old_pairs = block.second.second;
+			const long int old_pairs = block.second.second;
 			const long double new_weight = obj->relevantWeight(i,j, &s._edgeCounts);
-			const int new_pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
+			const long int new_pairs = obj->numberOfPairsInBlock(i,j, &s.labelling);
 			// PP2(new_weight, old_weight);
 			// PP2(new_pairs, old_pairs);
 			const long double old_x_z = obj->log2OneBlock(old_weight, old_pairs, i==j);

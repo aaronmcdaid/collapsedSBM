@@ -118,21 +118,21 @@ struct ObjectiveFunction {
 	// these first three bools decide which blocks to loop over, and how to calculate the valid pairs.
 	// But give the total edge weight of a block, which form of function will actually be used?
 	ObjectiveFunction(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const = 0;
+	virtual long double log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const = 0;
 	bool isValidBlock(const int i, const int j) const;
 	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
 	long double relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const; // this might include the other direction, if it's undirected
-	int numberOfPairsInBlock(const int i, const int j, const Labelling *edge_counts) const;
+	long int numberOfPairsInBlock(const int i, const int j, const Labelling *edge_counts) const;
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
+	virtual long double log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const;
 };
 struct ObjectiveFunction_Poisson : public ObjectiveFunction {
 	static const long double s = 1.0L;
 	static const long double theta = 1000.0L;
 	ObjectiveFunction_Poisson(const bool s, const bool d, const bool w);
-	virtual long double log2OneBlock(const long double edge_total, const int pairs, bool isDiagonal) const;
+	virtual long double log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const;
 };
 	long double assertNonPositiveFinite_line(const long double x, const int lineno);
 
