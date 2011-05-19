@@ -24,6 +24,7 @@ namespace sbm {
 			Cluster *cl = this->clusters.back();
 			assert(cl);
 			this->its.push_back( cl->newMember(i) );
+			++ cl->_order;
 			assert(*this->its.at(i) == i);
 		}
 
@@ -87,8 +88,11 @@ namespace sbm {
 			if(!mega) PP2(node_name.first, node_name.second);
 		}
 	}
+	Cluster :: Cluster() : _order(0) {
+	}
 	const int Cluster::order() const {
-		return this->members.size();
+		// assert( this->_order == (int)this->members.size() ) ;
+		return this->_order;
 	}
 	std::list<int>::iterator Cluster::newMember(const int n) {
 		this->members.push_front(n);
@@ -123,44 +127,53 @@ namespace sbm {
 		this->_k --;
 		this->labelling.deleteClusterFromTheEnd();
 	}
-	int Labelling:: moveNode(const int n, const int newClusterID) {
-		const int _k = this->clusters.size();
-		const int oldClusterID = this->cluster_id.at(n);
-		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		assert(newClusterID >= 0 && newClusterID < _k);
-		assert(oldClusterID >= 0 && oldClusterID < _k);
-		assert(newClusterID != oldClusterID);
-
-		Cluster *cl = this->clusters.at(newClusterID);
-		Cluster *oldcl = this->clusters.at(oldClusterID);
-		assert(cl);
-
-		const list<int>::iterator it = this->its.at(n);
-		assert(*it == n);
-		oldcl->members.erase(it); // fix up this->clusters.members
-		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
-		this->its.at(n) = newit; // fix up this->its
-
-		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
-
-		assert(oldClusterSize-1 == oldcl->order());
-		if(oldcl->order() == 0) {
+	void Labelling :: deltaSumOfLog2Facts(const int oldClOrder, const int clOrder) {
+		if(oldClOrder == 0) {
 			this->NonEmptyClusters--;
 		}
-		if(cl->order() == 1) {
+		if(clOrder == 1) {
 			this->NonEmptyClusters++;
 		}
-		const int   to_order =    cl->order();
-		assert(to_order > 0);
 		this->SumOfLog2Facts +=
-					+ (this->log2GammaAlphaPlus.at(oldcl->order()   ))
-					- (this->log2GammaAlphaPlus.at(oldcl->order()+1 ))
+					+ (this->log2GammaAlphaPlus.at(oldClOrder   ))
+					- (this->log2GammaAlphaPlus.at(oldClOrder+1 ))
 					;
 		this->SumOfLog2Facts +=
-					+ (this->log2GammaAlphaPlus.at(cl->order()      ))
-					- (this->log2GammaAlphaPlus.at(cl->order()-1    ))
+					+ (this->log2GammaAlphaPlus.at(clOrder      ))
+					- (this->log2GammaAlphaPlus.at(clOrder-1    ))
 					;
-		assert(isfinite(this->SumOfLog2Facts));
+	}
+	void Labelling :: fixUpIterators(const int n, Cluster *cl, Cluster *oldcl) {
+		const list<int>::iterator it = this->its.at(n);
+		// assert(*it == n);
+		oldcl->members.erase(it); // fix up this->clusters.members
+		oldcl->_order --;
+		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
+		cl->_order ++;
+		this->its.at(n) = newit; // fix up this->its
+	}
+	int Labelling:: moveNode(const int n, const int newClusterID) {
+		const int oldClusterID = this->cluster_id[n];
+		// const int oldClusterSize = this->clusters.at(oldClusterID)->order();
+		// const int _k = this->clusters.size();
+		// assert(newClusterID >= 0 && newClusterID < _k);
+		// assert(oldClusterID >= 0 && oldClusterID < _k);
+		// assert(newClusterID != oldClusterID);
+
+		Cluster *cl = this->clusters[newClusterID];
+		Cluster *oldcl = this->clusters[oldClusterID];
+		// assert(cl);
+
+		this->fixUpIterators(n, cl, oldcl);
+
+		this->cluster_id[n] = newClusterID; // fix up this->cluster_id
+
+		// assert(oldClusterSize-1 == oldcl->order());
+		const int   clOrder =    cl->order();
+		const int   oldClOrder =  oldcl->order();
+		// assert(to_order > 0);
+		this->deltaSumOfLog2Facts(oldClOrder, clOrder);
+		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
 	}
 	void State::moveNode(const int n, const int newClusterID) {

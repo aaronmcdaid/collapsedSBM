@@ -20,9 +20,11 @@ namespace sbm {
 typedef shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> GraphType;
 
 struct Cluster {
+		int _order;
 		std::list<int> members; // nodes ids of the members
 		const int order() const;
 		std::list<int>::iterator newMember(const int n);
+		Cluster();
 }; // each cluster to know which nodes are in it
 
 struct Labelling {
@@ -40,6 +42,8 @@ struct Labelling {
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd();
+	void deltaSumOfLog2Facts(const int oldClOrder, const int clOrder);
+	void fixUpIterators(const int n, Cluster *cl, Cluster *oldcl);
 	int moveNode(const int n, const int newClusterID);
 	void swapClusters(const int cl1, const int cl2);
 };
