@@ -24,13 +24,12 @@ namespace sbm {
 			Cluster *cl = this->clusters.back();
 			assert(cl);
 			this->its.push_back( cl->newMember(i) );
-			++ cl->_order;
 			assert(*this->its.at(i) == i);
 		}
 
 		assert((int)this->cluster_id.size()==this->_N);
 		assert((int)this->its.size()==this->_N);
-		assert((int)this->clusters.back()->members.size()==this->_N);
+		assert((int)this->clusters.back()->order()==this->_N);
 
 		for(int i=0; i < this->_N+1; i++) {
 			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
@@ -96,7 +95,15 @@ namespace sbm {
 	}
 	std::list<int>::iterator Cluster::newMember(const int n) {
 		this->members.push_front(n);
+		++ this->_order;
 		return this->members.begin();
+	}
+	void Cluster :: eraseMember(const std::list<int>::iterator it) {
+		this->members.erase(it); // fix up this->clusters.members
+		this->_order --;
+	}
+	const std :: list<int> & Cluster :: get_members() const {
+		return members;
 	}
 
 	int Labelling:: appendEmptyCluster() {
@@ -144,10 +151,8 @@ namespace sbm {
 	void Labelling :: fixUpIterators(const int n, Cluster *cl, Cluster *oldcl) {
 		const list<int>::iterator it = this->its.at(n);
 		assert(*it == n);
-		oldcl->members.erase(it); // fix up this->clusters.members
-		oldcl->_order --;
+		oldcl->eraseMember(it);
 		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
-		cl->_order ++;
 		this->its.at(n) = newit; // fix up this->its
 	}
 	int Labelling:: moveNode(const int n, const int newClusterID) {
@@ -279,7 +284,7 @@ namespace sbm {
 		for(int CL = 0; CL < this->_k; CL++) {
 			const Cluster *cl = this->labelling.clusters.at(CL);
 			assert(cl);
-			for(list<int>::const_iterator i = cl->members.begin(); i!=cl->members.end(); i++) {
+			for(list<int>::const_iterator i = cl->get_members().begin(); i!=cl->get_members().end(); i++) {
 				const int n = *i;
 				assert(n>=0 && n<this->_N);
 				bool wasAccepted = alreadyConsidered.insert(n).second;
@@ -564,11 +569,11 @@ namespace sbm {
 		// PP2(cl1,cl2);
 		const Cluster * CL1 = this->clusters.at(cl1);
 		const Cluster * CL2 = this->clusters.at(cl2);
-		forEach(int n, amd::mk_range(CL1->members)) {
+		forEach(int n, amd::mk_range(CL1->get_members())) {
 			assert(this->cluster_id.at(n) == cl1);
 			       this->cluster_id.at(n) =  cl2 ;
 		}
-		forEach(int n, amd::mk_range(CL2->members)) {
+		forEach(int n, amd::mk_range(CL2->get_members())) {
 			assert(this->cluster_id.at(n) == cl2);
 			       this->cluster_id.at(n) =  cl1 ;
 		}

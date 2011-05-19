@@ -322,8 +322,8 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	vector<int> randomizedNodeIDs; // the nodes in both clusters. Will be considered in a random order
 	const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
 	const sbm :: Cluster * const rCluster = s.labelling.clusters.at(right);
-	forEach(int n, amd :: mk_range(lCluster->members)) { randomizedNodeIDs.push_back(n); }
-	forEach(int n, amd :: mk_range(rCluster->members)) { randomizedNodeIDs.push_back(n); }
+	forEach(int n, amd :: mk_range(lCluster->get_members())) { randomizedNodeIDs.push_back(n); }
+	forEach(int n, amd :: mk_range(rCluster->get_members())) { randomizedNodeIDs.push_back(n); }
 
 	const int M = randomizedNodeIDs.size();
 	assert(M == lCluster->order() + rCluster->order());
