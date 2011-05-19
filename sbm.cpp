@@ -1289,6 +1289,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
 void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+	PP2(g->numNodes(), g->numRels());
 	sbm::State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
