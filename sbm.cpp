@@ -121,6 +121,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_m3_arg);
 	PP(args_info.initGT_flag);
 	PP(args_info.stringIDs_flag);
+	PP(args_info.mega_flag);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -1288,12 +1289,16 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
 void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
-	sbm::State s(g, edge_details, !args_info.stringIDs_flag);
+	sbm::State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 
-	CountSharedCluster count_shared_cluster(g->numNodes());
+	CountSharedCluster *count_shared_cluster;
+	if(args_info.mega_flag) // the network is probably too big, don't try to CountSharedCluster
+		count_shared_cluster	= 0;
+	else
+		count_shared_cluster	= new CountSharedCluster(g->numNodes());
 
 	/*
 	s.isolateNode(0);
@@ -1358,7 +1363,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 		}
 		if(i > 30000)
-		count_shared_cluster.consume(s.labelling.cluster_id);
+		if(count_shared_cluster)
+			count_shared_cluster->consume(s.labelling.cluster_id);
 
 		// PP(i);
 		// const long double pre = s.pmf(obj);
@@ -1384,7 +1390,8 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 			AR_M3little.dump();
 			AR_M3very.dump();
 			s.blockDetail(obj);
-			count_shared_cluster.dump(s);
+			if(count_shared_cluster)
+				count_shared_cluster->dump(s);
 			cout << " end of check at i==" << i << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();

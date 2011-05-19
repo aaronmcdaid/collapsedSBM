@@ -58,7 +58,7 @@ namespace sbm {
 			return l.first < r.first;
 		}
 	};
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details, const bool numericIDs) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
+	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -84,7 +84,7 @@ namespace sbm {
 			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringStringSorter() );
 		cout << "nodeNamesInOrder:(" << this->_N << " nodes)" << endl;
 		forEach(typeof(pair<string, int>) &node_name, amd :: mk_range(nodeNamesInOrder)) {
-			PP2(node_name.first, node_name.second);
+			if(!mega) PP2(node_name.first, node_name.second);
 		}
 	}
 	const int Cluster::order() const {
@@ -423,20 +423,21 @@ namespace sbm {
 		}
 		PP(nonEmptyK);
 		PP(this->pmf(obj));
-		forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
-		// for(int n=0; n<this->_N;n++)
-		{
-			const int n = node_name.second;
-			// PP2(n, this->_g->NodeAsString(n));
-			const int id_of_cluster = this->labelling.cluster_id.at(n);
-			if(id_of_cluster<10)
-				cout << (char)('0' + id_of_cluster);
-			else if(id_of_cluster < 36)
-				cout << (char)('a' + id_of_cluster - 10);
-			else
-				cout << '<' << id_of_cluster << '>';
+		if (!this->_mega) {
+			forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
+			{
+				const int n = node_name.second;
+				// PP2(n, this->_g->NodeAsString(n));
+				const int id_of_cluster = this->labelling.cluster_id.at(n);
+				if(id_of_cluster<10)
+					cout << (char)('0' + id_of_cluster);
+				else if(id_of_cluster < 36)
+					cout << (char)('a' + id_of_cluster - 10);
+				else
+					cout << '<' << id_of_cluster << '>';
+			}
+			cout << endl;
 		}
-		cout << endl;
 		if(groundTruth) {
 			assert(!groundTruth->empty());
 			vector<int> z_vector(this->_N);

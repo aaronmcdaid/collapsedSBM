@@ -1,2 +1,2 @@
-"SBM: respect nodeNamesInOrder"
+"SBM: --mega"
 "\n"

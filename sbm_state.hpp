@@ -52,7 +52,8 @@ struct State {
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
-	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details, const bool numericIDs);
+	const bool _mega; // if this is true, the print less
+	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
 
 	Labelling	labelling;
 	// the clustering
