@@ -137,15 +137,13 @@ namespace sbm {
 		this->SumOfLog2Facts +=
 					+ (this->log2GammaAlphaPlus.at(oldClOrder   ))
 					- (this->log2GammaAlphaPlus.at(oldClOrder+1 ))
-					;
-		this->SumOfLog2Facts +=
 					+ (this->log2GammaAlphaPlus.at(clOrder      ))
 					- (this->log2GammaAlphaPlus.at(clOrder-1    ))
 					;
 	}
 	void Labelling :: fixUpIterators(const int n, Cluster *cl, Cluster *oldcl) {
 		const list<int>::iterator it = this->its.at(n);
-		// assert(*it == n);
+		assert(*it == n);
 		oldcl->members.erase(it); // fix up this->clusters.members
 		oldcl->_order --;
 		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
@@ -153,25 +151,25 @@ namespace sbm {
 		this->its.at(n) = newit; // fix up this->its
 	}
 	int Labelling:: moveNode(const int n, const int newClusterID) {
-		const int oldClusterID = this->cluster_id[n];
-		// const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		// const int _k = this->clusters.size();
-		// assert(newClusterID >= 0 && newClusterID < _k);
-		// assert(oldClusterID >= 0 && oldClusterID < _k);
-		// assert(newClusterID != oldClusterID);
+		const int oldClusterID = this->cluster_id.at(n);
+		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
+		const int _k = this->clusters.size();
+		assert(newClusterID >= 0 && newClusterID < _k);
+		assert(oldClusterID >= 0 && oldClusterID < _k);
+		assert(newClusterID != oldClusterID);
 
-		Cluster *cl = this->clusters[newClusterID];
-		Cluster *oldcl = this->clusters[oldClusterID];
-		// assert(cl);
+		Cluster *cl = this->clusters.at(newClusterID);
+		Cluster *oldcl = this->clusters.at(oldClusterID);
+		assert(cl);
 
 		this->fixUpIterators(n, cl, oldcl);
 
-		this->cluster_id[n] = newClusterID; // fix up this->cluster_id
+		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
 
-		// assert(oldClusterSize-1 == oldcl->order());
+		assert(oldClusterSize-1 == oldcl->order());
 		const int   clOrder =    cl->order();
 		const int   oldClOrder =  oldcl->order();
-		// assert(to_order > 0);
+		assert(clOrder > 0);
 		this->deltaSumOfLog2Facts(oldClOrder, clOrder);
 		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
