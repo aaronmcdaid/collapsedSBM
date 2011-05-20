@@ -35,10 +35,6 @@ std::string ReadableShmGraphBase::WhichNode(int v) const {
 		return s.str();
 }
 
-static const char * STRINGS_MMAP = "Strings.mmap";
-static const char * NODES_AND_RELS_MMAP = "NodesAndRels.mmap";
-static const char * NEIGHBOURS_MMAP = "Neighbours.mmap";
-
 struct fileDoesNotExistException {};
 struct invalideGraphFileFormatException {};
 
@@ -192,16 +188,6 @@ struct nodeWithName {
 	{}
 };
 template<class T> struct nodeWithName_set;
-template<>        struct nodeWithName_set<MapMem> {
-	typedef bmi::multi_index_container<
-		nodeWithName,
-		bmi::indexed_by<
-			bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
-			bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
-		>
-		, MMapType  ::allocator<nodeWithName>::type
-	> t;
-};
 template<>        struct nodeWithName_set<PlainMem> {
 	typedef bmi::multi_index_container<
 		nodeWithName,
@@ -288,61 +274,6 @@ template<class T>
 	}
 
 DumbGraphReadableTemplate<PlainMem> testosdlfjslkdfjlsdjfkldsbject;
-
-template <class T>
-class DumbGraphReadONLYTemplate : public DumbGraphReadableTemplate<T> {
-	typedef T BackingT;
-	MMapType   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	MMapType   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	MMapType   segment_neigh;
-	const typename T::neighbouring_relationship_set empty_set_for_neighbours;
-
-public:
-	virtual ~DumbGraphReadONLYTemplate() {
-		// delete nodes; delete relationships; delete neighbouring_relationships; // seems like you can't/shouldn't delete objects like this
-	}
-	explicit DumbGraphReadONLYTemplate(const std::string &dir);
-	static DumbGraphReadONLYTemplate<T> * New(const std::string &dir);
-};
-template <>
-	DumbGraphReadONLYTemplate<MapMem>::DumbGraphReadONLYTemplate(const std::string &dir)
-		: segment_strings     (open_read_only, (dir + "/" + STRINGS_MMAP       ).c_str() /*, 1000000*/)
-		, segment_nodesAndRels(open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() /*, 1000000*/)
-		, segment_neigh       (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() /*, 1000000*/)
-		, empty_set_for_neighbours(segment_neigh.get_allocator<int>())
-	{
-		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set<MapMem>::t > ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = segment_nodesAndRels.find<MapMem::relationship_set> ("relationship_set").first; // ( relationship_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<relationship>());
-	 	this->neighbouring_relationshipsRO
-		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
-		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
-		this->empty_set_for_neighboursRO = &empty_set_for_neighbours;
-	}
-template <>
-	DumbGraphReadONLYTemplate<MapMem> * DumbGraphReadONLYTemplate<MapMem>::New(const std::string &dir) {
-		return new DumbGraphReadONLYTemplate<MapMem>(dir);
-	}
-template <>
-	DumbGraphReadONLYTemplate<PlainMem> * DumbGraphReadONLYTemplate<PlainMem>::New(const std::string &dir) {
-		assert(1==2);
-		return NULL;
-	}
-#if 0
-template <>
-	DumbGraphReadONLYTemplate<PlainMem>::DumbGraphReadONLYTemplate(const std::string &dir)
-		: segment_strings     (open_read_only, (dir + "/" + STRINGS_MMAP       ).c_str() /*, 1000000*/)
-		, segment_nodesAndRels(open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() /*, 1000000*/)
-		, segment_neigh       (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() /*, 1000000*/)
-		, empty_set_for_neighbours()
-	{
-		this->nodesRO         = segment_nodesAndRels.find<nodeWithName_set> ("nodeWithName_set").first; // ( nodeWithName_set::ctor_args_list()                         , segment_nodesAndRels.get_allocator<nodeWithName>());
-		this->relationshipsRO = new PlainMem::relationship_set();
-	 	this->neighbouring_relationshipsRO
-		                = segment_neigh.find<BackingT::neighbours_to_relationships_map>("Neighbours").first; // ( 3, boost::hash<int>(), std::equal_to<int>()  , segment_neigh.get_allocator<valtype>());    
-		this->strings_wrapRO .reset( new StringWithId_Mic_WrapRO(segment_strings));
-		this->empty_set_for_neighboursRO = &empty_set_for_neighbours;
-	}
-#endif
 
 template <class T>
 class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
@@ -434,21 +365,9 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 template <class W>
 ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char *directory = 0) {
 	DumbGraphRaw<PlainMem> *nodes_and_rels_wrap = NULL;
+	assert(!PlainMem::isMapMem);
 	if(PlainMem::isMapMem) {
-		assert(directory && strlen(directory)>0);
-		std::string dir(directory);
-		{
-			if(dir.length()==0)
-				dir="."; // current directory
-			else // remove any / on the end of it
-				if(*dir.rbegin() == '/')
-					dir.erase(dir.length()-1,1);
-		}
-
-		if(!graphTextFileName) {
-			return DumbGraphReadONLYTemplate<PlainMem>::New(dir);
-		}
-		nodes_and_rels_wrap = new DumbGraphRaw<PlainMem>(dir);
+		assert(1==2);
 	} else {
 		assert(!directory);
 		assert(graphTextFileName);
