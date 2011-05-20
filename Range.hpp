@@ -28,7 +28,7 @@ private:
 
 public:
 	IteratorRange(const Iterator & _begin, const Iterator & _end) : current(_begin), end(_end) {}
-	IteratorRange(std::pair<Iterator,Iterator> be) : current(be.first), end(be.second) {}
+	IteratorRange(std :: pair<Iterator,Iterator> be) : current(be.first), end(be.second) {}
 
 	bool empty() const { return current == end; }
 	Iterated & front() const { return *current; }
@@ -44,9 +44,9 @@ public:
 	typedef typeof(*(c.begin())) BeginTypeDerefed;
 };
 template <class Container>
-class ContainerRange : public IteratorRange< typename ContainerProperties<Container>::BeginType > {
+class ContainerRange : public IteratorRange< typename ContainerProperties<Container>:: BeginType > {
 public:
-	ContainerRange(Container &c) : IteratorRange< typename ContainerProperties<Container>::BeginType > (c.begin(), c.end()) {}
+	ContainerRange(Container &c) : IteratorRange< typename ContainerProperties<Container>:: BeginType > (c.begin(), c.end()) {}
 };
 
 
@@ -66,7 +66,7 @@ public:
 	ChainedRange(const Range &_first, const Range &_second) : first(_first), second(_second) {}
 	bool empty() const { return first.empty() && second.empty(); }
 	bool firstEmpty() const { return first.empty(); }
-	typename RangeTypes<Range>::ElementType front() const { return first.empty() ? second.front() : first.front(); }
+	typename RangeTypes<Range>:: ElementType front() const { return first.empty() ? second.front() : first.front(); }
 	void popFront() { if (first.empty()) second.popFront(); else first.popFront(); }
 };
 
@@ -76,13 +76,13 @@ struct Range {
 	virtual void popFront() = 0;
 	virtual T front() const = 0;
 	virtual ~Range() { }
-	typedef T value_type; // I think I should remove this, it's confusing with the ::reference type common in many containers.
+	typedef T value_type; // I think I should remove this, it's confusing with the :: reference type common in many containers.
 	typedef T front_type; // The type returned by front()
 };
 
 template<class Iterator>
 struct RangeContainer
-: public Range< typename Iterator::reference >
+: public Range< typename Iterator :: reference >
 {
 	Iterator _current;
 	Iterator _last;
@@ -90,7 +90,7 @@ struct RangeContainer
 	}
 	virtual bool empty() const { return _current == _last; }
 	virtual void popFront() { ++_current; }
-	virtual typename Iterator::reference front() const { return *_current; }
+	virtual typename Iterator :: reference front() const { return *_current; }
 	virtual ~RangeContainer() {
 		_current = _last;
 	}
@@ -98,45 +98,45 @@ struct RangeContainer
 
 namespace amd {
 template <typename C>
-std::auto_ptr< Range< typename C::iterator::reference > > mk_range(C &c) {
-	return std::auto_ptr< Range<typename C::iterator::reference> > (new RangeContainer<typename C::iterator>(c.begin(), c.end()));
+std :: auto_ptr< Range< typename C :: iterator :: reference > > mk_range(C &c) {
+	return std :: auto_ptr< Range<typename C :: iterator :: reference> > (new RangeContainer<typename C :: iterator>(c.begin(), c.end()));
 }
 template <typename C>
-std::auto_ptr< Range< typename C::const_iterator::reference > > mk_range(const C &c) {
-	return std::auto_ptr< Range<typename C::const_iterator::reference> > (new RangeContainer<typename C::const_iterator>(c.begin(), c.end())); 
+std :: auto_ptr< Range< typename C :: const_iterator :: reference > > mk_range(const C &c) {
+	return std :: auto_ptr< Range<typename C :: const_iterator :: reference> > (new RangeContainer<typename C :: const_iterator>(c.begin(), c.end())); 
 }
 template <typename C>
-std::auto_ptr< Range< typename C::reverse_iterator::reference > > mk_reverse_range(C &c) {
-	return std::auto_ptr< Range<typename C::reverse_iterator::reference> > (new RangeContainer<typename C::reverse_iterator>(c.rbegin(), c.rend()));
+std :: auto_ptr< Range< typename C :: reverse_iterator :: reference > > mk_reverse_range(C &c) {
+	return std :: auto_ptr< Range<typename C :: reverse_iterator :: reference> > (new RangeContainer<typename C :: reverse_iterator>(c.rbegin(), c.rend()));
 }
 template <typename C>
-std::auto_ptr< Range< typename C::const_reverse_iterator::reference > > mk_reverse_range(const C &c) {
-	return std::auto_ptr< Range<typename C::const_reverse_iterator::reference> > (new RangeContainer<typename C::const_reverse_iterator>(c.rbegin(), c.rend())); 
+std :: auto_ptr< Range< typename C :: const_reverse_iterator :: reference > > mk_reverse_range(const C &c) {
+	return std :: auto_ptr< Range<typename C :: const_reverse_iterator :: reference> > (new RangeContainer<typename C :: const_reverse_iterator>(c.rbegin(), c.rend())); 
 }
 
 
-class RangeOverStream : public Range<std::string> {
-	std::istream &istr;
+class RangeOverStream : public Range<std :: string> {
+	std :: istream &istr;
 	const char * delims;
 	bool isEmpty;
-	std::string currentLine;
+	std :: string currentLine;
 	void nextLine();
 public:
-	RangeOverStream(std::istream &_istr, const char * _delims);
+	RangeOverStream(std :: istream &_istr, const char * _delims);
 	bool empty() const;
-	std::string front() const;
+	std :: string front() const;
 	void popFront();
 };
-std::auto_ptr< Range<std::string> > rangeOverStream(std::istream &_istr, const char * _delims = "\n");
+std :: auto_ptr< Range<std :: string> > rangeOverStream(std :: istream &_istr, const char * _delims = "\n");
 
 template<class T, class F>
-class RangeMapper : public Range<typename boost::result_of<F(typename T::value_type)>::type> { // T is a range. F is a function which is applied to members of T. The type of this RangeMapper is the result of F applied to elements of T
+class RangeMapper : public Range<typename boost :: result_of<F(typename T :: value_type)>:: type> { // T is a range. F is a function which is applied to members of T. The type of this RangeMapper is the result of F applied to elements of T
 	T mapped;
 	typedef T source_range_type;
-	typedef typename source_range_type::value_type source_value_type;
+	typedef typename source_range_type :: value_type source_value_type;
 	F f;
 public:
-	typedef typename boost::result_of<F(typename T::value_type)>::type value_type;
+	typedef typename boost :: result_of<F(typename T :: value_type)>:: type value_type;
 	RangeMapper(const T & mapped_, F f_) : mapped(mapped_), f(f_) {}
 	bool empty() const { return mapped.empty(); }
 	void popFront() { mapped.popFront(); }
@@ -155,11 +155,11 @@ RangeMapper<T, F> map_range(const F &f, const T& m) {
 }
 
 template<class R, class P>
-class RangeFilter : public Range<typename R::value_type> {
+class RangeFilter : public Range<typename R :: value_type> {
 	R r;
 	P p;
 public:
-	typedef typename R::value_type value_type;
+	typedef typename R :: value_type value_type;
 	RangeFilter(const R& _r, const P& _p) : r(_r), p(_p) {
 		if(!r.empty() && !p(r.front())) {
 			this->popFront();
@@ -211,16 +211,16 @@ RangeEnum<I> make_counter_range(I first) {
 }
 
 template<class L, class R>
-class RangeZipper : public Range< std::pair<
-		 				typename std::tr1::remove_reference<typename L::value_type>::type
-						,typename std::tr1::remove_reference<typename R::value_type>::type
+class RangeZipper : public Range< std :: pair<
+		 				typename std :: tr1 :: remove_reference<typename L :: value_type>:: type
+						,typename std :: tr1 :: remove_reference<typename R :: value_type>:: type
 			> > {
 	L l;
 	R r;
 public:
-	typedef std::pair<
-		 typename std::tr1::remove_reference<typename L::value_type>::type
-		,typename std::tr1::remove_reference<typename R::value_type>::type
+	typedef std :: pair<
+		 typename std :: tr1 :: remove_reference<typename L :: value_type>:: type
+		,typename std :: tr1 :: remove_reference<typename R :: value_type>:: type
 	> value_type;
 	RangeZipper(const L &l_, const R &r_) : l(l_), r(r_) {}
 	virtual bool empty() const { return l.empty() || r.empty(); }
@@ -235,11 +235,11 @@ RangeZipper<L,R> zip(const L &l, const R &r) {
 }
 
 template<class L, class R>
-class RangeChain : public Range< typename L::value_type > {
+class RangeChain : public Range< typename L :: value_type > {
 	L l;
 	R r;
 public:
-	typedef typename L::value_type value_type;
+	typedef typename L :: value_type value_type;
 	RangeChain(const L &l_, const R &r_) : l(l_), r(r_) {}
 	virtual bool empty() const { return l.empty() && r.empty(); }
 	virtual value_type front() const {
@@ -278,9 +278,9 @@ RangeChain<L,R> chain(const L &l, const R &r) {
 		for(DECL = (crazy234identifier.second).front() ; crazy234identifier.first ; crazy234identifier.first=false)      
 
 template <class Type>
-class auto_ptrWithPairedBool : public std::auto_ptr<Type> {
+class auto_ptrWithPairedBool : public std :: auto_ptr<Type> {
 public:
-	auto_ptrWithPairedBool(Type *p) : std::auto_ptr<Type> (p), interrupted(false) {}
+	auto_ptrWithPairedBool(Type *p) : std :: auto_ptr<Type> (p), interrupted(false) {}
 	bool interrupted;
 };
 

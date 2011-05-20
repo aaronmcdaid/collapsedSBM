@@ -58,14 +58,14 @@ namespace sbm {
 			return l.first < r.first;
 		}
 	};
-	State::State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
+	State :: State(const GraphType * const g, const shmGraphRaw :: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
 		// inform EdgeCounts of all the edges
 		this->total_edge_weight = 0.0L;
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->_g->EndPoints(relId);
 			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
@@ -89,16 +89,16 @@ namespace sbm {
 	}
 	Cluster :: Cluster() : _order(0) {
 	}
-	const int Cluster::order() const {
+	const int Cluster :: order() const {
 		// assert( this->_order == (int)this->members.size() ) ;
 		return this->_order;
 	}
-	std::list<int>::iterator Cluster::newMember(const int n) {
+	std :: list<int>:: iterator Cluster :: newMember(const int n) {
 		this->members.push_front(n);
 		++ this->_order;
 		return this->members.begin();
 	}
-	void Cluster :: eraseMember(const std::list<int>::iterator it) {
+	void Cluster :: eraseMember(const std :: list<int>:: iterator it) {
 		this->members.erase(it); // fix up this->clusters.members
 		this->_order --;
 	}
@@ -106,7 +106,7 @@ namespace sbm {
 		return members;
 	}
 
-	int Labelling:: appendEmptyCluster() {
+	int Labelling :: appendEmptyCluster() {
 		const int emptyClusterId = this->_k;
 		Cluster * newCluster = new Cluster();
 		this->clusters.push_back(newCluster);
@@ -114,13 +114,13 @@ namespace sbm {
 		this->SumOfLog2Facts += LOG2GAMMA(this->_alpha);
 		return emptyClusterId;
 	}
-	int State:: appendEmptyCluster() {
+	int State :: appendEmptyCluster() {
 		this->labelling.appendEmptyCluster();
 		const int newClusterID = this->_k;
 		this->_k ++;
 		return newClusterID;
 	}
-	void Labelling:: deleteClusterFromTheEnd() {
+	void Labelling :: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
 		Cluster * clusterToDelete = this->clusters.at(this->_k - 1);
 		assert(clusterToDelete->order() == 0);
@@ -129,7 +129,7 @@ namespace sbm {
 		this->_k --;
 		this->SumOfLog2Facts -= LOG2GAMMA(this->_alpha);
 	}
-	void State:: deleteClusterFromTheEnd() {
+	void State :: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
 		this->_k --;
 		this->labelling.deleteClusterFromTheEnd();
@@ -149,13 +149,13 @@ namespace sbm {
 					;
 	}
 	void Labelling :: fixUpIterators(const int n, Cluster *cl, Cluster *oldcl) {
-		const list<int>::iterator it = this->its.at(n);
+		const list<int>:: iterator it = this->its.at(n);
 		assert(*it == n);
 		oldcl->eraseMember(it);
-		const list<int>::iterator newit = cl->newMember(n); // fix up this->clusters.members
+		const list<int>:: iterator newit = cl->newMember(n); // fix up this->clusters.members
 		this->its.at(n) = newit; // fix up this->its
 	}
-	int Labelling:: moveNode(const int n, const int newClusterID) {
+	int Labelling :: moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
 		const int _k = int(this->clusters.size());
@@ -179,10 +179,10 @@ namespace sbm {
 		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
 	}
-	void State::moveNode(const int n, const int newClusterID) {
+	void State :: moveNode(const int n, const int newClusterID) {
 		this->labelling.moveNode(n, newClusterID);
 	}
-	int State::isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
+	int State :: isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
 		const int newClusterID = this->appendEmptyCluster();
 		const int oldClusterID = this->labelling.cluster_id.at(n);
@@ -196,7 +196,7 @@ namespace sbm {
 
 		return newClusterID;
 	}
-	void State::unIsolateTempNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
+	void State :: unIsolateTempNode(const int n, const int newClusterID) { // move a node from its 'temporary' cluster to an existing cluster
 		const int oldClusterID = this->labelling.cluster_id.at(n);
 		this->moveNode(n, newClusterID);
 		assert(oldClusterID+1 == this->_k);
@@ -205,7 +205,7 @@ namespace sbm {
 		this->informNodeMove(n, oldClusterID, newClusterID);
 	}
 
-	void State:: summarizeEdgeCounts() const {
+	void State :: summarizeEdgeCounts() const {
 		for (int i=0; i<this->_k; i++)
 		for (int j=0; j<this->_k; j++)
 		{
@@ -218,7 +218,7 @@ namespace sbm {
 			}
 		}
 	}
-	void State:: blockDetail(const ObjectiveFunction *obj) const {
+	void State :: blockDetail(const ObjectiveFunction *obj) const {
 		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
 
@@ -271,12 +271,12 @@ namespace sbm {
 		assert(total_edge_weight_verification == this->total_edge_weight);
 	}
 
-	void State::internalCheck() const {
+	void State :: internalCheck() const {
 		assert(this->_k>0);
 		assert(this->_k == (int)this->labelling.clusters.size());
 		assert(this->_N == (int)this->labelling.cluster_id.size());
 		assert(this->_N == (int)this->labelling.its.size());
-		boost::unordered_set<int> alreadyConsidered;
+		boost :: unordered_set<int> alreadyConsidered;
 		long double sumVerify = 0.0L;
 		long double sumVerifyFacts = 0.0L;
 		long double sumVerifyInternal = 0.0L;
@@ -284,7 +284,7 @@ namespace sbm {
 		for(int CL = 0; CL < this->_k; CL++) {
 			const Cluster *cl = this->labelling.clusters.at(CL);
 			assert(cl);
-			for(list<int>::const_iterator i = cl->get_members().begin(); i!=cl->get_members().end(); i++) {
+			for(list<int>:: const_iterator i = cl->get_members().begin(); i!=cl->get_members().end(); i++) {
 				const int n = *i;
 				assert(n>=0 && n<this->_N);
 				bool wasAccepted = alreadyConsidered.insert(n).second;
@@ -310,7 +310,7 @@ namespace sbm {
 			long double total_edge_weight_verification = 0.0L;
 			long double total_edge_weight_Inside_verification = 0.0L; // just the edges that are inside a cluster
 			long double total_edge_weight_Outside_verification = 0.0L; // just the edges that are from one cluster to another
-			// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts))
+			// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd :: mk_range(this->_edgeCounts.counts))
 			for(int i=0; i<this->_k; i++)
 			for(int j=0; j<this->_k; j++)
 			{
@@ -337,7 +337,7 @@ namespace sbm {
 		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std::pair<int, int> & eps = this->_g->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->_g->EndPoints(relId);
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
@@ -352,7 +352,7 @@ namespace sbm {
 			}
 		}
 		/*
-		// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd::mk_range(this->_edgeCounts.counts))
+		// forEach(const State :: EdgeCounts :: map_type :: value_type  &x, amd :: mk_range(this->_edgeCounts.counts))
 		for(int i=0; i<this->_k; i++)
 		for(int j=0; j<this->_k; j++)
 		{
@@ -365,7 +365,7 @@ namespace sbm {
 				edgeCountsVerification.counts.erase(x.first);
 			}
 		}
-		forEach(const State :: EdgeCounts :: map_type :: value_type &x, amd::mk_range(edgeCountsVerification.counts)) {
+		forEach(const State :: EdgeCounts :: map_type :: value_type &x, amd :: mk_range(edgeCountsVerification.counts)) {
 			assert(x.second == 0.0L);
 		}
 		*/
@@ -429,7 +429,7 @@ namespace sbm {
 		}
 	}
 
-	void State:: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
+	void State :: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
 		int nonEmptyK = 0;
@@ -440,7 +440,7 @@ namespace sbm {
 		PP(nonEmptyK);
 		PP(this->pmf(obj));
 		if (!this->_mega) {
-			forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
+			forEach( const typeof(pair<string,int>) &node_name, amd :: mk_range(this->nodeNamesInOrder))
 			{
 				const int n = node_name.second;
 				// PP2(n, this->_g->NodeAsString(n));
@@ -457,7 +457,7 @@ namespace sbm {
 		if(groundTruth) {
 			assert(!groundTruth->empty());
 			vector<int> z_vector(this->_N);
-			forEach( const typeof(pair<string,int>) &node_name, amd::mk_range(this->nodeNamesInOrder))
+			forEach( const typeof(pair<string,int>) &node_name, amd :: mk_range(this->nodeNamesInOrder))
 			{
 				const int n = node_name.second;
 				cout << groundTruth->at(n);
@@ -485,7 +485,7 @@ namespace sbm {
 	}
 
 
-	long double & State:: EdgeCounts:: at(int i,int j) {
+	long double & State :: EdgeCounts :: at(int i,int j) {
 			assert(i>=0);
 				assert(j>=0);
 				if((int) this->counts.size() <= i)
@@ -495,7 +495,7 @@ namespace sbm {
 					y.resize(j+1);
 				return y.at(j);
 	}
-	long double State:: EdgeCounts:: read(int i, int j) const {
+	long double State :: EdgeCounts :: read(int i, int j) const {
 				assert(i>=0);
 				assert(j>=0);
 				if((int) this->counts.size() <= i)
@@ -505,9 +505,9 @@ namespace sbm {
 					y.resize(j+1);
 				return y.at(j);
 	}
-	State:: EdgeCounts:: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
+	State :: EdgeCounts :: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
 	}
-	void State::EdgeCounts::inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
+	void State :: EdgeCounts :: inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
@@ -519,7 +519,7 @@ namespace sbm {
 			this->externalEdgeWeight += l2h+h2l;
 		}
 	}
-	void State::EdgeCounts::uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
+	void State :: EdgeCounts :: uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
@@ -531,10 +531,10 @@ namespace sbm {
 			this->externalEdgeWeight -= l2h+h2l;
 		}
 	}
-	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+	void State :: informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
 		const boost :: unordered_set<int> & rels = this->_g->myRels(n);
-		forEach(const int relId, amd::mk_range(rels)) {
+		forEach(const int relId, amd :: mk_range(rels)) {
 			const pair<int,int> eps = this->_g->EndPoints(relId);
 			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);
 			const int sndClusterNew = this->labelling.cluster_id.at(eps.second);
@@ -552,13 +552,13 @@ namespace sbm {
 			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew, relId);
 		}
 	}
-	int State:: moveNodeAndInformOfEdges(const int n, const int newcl) {
+	int State :: moveNodeAndInformOfEdges(const int n, const int newcl) {
 		const int oldClusterID = this->labelling.cluster_id.at(n);
 		this->moveNode(n, newcl);
 		this->informNodeMove(n, oldClusterID, newcl);
 		return oldClusterID;
 	}
-	int State:: moveNodeAndInformOfEdges2(const int n, const int newcl) {
+	int State :: moveNodeAndInformOfEdges2(const int n, const int newcl) {
 		const int oldClusterID = this->labelling.cluster_id.at(n);
 		if(oldClusterID != newcl)
 			return this->moveNodeAndInformOfEdges(n, newcl);
@@ -569,11 +569,11 @@ namespace sbm {
 		// PP2(cl1,cl2);
 		const Cluster * CL1 = this->clusters.at(cl1);
 		const Cluster * CL2 = this->clusters.at(cl2);
-		forEach(int n, amd::mk_range(CL1->get_members())) {
+		forEach(int n, amd :: mk_range(CL1->get_members())) {
 			assert(this->cluster_id.at(n) == cl1);
 			       this->cluster_id.at(n) =  cl2 ;
 		}
-		forEach(int n, amd::mk_range(CL2->get_members())) {
+		forEach(int n, amd :: mk_range(CL2->get_members())) {
 			assert(this->cluster_id.at(n) == cl2);
 			       this->cluster_id.at(n) =  cl1 ;
 		}
@@ -596,16 +596,16 @@ namespace sbm {
 		swap(this->_edgeCounts.counts.at(cl1), this->_edgeCounts.counts.at(cl2));
 	}
 
-	long double State:: P_z_K() const { // 1 and 2
+	long double State :: P_z_K() const { // 1 and 2
 		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		return assertNonPositiveFinite(priorOnK);
 	}
-	long double State:: P_z_orders() const { // given our current this->_k, what's P(z | k)
+	long double State :: P_z_orders() const { // given our current this->_k, what's P(z | k)
 		return                        LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
 	}
 
-	long double State:: P_z_slow() const { // given our current this->_k, what's P(z | k)
+	long double State :: P_z_slow() const { // given our current this->_k, what's P(z | k)
 		const long double K_prior = this->P_z_K();
 		long double perCluster_bits = LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha);
 		for(int CL=0; CL < this->_k; CL++) {
@@ -622,13 +622,13 @@ namespace sbm {
 		assert(perCluster_bits == this->P_z_orders());
 		return assertNonPositiveFinite(K_prior + perCluster_bits);
 	}
-	long double State:: P_z() const { // given our current this->_k, what's P(z | k)
+	long double State :: P_z() const { // given our current this->_k, what's P(z | k)
 		const long double K_prior = this->P_z_K();
 		return assertNonPositiveFinite(K_prior + P_z_orders());
 	}
 
 	
-	long double State:: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
+	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
 		long double edges_bits = 0.0L;
 		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
@@ -701,18 +701,18 @@ namespace sbm {
 		return edges_bits;
 		// return assertNonPositiveFinite(edges_bits); // it doesn't *have* to be finite, just as in our Poisson model (due to the ignoring of x!)
 	}
-	long double State:: P_edges_given_z(const ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
+	long double State :: P_edges_given_z(const ObjectiveFunction *obj) const { // this function might be used to try faster ways to calculate the same data. Especially where there are lots of clusters in a small graph.
 		const long double slow = this->P_edges_given_z_slow(obj);
 		return assertNonPositiveFinite(slow);
 	}
 	struct BaseLineNotCorrectException {
 	};
-	long double State:: pmf_slow(const ObjectiveFunction *obj) const {
+	long double State :: pmf_slow(const ObjectiveFunction *obj) const {
 		const long double t = this->P_edges_given_z_slow(obj) + this->P_z_slow() ;
 		assert(isfinite(t));
 		return t;
 	}
-	long double State:: pmf(const ObjectiveFunction *obj) const {
+	long double State :: pmf(const ObjectiveFunction *obj) const {
 		return this->pmf_slow(obj);
 		/*
 		const long double fast = P_z_K() + P_z_orders() + this->P_edges_given_z_baseline() + this->P_edges_given_z_correction();
@@ -723,13 +723,13 @@ namespace sbm {
 	}
 
 	ObjectiveFunction :: ObjectiveFunction(const bool s, const bool d, const bool w) : selfloops(s), directed(d), weighted(w) {}
-	bool ObjectiveFunction:: isValidBlock(const int i, const int j) const {
+	bool ObjectiveFunction :: isValidBlock(const int i, const int j) const {
 		if(this->directed)
 			return true;
 		else
 			return j <=  i;
 	}
-	bool ObjectiveFunction:: isTwoSided(const int i, const int j) const{ // should the other direction be included when counting the edges?
+	bool ObjectiveFunction :: isTwoSided(const int i, const int j) const{ // should the other direction be included when counting the edges?
 		if(j==i) // get(i,j) == get(j,i) already
 			return false;
 		if(this->directed)

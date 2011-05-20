@@ -28,17 +28,17 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
-void runMMSB(const sbm::GraphType *g, const int commandLineK);
+void runSBM(const sbm :: GraphType *g, const int commandLineK, const shmGraphRaw :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
+void runMMSB(const sbm :: GraphType *g, const int commandLineK);
 
 // static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
 	for(int rel=0; rel<g->numRels(); rel++) {
-		std::pair<int,int> eps = g->EndPoints(rel);
-		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		std :: pair<int,int> eps = g->EndPoints(rel);
+		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
 		cout << rel
 			<< '\t' << eps.first << '"' << epsNames.first << '"'
 			<< '\t' << eps.second << '"' << epsNames.second << '"'
@@ -46,28 +46,13 @@ void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, 
 	}
 }
 // static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
 	for(int rel=0; rel<g->numRels(); rel++) {
-		std::pair<int,int> eps = g->EndPoints(rel);
-		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
-			<< endl;
-	}
-}
-// static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std::pair<int,int> eps = g->EndPoints(rel);
-		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		std :: pair<int,int> eps = g->EndPoints(rel);
+		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
 		cout << rel
 			<< '\t' << eps.first << '"' << epsNames.first << '"'
 			<< '\t' << eps.second << '"' << epsNames.second << '"'
@@ -76,13 +61,28 @@ void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, 
 	}
 }
 // static
-void dumpGraph(shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> *g, const shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
 	for(int rel=0; rel<g->numRels(); rel++) {
-		std::pair<int,int> eps = g->EndPoints(rel);
-		std::pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		std :: pair<int,int> eps = g->EndPoints(rel);
+		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
+			<< endl;
+	}
+}
+// static
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > & edge_details) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	PP(g->hasASelfLoop);
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std :: pair<int,int> eps = g->EndPoints(rel);
+		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
 		cout << rel
 			<< '\t' << eps.first << '"' << epsNames.first << '"'
 			<< '\t' << eps.second << '"' << epsNames.second << '"'
@@ -137,35 +137,35 @@ int main(int argc, char **argv) {
 	PP(sbm :: ObjectiveFunction_Poisson :: s);
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
-	sbm:: ObjectiveFunction *obj = NULL;
-	auto_ptr<shmGraphRaw:: ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g;
-	auto_ptr<shmGraphRaw:: EdgeDetailsInterface> edge_details_;
+	sbm :: ObjectiveFunction *obj = NULL;
+	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> > g;
+	auto_ptr<shmGraphRaw :: EdgeDetailsInterface> edge_details_;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
-		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: NoDetails >();
-		// auto_ptr<shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> > g (shmGraphRaw::loadEdgeList<shmGraphRaw::PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
-		g.reset(shmGraphRaw::loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
+		shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails >();
+		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> > g (shmGraphRaw :: loadEdgeList<shmGraphRaw :: PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
+		g.reset(shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
-		obj= 	new sbm:: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedNoWeights >();
-		g.reset (shmGraphRaw::loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
+		shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights >();
+		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
-		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: WeightNoDir >();
-		g.reset (shmGraphRaw::loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
+		shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir >();
+		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
-		obj= 	new sbm:: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights > *edge_details = new shmGraphRaw:: EdgeDetails< shmGraphRaw:: DirectedLDoubleWeights >();
-		g.reset (shmGraphRaw::loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
+		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
+		shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights >();
+		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
 	delete obj;
 }
 
-void randomize(sbm::State &s, const int K) { // randomize the partition and have K clusters in it
+void randomize(sbm :: State &s, const int K) { // randomize the partition and have K clusters in it
 	assert(s._k <= K);
 	assert(K >= 1);
 	while(s._k < K) {
@@ -290,7 +290,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 	return b;
 }
 
-long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
+long double delta_P_z_x__1RowOfBlocks(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
 long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative) {
 	// 1. Choose two clusters at random
@@ -517,7 +517,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 }
 
 // static
-long double gibbsOneNode(sbm::State &s, const sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
+long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1) {
 		AR->notify(false);
 		return 0.0L;
@@ -632,7 +632,7 @@ long double gibbsOneNode(sbm::State &s, const sbm:: ObjectiveFunction *obj, Acce
 		;
 }
 
-long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
+long double delta_P_z_x__1RowOfBlocks(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
 		// moving 1 isolated node into one cluster will affect some blocks.
 		// We're only interested in the blocks of clusters whose id is < pre_k
 		// i.e. there may have been many nodes isolated as part of the M3 move, but we're not interested in the interactions between them.
@@ -704,7 +704,7 @@ long double delta_P_z_x__1RowOfBlocks(sbm::State &s, const sbm:: ObjectiveFuncti
 }
 
 // static
-long double MoneNode(sbm::State &s, sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
+long double MoneNode(sbm :: State &s, sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
@@ -829,14 +829,14 @@ struct TwoChoices {
 		assert(isfinite(Pright));
 	}
 };
-static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
+static OneChoice M3_oneNode(sbm :: State &s, const int n, const int candCluster) {
 	// const long double pre = s.pmf(); // TODO remove this, and the corresponding check at the end
 	// given an isolated node, and a candidate cluster to join, what's the delta in the fitness?
 	
 	const int isolatedClusterID = s.labelling.cluster_id.at(n);
-	const sbm:: Cluster * isoCl = s.labelling.clusters.at(isolatedClusterID);
+	const sbm :: Cluster * isoCl = s.labelling.clusters.at(isolatedClusterID);
 	assert(isoCl->order() == 1);
-	const sbm:: Cluster * candCl = s.labelling.clusters.at(candCluster);
+	const sbm :: Cluster * candCl = s.labelling.clusters.at(candCluster);
 	assert(isolatedClusterID != candCluster);
 	const int old_order = candCl->order();
 	const int new_order = old_order+1;
@@ -887,7 +887,7 @@ static OneChoice M3_oneNode(sbm::State &s, const int n, const int candCluster) {
 
 	return OneChoice(delta2 , delta3 , delta4);
 }
-void M3_old(sbm::State &s) {
+void M3_old(sbm :: State &s) {
 	const bool verbose = false;
 	// cout << endl << "     ========== M3 =========" << endl;
 	const long double preM3   = s.pmf();
@@ -908,25 +908,25 @@ void M3_old(sbm::State &s) {
 	if(cl1 == cl2)
 		return;
 	if(verbose) cout << endl << "     ========== M3 (found two clusters) =========" << endl;
-	const sbm:: Cluster * CL1 = s.labelling.clusters.at(cl1);
-	const sbm:: Cluster * CL2 = s.labelling.clusters.at(cl2);
+	const sbm :: Cluster * CL1 = s.labelling.clusters.at(cl1);
+	const sbm :: Cluster * CL2 = s.labelling.clusters.at(cl2);
 	vector<int> allNodes;
-	boost::unordered_map<int, int> statusQuoClustering;
+	boost :: unordered_map<int, int> statusQuoClustering;
 	allNodes.insert(allNodes.end(), CL1->members.begin(), CL1->members.end());
 	allNodes.insert(allNodes.end(), CL2->members.begin(), CL2->members.end());
 	// PP(CL1->members.size());
 	// PP(CL2->members.size());
 	// PP(allNodes.size());
 	assert(CL1->members.size() + CL2->members.size() == allNodes.size());
-	forEach(int x, amd::mk_range(CL1->members)) { statusQuoClustering[x] = cl1; }
-	forEach(int y, amd::mk_range(CL2->members)) { statusQuoClustering[y] = cl2; }
-	// forEach(int x, amd::mk_range(CL1->members)) { PPt(x); } cout << endl;
-	// forEach(int y, amd::mk_range(CL2->members)) { PPt(y); } cout << endl;
+	forEach(int x, amd :: mk_range(CL1->members)) { statusQuoClustering[x] = cl1; }
+	forEach(int y, amd :: mk_range(CL2->members)) { statusQuoClustering[y] = cl2; }
+	// forEach(int x, amd :: mk_range(CL1->members)) { PPt(x); } cout << endl;
+	// forEach(int y, amd :: mk_range(CL2->members)) { PPt(y); } cout << endl;
 	random_shuffle(allNodes.begin(), allNodes.end());
-	// forEach(int z2, amd::mk_range(allNodes    )) { PPt(z2); } cout << endl;
+	// forEach(int z2, amd :: mk_range(allNodes    )) { PPt(z2); } cout << endl;
 	long double deltaSumOfTheStatusQuo = 0.0L;
 	long double log2ProductOfProposalProbabilitiesForStatusQuo = 0.0;
-	for(vector<int>::const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
+	for(vector<int>:: const_reverse_iterator remover = allNodes.rbegin(); remover != allNodes.rend(); ++remover) {
 		const int node_to_remove = *remover;
 		// PP(node_to_remove);
 		// const long double pre = s.pmf();
@@ -941,7 +941,7 @@ void M3_old(sbm::State &s) {
 		// assert(pre == pre1 + pre2 + pre3 + pre4);
 
 		const int old_clusterID = s.labelling.cluster_id.at(node_to_remove);
-		const sbm:: Cluster * old_cluster = s.labelling.clusters.at(old_clusterID);
+		const sbm :: Cluster * old_cluster = s.labelling.clusters.at(old_clusterID);
 		const int old_order = old_cluster->order();
 		assert(old_order>=1);
 		long double delta2 = -LOG2FACT(old_order);
@@ -1036,14 +1036,14 @@ void M3_old(sbm::State &s) {
 	bool IsRandomProposalIdenticalToStatusQuo = true;
 	{ // random proposal
 		// cout << endl << "  random proposals for M3" << endl << endl;
-		for(vector<int>::const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
+		for(vector<int>:: const_iterator adder = allNodes.begin(); adder != allNodes.end(); ++adder) {
 			// cout << endl << "  random proposal for M3" << endl << endl;
 			// const long double preM3OneRandom = s.pmf();
 			const int node_to_Add = *adder;
 			// PP(node_to_Add);
 			const int clID = s.labelling.cluster_id.at(node_to_Add);
 			assert(clID + 1 == s._k);
-			const sbm:: Cluster * clIsolated = s.labelling.clusters.at(clID);
+			const sbm :: Cluster * clIsolated = s.labelling.clusters.at(clID);
 			assert(clIsolated->order()==1);
 			assert(clIsolated->members.front()==node_to_Add);
 			// which of the two to add to?
@@ -1116,7 +1116,7 @@ void M3_old(sbm::State &s) {
 			cout << "M3 ACCEPT: " << acceptanceLog2 << endl;
 	} else {
 		// reject. let's put them all back
-		for(vector<int>::const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
+		for(vector<int>:: const_iterator reAdder = allNodes.begin(); reAdder != allNodes.end(); ++reAdder) {
 			// these should all be isolated nodes, and at the end of the list of clusters
 			const int node_to_reAdd = *reAdder;
 			// PP(node_to_reAdd);
@@ -1141,7 +1141,7 @@ void M3_old(sbm::State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-static long double MetropolisOnK(sbm::State &s, const sbm:: ObjectiveFunction *obj, AcceptanceRate *AR) {
+static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
@@ -1264,11 +1264,11 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 		assert((int)s.nodeNamesInOrder.size() == this->N);
 		cout << "  CountSharedCluster(" << this->denominator << ")" << endl;
 		//for(int n=0; n<N; n++)
-		forEach(const typeof(pair<string,int>) & node_name, amd::mk_range(s.nodeNamesInOrder))
+		forEach(const typeof(pair<string,int>) & node_name, amd :: mk_range(s.nodeNamesInOrder))
 		{
 			const int n = node_name.second;
 			//for(int m=0; m<N; m++)
-			forEach(const typeof(pair<string,int>) & node_name2, amd::mk_range(s.nodeNamesInOrder))
+			forEach(const typeof(pair<string,int>) & node_name2, amd :: mk_range(s.nodeNamesInOrder))
 			{
 				const int m = node_name2.second;
 				if(n==m)
@@ -1288,9 +1288,9 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw:: EdgeDetailsInterface * const edge_details, const sbm:: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+void runSBM(const sbm :: GraphType *g, const int commandLineK, const shmGraphRaw :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	PP2(g->numNodes(), g->numRels());
-	sbm::State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
+	sbm :: State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
@@ -1402,10 +1402,10 @@ void runSBM(const sbm::GraphType *g, const int commandLineK, const shmGraphRaw::
 	s.internalCheck();
 }
 
-void runMMSB(const sbm::GraphType *g, const int commandLineK) {
+void runMMSB(const sbm :: GraphType *g, const int commandLineK) {
 	assert(commandLineK > 1);
 	PP2(g->numNodes(), g->numRels());
-	sbm:: MMSBstate s(g);
+	sbm :: MMSBstate s(g);
 	PP(s._N);
 	// s.P_zs_given_K();
 	// cout << endl;

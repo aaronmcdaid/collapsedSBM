@@ -17,16 +17,16 @@ static inline double LOG2FACT(const int x) {
 }
 
 namespace sbm {
-typedef shmGraphRaw::ReadableShmGraphTemplate<shmGraphRaw::PlainMem> GraphType;
+typedef shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> GraphType;
 
 struct Cluster {
 private:
 		int _order;
-		std::list<int> members; // nodes ids of the members
+		std :: list<int> members; // nodes ids of the members
 public:
 		const int order() const;
-		std::list<int>::iterator newMember(const int n);
-		void eraseMember(const std::list<int>::iterator it);
+		std :: list<int>:: iterator newMember(const int n);
+		void eraseMember(const std :: list<int>:: iterator it);
 		const std :: list<int> & get_members() const;
 		Cluster();
 }; // each cluster to know which nodes are in it
@@ -35,9 +35,9 @@ struct Labelling {
 	const int _N;
 	int _k;
 	const long double _alpha;
-	std::vector< Cluster* > clusters; // numbered 0 to k-1
-	std::vector< int > cluster_id; // the cluster that each node is in
-	std::vector< std::list<int>::iterator > its; // an iterator into the relevant part of Cluster::members
+	std :: vector< Cluster* > clusters; // numbered 0 to k-1
+	std :: vector< int > cluster_id; // the cluster that each node is in
+	std :: vector< std :: list<int>:: iterator > its; // an iterator into the relevant part of Cluster :: members
 	int NonEmptyClusters;
 	mutable long double SumOfLog2Facts;
 	std :: vector<double> log2GammaAlphaPlus;
@@ -56,12 +56,12 @@ struct ObjectiveFunction;
 
 struct State {
 	const GraphType * const _g; // the graph
-	const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
+	const shmGraphRaw :: EdgeDetailsInterface * const _edge_details;
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
-	explicit State(const GraphType * const g, const shmGraphRaw:: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
+	explicit State(const GraphType * const g, const shmGraphRaw :: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
 
 	Labelling	labelling;
 	// the clustering
@@ -85,18 +85,18 @@ struct State {
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
-		const shmGraphRaw:: EdgeDetailsInterface * const _edge_details;
+		const shmGraphRaw :: EdgeDetailsInterface * const _edge_details;
 		mutable std :: vector< std :: vector<long double> > counts;
 		long double externalEdgeWeight;
-		EdgeCounts(const shmGraphRaw:: EdgeDetailsInterface *edge_details);
+		EdgeCounts(const shmGraphRaw :: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
 		long double & at(int i,int j) ;
 		long double read(int i, int j) const ;
 		private:
-		friend void State:: summarizeEdgeCounts() const;
-		friend void State:: internalCheck() const;
-		friend void State:: swapClusters(int,int);
+		friend void State :: summarizeEdgeCounts() const;
+		friend void State :: internalCheck() const;
+		friend void State :: swapClusters(int,int);
 	};
 	void informNodeMove(const int n, const int oldcl, const int newcl); // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 	int moveNodeAndInformOfEdges(const int n, const int newcl);

@@ -1,4 +1,4 @@
-void randomize(sbm::State &s, const int K);
+void randomize(sbm :: State &s, const int K);
 struct AcceptanceRate {
 	vector<bool> acc;
 	map<int,int> mostRecent; // in order to do a moving average

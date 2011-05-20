@@ -4,45 +4,45 @@
 #define SIMPLER_Z 2
 #define SIMPLER_EDGES 2
 namespace sbm {
-	void PairCounts:: set(const int i, const int j, const int to) {
+	void PairCounts :: set(const int i, const int j, const int to) {
 		assert(to >= 0);
-		this-> operator [] (std::make_pair(i,j)) = to;
-		this-> operator [] (std::make_pair(j,i)) = to;
-		if(this-> at(std::make_pair(i,j)) == 0) {
-			this-> erase(std::make_pair(i,j));
+		this-> operator [] (std :: make_pair(i,j)) = to;
+		this-> operator [] (std :: make_pair(j,i)) = to;
+		if(this-> at(std :: make_pair(i,j)) == 0) {
+			this-> erase(std :: make_pair(i,j));
 			if(i!=j)
-				this-> erase(std::make_pair(j,i));
+				this-> erase(std :: make_pair(j,i));
 			cout << __LINE__ << endl;
-			this-> at(std::make_pair(i,j));
+			this-> at(std :: make_pair(i,j));
 			cout << __LINE__ << endl;
 		}
 	}
-	void PairCounts:: inc(const int i, const int j) {
-		this-> operator [] (std::make_pair(i,j)) ++;
+	void PairCounts :: inc(const int i, const int j) {
+		this-> operator [] (std :: make_pair(i,j)) ++;
 		if(i!=j)
-			this-> operator [] (std::make_pair(j,i)) ++;
+			this-> operator [] (std :: make_pair(j,i)) ++;
 	}
-	void PairCounts:: dec(const int i, const int j) {
-		assert(this-> count (std::make_pair(i,j)) > 0);
-		assert(this-> count (std::make_pair(j,i)) > 0);
-		assert(this-> at    (std::make_pair(i,j)) > 0);
-		assert(this-> at    (std::make_pair(j,i)) > 0);
-		this-> operator [] (std::make_pair(i,j)) --;
+	void PairCounts :: dec(const int i, const int j) {
+		assert(this-> count (std :: make_pair(i,j)) > 0);
+		assert(this-> count (std :: make_pair(j,i)) > 0);
+		assert(this-> at    (std :: make_pair(i,j)) > 0);
+		assert(this-> at    (std :: make_pair(j,i)) > 0);
+		this-> operator [] (std :: make_pair(i,j)) --;
 		if(i!=j)
-			this-> operator [] (std::make_pair(j,i)) --;
-		if(this-> at(std::make_pair(i,j)) == 0) {
-			this-> erase(std::make_pair(i,j));
+			this-> operator [] (std :: make_pair(j,i)) --;
+		if(this-> at(std :: make_pair(i,j)) == 0) {
+			this-> erase(std :: make_pair(i,j));
 		}
-		if(i != j && this-> at(std::make_pair(j,i)) == 0) {
-			this-> erase(std::make_pair(j,i));
+		if(i != j && this-> at(std :: make_pair(j,i)) == 0) {
+			this-> erase(std :: make_pair(j,i));
 		}
 	}
-	int   PairCounts:: get(const int i, const int j) const {
-			if (this->count(std::make_pair(i,j))==0)
+	int   PairCounts :: get(const int i, const int j) const {
+			if (this->count(std :: make_pair(i,j))==0)
 				return 0;
-			return this-> at(std::make_pair(i,j));
+			return this-> at(std :: make_pair(i,j));
 	}
-	MMSBstate:: MMSBstate (const GraphType * const g): _g(g), _N(g->numNodes()), _k(1) {
+	MMSBstate :: MMSBstate (const GraphType * const g): _g(g), _N(g->numNodes()), _k(1) {
 		for(int i=0; i< this->_N; i++) {
 			ls.push_back(new Labelling(_N, 1.0L));
 		}
@@ -60,7 +60,7 @@ namespace sbm {
 			assert(wasInserted);
 		}
 	};
-	void MMSBstate:: appendEmptyCluster() {
+	void MMSBstate :: appendEmptyCluster() {
 		for(int i=0; i< this->_N; i++) {
 			Labelling * l = ls.at(i);
 			assert(l);
@@ -69,15 +69,15 @@ namespace sbm {
 		}
 		this->_k ++;
 	}
-	long double MMSBstate:: P_z_K() const { // 1 and 2
+	long double MMSBstate :: P_z_K() const { // 1 and 2
 		// const long double priorOnK = -this->_k; // Exponential prior on K
 		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
 		const long double K_dependant_bits = priorOnK + LOG2GAMMA(this->_k) - LOG2GAMMA(this->_k + this->_N);
-		return sbm:: assertNonPositiveFinite_line(K_dependant_bits, __LINE__);
+		return sbm :: assertNonPositiveFinite_line(K_dependant_bits, __LINE__);
 	}
-	void MMSBstate:: P_zs_given_K() const {
+	void MMSBstate :: P_zs_given_K() const {
 		cout << endl << "  P_zs_given_K()" << endl;
-		forEach(int nodeName, amd::mk_range(this->nodeNames))
+		forEach(int nodeName, amd :: mk_range(this->nodeNames))
 		// for(int i=0; i< this->_N; i++)
 		{
 			const int i = this->_g->StringToNodeId(printfstring("%d", nodeName).c_str());
@@ -124,9 +124,9 @@ namespace sbm {
 		// PP(x);
 		x -= M_LOG2E * gsl_sf_lnchoose(n, k);
 		// PP(x);
-		return sbm:: assertNonPositiveFinite_line(x, __LINE__);
+		return sbm :: assertNonPositiveFinite_line(x, __LINE__);
 	}
-	long double MMSBstate:: pmf_slow() const {
+	long double MMSBstate :: pmf_slow() const {
 		// this will check that numEdges and numPairs as well as calculate everything
 		long double log2facts = 0.0L;
 		for(int i=0; i<this->_N; i++) {
@@ -170,11 +170,11 @@ namespace sbm {
 			DYINGWORDS(this->numEdges.size() == numEdgesVerify.size()) {
 				PP2(this->numEdges.size() , numEdgesVerify.size());
 				cout << " numEdgesVerify" << endl;
-				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd::mk_range(numEdgesVerify)) {
+				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd :: mk_range(numEdgesVerify)) {
 					PP3(x.first.first,x.first.second,x.second);
 				}
 				cout << " this->numEdges" << endl;
-				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd::mk_range(this->numEdges)) {
+				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd :: mk_range(this->numEdges)) {
 					PP3(x.first.first,x.first.second,x.second);
 				}
 			}
@@ -183,11 +183,11 @@ namespace sbm {
 			DYINGWORDS(this->numPairs.size() == numPairsVerify.size()) {
 				PP2(this->numPairs.size() , numPairsVerify.size());
 				cout << " numPairsVerify" << endl;
-				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd::mk_range(numPairsVerify)) {
+				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd :: mk_range(numPairsVerify)) {
 					PP3(x.first.first,x.first.second,x.second);
 				}
 				cout << " this->numPairs" << endl;
-				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd::mk_range(this->numPairs)) {
+				forEach(const typeof(pair< pair<int,int> ,int>) &x, amd :: mk_range(this->numPairs)) {
 					PP3(x.first.first,x.first.second,x.second);
 				}
 			}
@@ -209,7 +209,7 @@ namespace sbm {
 		PP3(SIMPLER_Z*log2facts , edges_bits, SIMPLER_Z*log2facts+SIMPLER_EDGES*edges_bits);
 		return SIMPLER_Z*log2facts + SIMPLER_EDGES*edges_bits;
 	}
-	long double MMSBstate:: moveOnePair(const int w,const int v,const int clid) const { // node w, when interacting with v, should take identity clid
+	long double MMSBstate :: moveOnePair(const int w,const int v,const int clid) const { // node w, when interacting with v, should take identity clid
 		const bool verbose = false;
 		assert(w!=v);
 		assert(clid >= 0 && clid < this->_k);
@@ -278,7 +278,7 @@ namespace sbm {
 
 		return delta;
 	}
-	int MMSBstate:: performMoveAndUpdateEdges(const int w, const int v, const int clid) {
+	int MMSBstate :: performMoveAndUpdateEdges(const int w, const int v, const int clid) {
 		assert(w!=v); // TODO: need to move efficiently store the Labelling, given that self loops are meaningless
 		const bool areConnected = this->_g->are_connected(w,v);
 		Labelling * l = ls.at(w);
@@ -294,7 +294,7 @@ namespace sbm {
 				this->numEdges.inc(fixed_id, clid);
 		return old_clid;
 	}
-	long double MMSBstate:: MetropolisMoveOnePair(const int w,const int v,const int clid) { // node w, when interacting with v, should take identity clid
+	long double MMSBstate :: MetropolisMoveOnePair(const int w,const int v,const int clid) { // node w, when interacting with v, should take identity clid
 		const Labelling * l = ls.at(w);
 		const int old_clid = l->cluster_id.at(v);
 		if(old_clid == clid) {

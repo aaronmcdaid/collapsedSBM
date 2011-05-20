@@ -5,16 +5,16 @@
 using namespace std;
 
 namespace amd {
-void create_directory(const std::string& directory) throw() {
+void create_directory(const std :: string& directory) throw() {
 	errno=0;
 	mkdir(directory.c_str(), S_IRWXU|S_IRWXG);
 
 	if(errno && errno!=EEXIST)
-		throw std::ios_base::failure("Attemping to create directory:" + directory);
+		throw std :: ios_base :: failure("Attemping to create directory:" + directory);
 	
 }
-	ConnectedComponents::ConnectedComponents() : C(-1) {}
-	void ConnectedComponents::setNumCliques(int _C) {
+	ConnectedComponents :: ConnectedComponents() : C(-1) {}
+	void ConnectedComponents :: setNumCliques(int _C) {
 		assert(this->C==-1);
 		this->C = _C;
 		this->component.resize(C);
@@ -28,7 +28,7 @@ void create_directory(const std::string& directory) throw() {
 			prev     .at(i) = i;
 		}
 	}
-	bool ConnectedComponents::joinNodesIntoSameComponent(int cl1, int cl2) {
+	bool ConnectedComponents :: joinNodesIntoSameComponent(int cl1, int cl2) {
 		assert(this->C>0); // This is important. This represents the uninitialized components. We don't care about k=2 or k=1
 		assert(cl1 != cl2);
 		const int comp1 = this->component.at(cl1);

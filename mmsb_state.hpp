@@ -1,6 +1,6 @@
 #include "sbm_state.hpp"
 namespace sbm {
-	struct PairCounts : public boost::unordered_map< std::pair<int,int>, int > {
+	struct PairCounts : public boost :: unordered_map< std :: pair<int,int>, int > {
 		void  set(const int i, const int j, const int to);
 		void  inc(const int i, const int j);
 		void  dec(const int i, const int j);
@@ -9,9 +9,9 @@ namespace sbm {
 	struct MMSBstate {
 		const GraphType * const _g;
 		const int _N;
-		std::set<int> nodeNames; // an int because we want the ints in numerical order. This won't work with string ids though. TODO
+		std :: set<int> nodeNames; // an int because we want the ints in numerical order. This won't work with string ids though. TODO
 		int _k;
-		std::vector<Labelling*> ls; // one labelling for each node
+		std :: vector<Labelling*> ls; // one labelling for each node
 		PairCounts numPairs;
 		PairCounts numEdges;
 

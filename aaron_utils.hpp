@@ -33,9 +33,9 @@ enum {FALSE=0, TRUE=1};
 #define PP3(x,y,z)             cout << #x << ',' << #y << ',' << #z                              << ":\t" << x << " , " << y << " , " << z << endl
 #define PP4(x,y,z,w)           cout << #x << ',' << #y << ',' << #z << ',' << #w                 << ":\t" << x << " , " << y << " , " << z << " , " << w << endl
 #define PPLg(x) Pn("%s:%20.11Lg", #x, x)
-std::string thousandsSeparated(uint64 x);
+std :: string thousandsSeparated(uint64 x);
 #define PPdec(x) cout << #x << ":" << thousandsSeparated(x) << endl
-#define PPhex(x) cout << #x << ":" << std::hex << std::setw(20) << x << std::dec << endl
+#define PPhex(x) cout << #x << ":" << std :: hex << std :: setw(20) << x << std :: dec << endl
 #define Print(x)  P("%s", show(x).c_str())
 #define Printn(x) P("%s\n", show(x).c_str())
 #define v1(...) do { if(global_verbose_flag)  PP(__VA_ARGS__); } while(0)
@@ -56,9 +56,9 @@ enum {
 int testForError(FILE * x);
 int testForError(int x);
 
-std::string show(int64 x);
-std::string show(const char * x);
-std::string show(const std::string &x);
+std :: string show(int64 x);
+std :: string show(const char * x);
+std :: string show(const std :: string &x);
 
 class runningAverage {
 	int64 total;
@@ -66,7 +66,7 @@ class runningAverage {
 public:
 	runningAverage();
 	void operator() (int64 i);
-	std::string operator() (void) const;
+	std :: string operator() (void) const;
 } ;
 #define unless(x) if(!(x))
 
@@ -97,7 +97,7 @@ struct StopWatch { // TODO: put the stopWatch in another file?
 		last_laptime = tp;
 	}
 	void laptime(void) { laptime(""); }
-	void laptime(const std::string &tag) {
+	void laptime(const std :: string &tag) {
 		struct timeval tp_new;
 		gettimeofday(&tp_new, NULL);
 		double sinceStart   = (double)(tp_new.tv_sec - tp.tv_sec) + (double)(tp_new.tv_usec - tp.tv_usec) / 1000000;
@@ -113,25 +113,25 @@ struct StopWatch { // TODO: put the stopWatch in another file?
 
 template<class K, class V> class maxOnlymap : public map<K, V> {
 public:
-	pair<typename map<K,V>::iterator,bool> insert ( const typename map<K,V>::value_type& x ) {
+	pair<typename map<K,V>:: iterator,bool> insert ( const typename map<K,V>:: value_type& x ) {
 		if(this->empty()) {
-			return map<K,V>::insert(x);
+			return map<K,V>:: insert(x);
 		}
 		if(x.first <= this->begin()->first ) {
 			return make_pair(this->end(), true); // ignore it.
 		}
 		this->clear();
-		return map<K,V>::insert(x);
+		return map<K,V>:: insert(x);
 	}
 };
 
 struct Timer {
 	struct timeval start;
-	std::string _s;
+	std :: string _s;
 	Timer() {
 		gettimeofday(&start, NULL);
 	}
-	Timer(const std::string &s): _s(s) {
+	Timer(const std :: string &s): _s(s) {
 		gettimeofday(&start, NULL);
 	}
 	double age() const {
@@ -145,8 +145,8 @@ struct Timer {
 		P("                                                                          "); cout << "Timer " << _s << ": " << diff << " s" << endl;
 	}
 };
-#define uset std::tr1::unordered_set
-#define umap std::tr1::unordered_map
+#define uset std :: tr1 :: unordered_set
+#define umap std :: tr1 :: unordered_map
 
 namespace amd {
 
@@ -156,14 +156,14 @@ bool fileExists(const char *);
 struct DebugCounter {
 	int count;
 	int freq;
-	std::string s;
-	DebugCounter(const std::string &_s, int _freq = 1000);
+	std :: string s;
+	DebugCounter(const std :: string &_s, int _freq = 1000);
 	void operator++ ();
 };
 
 template<class T>
 void Histogram(T r) {
-	typedef typename tr1::remove_const<typename tr1::remove_reference<typename T::value_type>::type>::type V;
+	typedef typename tr1 :: remove_const<typename tr1 :: remove_reference<typename T :: value_type>:: type>:: type V;
 	map<V, int> freqs;
 	size_t total = 0;
 	while(!r.empty()) {
@@ -181,8 +181,8 @@ void Histogram(T r) {
 }
 template<class T1, class T2>
 void TwoWayTable(T1 r1, T2 r2) {
-	typedef typename tr1::remove_const<typename tr1::remove_reference<typename T1::value_type>::type>::type V1;
-	typedef typename tr1::remove_const<typename tr1::remove_reference<typename T2::value_type>::type>::type V2;
+	typedef typename tr1 :: remove_const<typename tr1 :: remove_reference<typename T1 :: value_type>:: type>:: type V1;
+	typedef typename tr1 :: remove_const<typename tr1 :: remove_reference<typename T2 :: value_type>:: type>:: type V2;
 	map<V1, int> xs;
 	map<V2, int> ys;
 	map<pair<V1,V2>, int> freqs;
@@ -229,7 +229,7 @@ void TwoWayTable(T1 r1, T2 r2) {
 }
 
 template<class C>
-typename C::value_type constAt(const C &c, int i) {
+typename C :: value_type constAt(const C &c, int i) {
 	return c.at(i);
 }
 
@@ -258,6 +258,6 @@ ostream & operator<< (ostream &str, const FormatFlagStack :: PopT  & pusher);
 
 #define VERYCLOSE(a,b) (1e-10 > fabs((a)-(b)))
 
-#define printfstring(...) ({ char str[1000]; sprintf(str, __VA_ARGS__) ; (std::string (str)); })
+#define printfstring(...) ({ char str[1000]; sprintf(str, __VA_ARGS__) ; (std :: string (str)); })
 
 #endif
