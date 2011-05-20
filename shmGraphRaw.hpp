@@ -254,7 +254,7 @@ struct WeightNoDir {
 };
 
 template<class W>
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char * directory = NULL);
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details);
 
 struct SelfLoopsNotSupported : public std::exception {
 };
