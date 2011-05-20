@@ -170,7 +170,7 @@ class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const typename nodeWithName_set<T>::t *nodesRO;
 	const typename shmGraphRaw :: relationship_set *relationshipsRO;
-	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
+	const typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
 	const typename boost :: unordered_set<int> *empty_set_for_neighboursRO;
 public:
@@ -192,7 +192,7 @@ template<class T>
 /* virtual */ int DumbGraphReadableTemplate<T>::numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
 template<class T>
 /* virtual */ const boost :: unordered_set<int> & DumbGraphReadableTemplate<T>::myRels(int n) const {
-		typename T::neighbours_to_relationships_map::const_iterator i = neighbouring_relationshipsRO->find(n);
+		typename shmGraphRaw :: neighbours_to_relationships_map :: const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
 			return *empty_set_for_neighboursRO;
 		}
@@ -245,7 +245,7 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 
 	typename nodeWithName_set<T>::t *nodes;
 	typename shmGraphRaw :: relationship_set *relationships;
-	typename T::neighbours_to_relationships_map *neighbouring_relationships;
+	typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationships;
 public:
 	ModifiableStringArray *strings_wrap;
 public:
@@ -280,7 +280,7 @@ public:
 			assert(p.second      == insertionResult.first->nodeIds.second  );
 			assert(insertionResult.second);
 			{ // add this to the neighbouring relationships object too
-				typename T::neighbours_to_relationships_map::iterator i;
+				typename shmGraphRaw :: neighbours_to_relationships_map ::iterator i;
 				{
 					i = neighbouring_relationships->find(p.first);
 					if(i == neighbouring_relationships->end())
@@ -307,7 +307,7 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 		nodes         = new nodeWithName_set<PlainMem>::t();
 		relationships = new shmGraphRaw :: relationship_set ();
 	 	neighbouring_relationships
-		              = new PlainMem::neighbours_to_relationships_map;
+		              = new shmGraphRaw :: neighbours_to_relationships_map;
 		strings_wrap = new ModifiableStringArrayInPlainMemory();
 		this->nodesRO = nodes;
 		this->relationshipsRO = relationships;

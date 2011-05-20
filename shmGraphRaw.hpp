@@ -46,11 +46,9 @@ typedef bmi::multi_index_container<
 		>
 > relationship_set;
 
-struct PlainMem {
-	typedef boost::unordered_map
-    		< int               , boost :: unordered_set<int> >
-			neighbours_to_relationships_map;
-};
+typedef boost::unordered_map < int, boost :: unordered_set<int> > neighbours_to_relationships_map;
+
+struct PlainMem{};
 
 
 class StrH { // string handle. It just wraps an int that refers to the memory mapped file
