@@ -212,12 +212,12 @@ protected:
 	const typename T::relationship_set *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
-	const typename T::neighbouring_relationship_set *empty_set_for_neighboursRO;
+	const typename boost :: unordered_set<int> *empty_set_for_neighboursRO;
 public:
 	virtual int numNodes() const;
 	virtual int numRels()  const;
 	virtual int numNodesWithAtLeastOneRel()  const;
-	virtual const typename T::mmap_uset_of_ints & myRels(int n) const;
+	virtual const typename boost :: unordered_set<int> & myRels(int n) const;
 	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
 	virtual const char * NodeAsString(int v) const;
 	virtual int StringToNodeId(const char *s) const;
@@ -231,7 +231,7 @@ template<class T>
 template<class T>
 /* virtual */ int DumbGraphReadableTemplate<T>::numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
 template<class T>
-/* virtual */ const typename T::mmap_uset_of_ints & DumbGraphReadableTemplate<T>::myRels(int n) const {
+/* virtual */ const boost :: unordered_set<int> & DumbGraphReadableTemplate<T>::myRels(int n) const {
 		typename T::neighbours_to_relationships_map::const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
 			return *empty_set_for_neighboursRO;
@@ -281,7 +281,7 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 	typename T::segment_type   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
 	typename T::segment_type   segment_neigh;
 
-	const typename T::neighbouring_relationship_set empty_set_for_neighbours;
+	const typename boost :: unordered_set<int> empty_set_for_neighbours;
 
 	typename nodeWithName_set<T>::t *nodes;
 	typename T::relationship_set *relationships;

@@ -533,7 +533,7 @@ namespace sbm {
 	}
 	void State::informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
-		const PlainMem::mmap_uset_of_ints & rels = this->_g->myRels(n);
+		const boost :: unordered_set<int> & rels = this->_g->myRels(n);
 		forEach(const int relId, amd::mk_range(rels)) {
 			const pair<int,int> eps = this->_g->EndPoints(relId);
 			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);

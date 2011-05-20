@@ -56,12 +56,10 @@ typedef bmi::multi_index_container<
 > relationship_set_PlainMem;
 
 struct PlainMem {
-	typedef boost::unordered_set<int /*, boost::hash<int>,  std::equal_to<int>*/ > mmap_uset_of_ints;
-	typedef mmap_uset_of_ints neighbouring_relationship_set;
-	typedef std::pair<const int, neighbouring_relationship_set> valtype;
+	typedef std::pair<const int, boost :: unordered_set<int> > valtype;
 	// typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
 	typedef boost::unordered_map
-    		< int               , neighbouring_relationship_set
+    		< int               , boost :: unordered_set<int>
     		, boost::hash<int>  ,std::equal_to<int>
     		>
 			neighbours_to_relationships_map;
@@ -121,7 +119,7 @@ public:
 		}
 		return neighs;
 	}
-	virtual const typename T::mmap_uset_of_ints & myRels(int n) const = 0;
+	virtual const typename boost :: unordered_set<int> & myRels(int n) const = 0;
 };
 
 struct EdgeDetailsInterface {
