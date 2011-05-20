@@ -55,22 +55,8 @@ typedef bmi::multi_index_container<
 		// , MMapType  ::allocator<relationship>::type
 > relationship_set_PlainMem;
 
-struct MapMem {
-	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int>, boost::interprocess::allocator< int, MMapType::segment_manager> > mmap_uset_of_ints;
-	typedef mmap_uset_of_ints neighbouring_relationship_set;
-	typedef std::pair<const int, neighbouring_relationship_set> valtype;
-	typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
-	typedef boost::unordered_map
-    		< int               , neighbouring_relationship_set
-    		, boost::hash<int>  ,std::equal_to<int>
-    		, ShmemAllocator>
-			neighbours_to_relationships_map;
-	typedef relationship_set_MapMem relationship_set;
-	static const int isMapMem = 1;
-	typedef MMapType segment_type;
-};
 struct PlainMem {
-	typedef boost::unordered_set<int, boost::hash<int>,  std::equal_to<int> > mmap_uset_of_ints;
+	typedef boost::unordered_set<int /*, boost::hash<int>,  std::equal_to<int>*/ > mmap_uset_of_ints;
 	typedef mmap_uset_of_ints neighbouring_relationship_set;
 	typedef std::pair<const int, neighbouring_relationship_set> valtype;
 	// typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
@@ -80,7 +66,6 @@ struct PlainMem {
     		>
 			neighbours_to_relationships_map;
 	typedef relationship_set_PlainMem relationship_set;
-	static const int isMapMem = 0;
 	enum nil{};
 	typedef nil segment_type;
 };

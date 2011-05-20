@@ -365,7 +365,6 @@ DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 template <class W>
 ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details) {
 	DumbGraphRaw<PlainMem> *nodes_and_rels_wrap = NULL;
-	assert(!PlainMem::isMapMem);
 
 	assert(graphTextFileName);
 	nodes_and_rels_wrap = new DumbGraphRaw<PlainMem>("");
