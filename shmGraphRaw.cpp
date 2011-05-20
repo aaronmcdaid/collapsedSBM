@@ -154,15 +154,6 @@ typedef bmi::multi_index_container<
 			bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
 		>
 	> nodeWithName_Set;
-struct nodeWithName_set {
-	typedef bmi::multi_index_container<
-		nodeWithName,
-		bmi::indexed_by<
-			bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
-			bmi::hashed_unique  <bmi::tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH::hasher>
-		>
-	> t;
-};
 
 
 relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(id_), nodeIds(nodes_) {
@@ -174,7 +165,7 @@ relationship::relationship( int id_ , const std::pair<int,int> &nodes_) : relId(
 template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
-	const typename nodeWithName_set :: t *nodesRO;
+	const typename shmGraphRaw :: nodeWithName_Set *nodesRO;
 	const typename shmGraphRaw :: relationship_set *relationshipsRO;
 	const typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
@@ -221,7 +212,7 @@ template<class T>
 /* virtual */ int DumbGraphReadableTemplate<T>::StringToNodeId(const char *s) const {
 		StrH string_handle = strings_wrapRO->StringToStringId(s);
 		// assert (0==strcmp(s , (*strings_wrapRO)[string_handle]));
-		typename nodeWithName_set :: t :: template index_iterator<nameT>::type i = nodesRO->template get<nameT>().find(string_handle );
+		typename shmGraphRaw :: nodeWithName_Set :: template index_iterator<nameT>::type i = nodesRO->template get<nameT>().find(string_handle );
 		assert(i != nodesRO->template get<nameT>().end());
 		// assert (0==strcmp(s , (*strings_wrapRO)[i->string_h]));
 		return i->id;
@@ -249,7 +240,7 @@ class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
 
 	const typename boost :: unordered_set<int> empty_set_for_neighbours;
 
-	typename nodeWithName_set :: t *nodes;
+	typename shmGraphRaw :: nodeWithName_Set *nodes;
 	typename shmGraphRaw :: relationship_set *relationships;
 	typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationships;
 public:
@@ -261,10 +252,10 @@ public:
 	}
 	explicit DumbGraphRaw(const std::string &dir);
 	int insertNode(StrH node_name) {
-		typename nodeWithName_set :: t :: template index_iterator<nameT>::type i = nodes->template get<nameT>().find(node_name);
+		typename shmGraphRaw :: nodeWithName_Set :: template index_iterator<nameT>::type i = nodes->template get<nameT>().find(node_name);
 		if(i == nodes->template get<nameT>().end()) {
 			int proposedNewId = nodes->size();
-			std::pair<typename nodeWithName_set :: t :: iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
+			std::pair<typename shmGraphRaw :: nodeWithName_Set :: iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
 			assert(proposedNewId == insertionResult.first->id        );
 			assert(node_name     == insertionResult.first->string_h  );
 			assert(insertionResult.second);
@@ -310,8 +301,8 @@ public:
 template <>
 DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 {
-		nodes         = new nodeWithName_set :: t();
-		relationships = new shmGraphRaw :: relationship_set ();
+		nodes         = new shmGraphRaw :: nodeWithName_Set();
+		relationships = new shmGraphRaw :: relationship_set();
 	 	neighbouring_relationships
 		              = new shmGraphRaw :: neighbours_to_relationships_map();
 		strings_wrap = new ModifiableStringArrayInPlainMemory();
