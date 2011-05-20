@@ -44,28 +44,12 @@ typedef bmi::multi_index_container<
 	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
 	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
 		>
-		, MMapType  ::allocator<relationship>::type
-> relationship_set_MapMem;
-typedef bmi::multi_index_container<
- 		relationship,
-  		bmi::indexed_by<
-	 		bmi::hashed_unique  <bmi::tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
-	 		bmi::hashed_unique  <bmi::tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship::relPairType,nodeIds)>
-		>
-		// , MMapType  ::allocator<relationship>::type
-> relationship_set_PlainMem;
+> relationship_set;
 
 struct PlainMem {
-	typedef std::pair<const int, boost :: unordered_set<int> > valtype;
-	// typedef bip::allocator< valtype, MMapType::segment_manager> ShmemAllocator;
 	typedef boost::unordered_map
-    		< int               , boost :: unordered_set<int>
-    		, boost::hash<int>  ,std::equal_to<int>
-    		>
+    		< int               , boost :: unordered_set<int> >
 			neighbours_to_relationships_map;
-	typedef relationship_set_PlainMem relationship_set;
-	enum nil{};
-	typedef nil segment_type;
 };
 
 

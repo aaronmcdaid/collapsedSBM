@@ -133,46 +133,6 @@ public:
 		return StrH(string2id.at(str));
 	}
 };
-class StringWithId_Mic_Wrap : public ModifiableStringArray {
-
-	char_allocator ca;
-	typedef StringWithId_Mic_WrapRO::StringWithId StringWithId;
-	typedef StringWithId_Mic_WrapRO::StringWithId_Mic StringWithId_Mic;
-	StringWithId_Mic * const d;
-public:
-	// ~StringWithId_Mic_Wrap() { Pn("130"); delete d; Pn("160"); } // seems like you can't/shouldn't delete objects like this
-	explicit StringWithId_Mic_Wrap(MMapType &segment_strings)
-			: ca(char_allocator (segment_strings.get_allocator<char>()))
-			, d( segment_strings.find_or_construct<StringWithId_Mic> ("StringWithId_Mic") ( StringWithId_Mic::ctor_args_list()                         , segment_strings.get_allocator<StringWithId>()))
-		{
-			this->insert("");
-		}
-	size_t size() const { return d->size(); }
-	StrH insert(const char * s) { // insert, or find, this string. Return its id
-		StringWithId_Mic::index_iterator<nameT>::type i = d->get<nameT>().find(s, hashSHMString, equalSHMStrings);
-		if(i == d->get<nameT>().end()) {
-			int proposedNewId = d->size();
-			std::pair<StringWithId_Mic::iterator, bool> insertionResult = d->insert(StringWithId(proposedNewId, s, ca));
-			assert(proposedNewId == insertionResult.first->id);
-			assert(insertionResult.second);
-			return StrH( insertionResult.first->id );
-		} else {
-			return StrH( i->id );
-		}
-	}
-	StrH insert(std::string &s) { return this->insert(s.c_str()); }
-
-	virtual const char * operator[] (StrH sh) const {
-		StringWithId_Mic::index_iterator<idT>::type i = d->get<idT>().find(sh.get_underlying_id());
-		assert(i != d->get<idT>().end() );
-		return i->s.c_str();
-	}
-	virtual StrH StringToStringId(const char *s) const {
-		StringWithId_Mic::index_iterator<nameT>::type i = d->get<nameT>().find(s, hashSHMString, equalSHMStrings);
-		assert(i != d->get<nameT>().end() );
-		return StrH(i->id);
-	}
-};
 
 /*
  * nodes and relationships
@@ -209,7 +169,7 @@ template <class T>
 class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
 protected:
 	const typename nodeWithName_set<T>::t *nodesRO;
-	const typename T::relationship_set *relationshipsRO;
+	const typename shmGraphRaw :: relationship_set *relationshipsRO;
 	const typename T::neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std::auto_ptr<const StringArray> strings_wrapRO;
 	const typename boost :: unordered_set<int> *empty_set_for_neighboursRO;
@@ -277,17 +237,16 @@ DumbGraphReadableTemplate<PlainMem> testosdlfjslkdfjlsdjfkldsbject;
 
 template <class T>
 class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
-	typename T::segment_type   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	typename T::segment_type   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	typename T::segment_type   segment_neigh;
+	// typename T::segment_type   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
+	// typename T::segment_type   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
+	// typename T::segment_type   segment_neigh;
 
 	const typename boost :: unordered_set<int> empty_set_for_neighbours;
 
 	typename nodeWithName_set<T>::t *nodes;
-	typename T::relationship_set *relationships;
+	typename shmGraphRaw :: relationship_set *relationships;
 	typename T::neighbours_to_relationships_map *neighbouring_relationships;
 public:
-	//StringWithId_Mic_Wrap *strings_wrap;
 	ModifiableStringArray *strings_wrap;
 public:
 	virtual ~DumbGraphRaw() {
@@ -312,10 +271,10 @@ public:
 		if(p.first > p.second)
 			swap(p.first, p.second);
 		assert(p.first <= p.second);
-		typename T::relationship_set:: template index_iterator<nodeIdsT>::type i = relationships->template get<nodeIdsT>().find(p);
+		typename shmGraphRaw :: relationship_set :: template index_iterator<nodeIdsT>::type i = relationships->template get<nodeIdsT>().find(p);
 		if(i == relationships->template get<nodeIdsT>().end()) {
 			int relId = relationships->size();
-			std::pair<typename T::relationship_set::iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
+			std::pair<typename shmGraphRaw :: relationship_set ::iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
 			assert(relId == insertionResult.first->relId        );
 			assert(p.first       == insertionResult.first->nodeIds.first  );
 			assert(p.second      == insertionResult.first->nodeIds.second  );
@@ -346,7 +305,7 @@ template <>
 DumbGraphRaw<PlainMem>::DumbGraphRaw(const std::string &dir)
 {
 		nodes         = new nodeWithName_set<PlainMem>::t();
-		relationships = new PlainMem::relationship_set();
+		relationships = new shmGraphRaw :: relationship_set ();
 	 	neighbouring_relationships
 		              = new PlainMem::neighbours_to_relationships_map;
 		strings_wrap = new ModifiableStringArrayInPlainMemory();
