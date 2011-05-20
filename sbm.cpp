@@ -32,7 +32,7 @@ void runSBM(const sbm :: GraphType *g, const int commandLineK, const shmGraphRaw
 void runMMSB(const sbm :: GraphType *g, const int commandLineK);
 
 // static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
@@ -46,22 +46,7 @@ void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> 
 	}
 }
 // static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std :: pair<int,int> eps = g->EndPoints(rel);
-		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
-			<< endl;
-	}
-}
-// static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
@@ -76,7 +61,22 @@ void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> 
 	}
 }
 // static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > & edge_details) {
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > & edge_details) {
+	PP(g->numNodes());
+	PP(g->numRels());
+	PP(g->hasASelfLoop);
+	for(int rel=0; rel<g->numRels(); rel++) {
+		std :: pair<int,int> eps = g->EndPoints(rel);
+		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
+		cout << rel
+			<< '\t' << eps.first << '"' << epsNames.first << '"'
+			<< '\t' << eps.second << '"' << epsNames.second << '"'
+			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
+			<< endl;
+	}
+}
+// static
+void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > & edge_details) {
 	PP(g->numNodes());
 	PP(g->numRels());
 	PP(g->hasASelfLoop);
@@ -138,12 +138,12 @@ int main(int argc, char **argv) {
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
 	sbm :: ObjectiveFunction *obj = NULL;
-	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> > g;
+	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g;
 	auto_ptr<shmGraphRaw :: EdgeDetailsInterface> edge_details_;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails >();
-		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> > g (shmGraphRaw :: loadEdgeList<shmGraphRaw :: PlainMem>(edgeListFileName, args_info.selfloop_flag, edge_details));
+		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		g.reset(shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);

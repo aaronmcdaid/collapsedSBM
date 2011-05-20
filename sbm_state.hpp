@@ -17,7 +17,7 @@ static inline double LOG2FACT(const int x) {
 }
 
 namespace sbm {
-typedef shmGraphRaw :: ReadableShmGraphTemplate<shmGraphRaw :: PlainMem> GraphType;
+typedef shmGraphRaw :: ReadableShmGraphTemplate GraphType;
 
 struct Cluster {
 private:

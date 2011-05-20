@@ -162,87 +162,71 @@ relationship :: relationship( int id_ , const std :: pair<int,int> &nodes_) : re
 
 
 
-template <class T>
-class DumbGraphReadableTemplate : public ReadableShmGraphTemplate<T> {
+class DumbGraphReadableTemplate : public ReadableShmGraphTemplate {
 protected:
-	const typename shmGraphRaw :: nodeWithName_Set *nodesRO;
-	const typename shmGraphRaw :: relationship_set *relationshipsRO;
-	const typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationshipsRO;
+	const shmGraphRaw :: nodeWithName_Set *nodesRO;
+	const shmGraphRaw :: relationship_set *relationshipsRO;
+	const shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationshipsRO;
 	std :: auto_ptr<const StringArray> strings_wrapRO;
-	const typename boost :: unordered_set<int> *empty_set_for_neighboursRO;
+	const boost :: unordered_set<int> *empty_set_for_neighboursRO;
 public:
 	virtual int numNodes() const;
 	virtual int numRels()  const;
 	virtual int numNodesWithAtLeastOneRel()  const;
-	virtual const typename boost :: unordered_set<int> & myRels(int n) const;
+	virtual const boost :: unordered_set<int> & myRels(int n) const;
 	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
 	virtual const char * NodeAsString(int v) const;
 	virtual int StringToNodeId(const char *s) const;
 	virtual const std :: pair<int, int> & EndPoints(int relId) const;
 	virtual bool are_connected(int v1, int v2) const;
 };
-template<class T>
-/* virtual */ int DumbGraphReadableTemplate<T>:: numNodes() const { return nodesRO->size(); }
-template<class T>
-/* virtual */ int DumbGraphReadableTemplate<T>:: numRels()  const { return relationshipsRO->size(); }
-template<class T>
-/* virtual */ int DumbGraphReadableTemplate<T>:: numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
-template<class T>
-/* virtual */ const boost :: unordered_set<int> & DumbGraphReadableTemplate<T>:: myRels(int n) const {
-		typename shmGraphRaw :: neighbours_to_relationships_map :: const_iterator i = neighbouring_relationshipsRO->find(n);
+/* virtual */ int DumbGraphReadableTemplate :: numNodes() const { return nodesRO->size(); }
+/* virtual */ int DumbGraphReadableTemplate :: numRels()  const { return relationshipsRO->size(); }
+/* virtual */ int DumbGraphReadableTemplate :: numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
+/* virtual */ const boost :: unordered_set<int> & DumbGraphReadableTemplate :: myRels(int n) const {
+		shmGraphRaw :: neighbours_to_relationships_map :: const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
 			return *empty_set_for_neighboursRO;
 		}
 		else
 			return i->second;
 	}
-template<class T>
-/* virtual */ pair<const char*, const char*> DumbGraphReadableTemplate<T>:: EndPointsAsStrings(int relId) const {
+/* virtual */ pair<const char*, const char*> DumbGraphReadableTemplate :: EndPointsAsStrings(int relId) const {
 		assert(relId >=0 && relId < this->numRels() );
-		const pair<int,int> &endpoints = relationshipsRO->template get<idT>().find(relId)->nodeIds;
+		const pair<int,int> &endpoints = relationshipsRO->get<idT>().find(relId)->nodeIds;
 		const char *l = this->NodeAsString(endpoints.first); // (*strings_wrap)[nodes->get<idT>().find(endpoints.first )->string_h];
 		const char *r = this->NodeAsString(endpoints.second);// (*strings_wrap)[nodes->get<idT>().find(endpoints.second)->string_h];
 		return make_pair(l,r);
 	}
-template<class T>
-/* virtual */ const char * DumbGraphReadableTemplate<T>:: NodeAsString(int v) const {
-		return (*strings_wrapRO)[nodesRO->template get<idT>().find(v )->string_h];
+/* virtual */ const char * DumbGraphReadableTemplate :: NodeAsString(int v) const {
+		return (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
 	}
-template<class T>
-/* virtual */ int DumbGraphReadableTemplate<T>:: StringToNodeId(const char *s) const {
+/* virtual */ int DumbGraphReadableTemplate :: StringToNodeId(const char *s) const {
 		StrH string_handle = strings_wrapRO->StringToStringId(s);
 		// assert (0==strcmp(s , (*strings_wrapRO)[string_handle]));
-		typename shmGraphRaw :: nodeWithName_Set :: template index_iterator<nameT>:: type i = nodesRO->template get<nameT>().find(string_handle );
-		assert(i != nodesRO->template get<nameT>().end());
+		shmGraphRaw :: nodeWithName_Set :: index_iterator<nameT>:: type i = nodesRO->get<nameT>().find(string_handle );
+		assert(i != nodesRO->get<nameT>().end());
 		// assert (0==strcmp(s , (*strings_wrapRO)[i->string_h]));
 		return i->id;
 	}
-template<class T>
-/* virtual */ const std :: pair<int, int> & DumbGraphReadableTemplate<T>:: EndPoints(int relId) const {
+/* virtual */ const std :: pair<int, int> & DumbGraphReadableTemplate :: EndPoints(int relId) const {
 		assert(relId >=0 && relId < this->numRels() );
-		return relationshipsRO->template get<idT>().find(relId)->nodeIds;
+		return relationshipsRO->get<idT>().find(relId)->nodeIds;
 	}
-template<class T>
-/* virtual */ bool DumbGraphReadableTemplate<T>:: are_connected(int v1, int v2) const {
+/* virtual */ bool DumbGraphReadableTemplate :: are_connected(int v1, int v2) const {
 		if(v1 > v2)
 			swap(v1,v2);
 		assert (v1 <= v2);
-		return (relationshipsRO->template get<nodeIdsT>().end() != relationshipsRO->template get<nodeIdsT>().find(make_pair(v1,v2)) );
+		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(make_pair(v1,v2)) );
 	}
 
-DumbGraphReadableTemplate<PlainMem> testosdlfjslkdfjlsdjfkldsbject;
+class DumbGraphRaw : public DumbGraphReadableTemplate {
 
-template <class T>
-class DumbGraphRaw : public DumbGraphReadableTemplate<T> {
-	// typename T :: segment_type   segment_strings; // managed_mapped_file   segment               (open_read_only, (dir + "/" + NODES_AND_RELS_MMAP).c_str() );
-	// typename T :: segment_type   segment_nodesAndRels; // managed_mapped_file   segment_neigh         (open_read_only, (dir + "/" + NEIGHBOURS_MMAP    ).c_str() );
-	// typename T :: segment_type   segment_neigh;
+	const boost :: unordered_set<int> empty_set_for_neighbours;
 
-	const typename boost :: unordered_set<int> empty_set_for_neighbours;
-
-	typename shmGraphRaw :: nodeWithName_Set *nodes;
-	typename shmGraphRaw :: relationship_set *relationships;
-	typename shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationships;
+	shmGraphRaw :: nodeWithName_Set *nodes;
+	shmGraphRaw :: relationship_set *relationships;
+	shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationships;
 public:
 	ModifiableStringArray *strings_wrap;
 public:
@@ -252,10 +236,10 @@ public:
 	}
 	explicit DumbGraphRaw(const std :: string &dir);
 	int insertNode(StrH node_name) {
-		typename shmGraphRaw :: nodeWithName_Set :: template index_iterator<nameT>:: type i = nodes->template get<nameT>().find(node_name);
-		if(i == nodes->template get<nameT>().end()) {
+		shmGraphRaw :: nodeWithName_Set :: index_iterator<nameT>:: type i = nodes->get<nameT>().find(node_name);
+		if(i == nodes->get<nameT>().end()) {
 			int proposedNewId = nodes->size();
-			std :: pair<typename shmGraphRaw :: nodeWithName_Set :: iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
+			std :: pair<shmGraphRaw :: nodeWithName_Set :: iterator, bool> insertionResult = nodes->insert(nodeWithName(proposedNewId, node_name));
 			assert(proposedNewId == insertionResult.first->id        );
 			assert(node_name     == insertionResult.first->string_h  );
 			assert(insertionResult.second);
@@ -268,16 +252,16 @@ public:
 		if(p.first > p.second)
 			swap(p.first, p.second);
 		assert(p.first <= p.second);
-		typename shmGraphRaw :: relationship_set :: template index_iterator<nodeIdsT>:: type i = relationships->template get<nodeIdsT>().find(p);
-		if(i == relationships->template get<nodeIdsT>().end()) {
+		shmGraphRaw :: relationship_set :: index_iterator<nodeIdsT>:: type i = relationships->get<nodeIdsT>().find(p);
+		if(i == relationships->get<nodeIdsT>().end()) {
 			int relId = relationships->size();
-			std :: pair<typename shmGraphRaw :: relationship_set :: iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
+			std :: pair<shmGraphRaw :: relationship_set :: iterator, bool> insertionResult = relationships->insert(relationship(relId, p));
 			assert(relId == insertionResult.first->relId        );
 			assert(p.first       == insertionResult.first->nodeIds.first  );
 			assert(p.second      == insertionResult.first->nodeIds.second  );
 			assert(insertionResult.second);
 			{ // add this to the neighbouring relationships object too
-				typename shmGraphRaw :: neighbours_to_relationships_map :: iterator i;
+				shmGraphRaw :: neighbours_to_relationships_map :: iterator i;
 				{
 					i = neighbouring_relationships->find(p.first);
 					if(i == neighbouring_relationships->end())
@@ -298,8 +282,7 @@ public:
 		}
 	}
 };
-template <>
-DumbGraphRaw<PlainMem>:: DumbGraphRaw(const std :: string &dir)
+DumbGraphRaw :: DumbGraphRaw(const std :: string &dir)
 {
 		nodes         = new shmGraphRaw :: nodeWithName_Set();
 		relationships = new shmGraphRaw :: relationship_set();
@@ -319,11 +302,11 @@ DumbGraphRaw<PlainMem>:: DumbGraphRaw(const std :: string &dir)
  */
 
 template <class W>
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details) {
-	DumbGraphRaw<PlainMem> *nodes_and_rels_wrap = NULL;
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details) {
+	DumbGraphRaw *nodes_and_rels_wrap = NULL;
 
 	assert(graphTextFileName);
-	nodes_and_rels_wrap = new DumbGraphRaw<PlainMem>("");
+	nodes_and_rels_wrap = new DumbGraphRaw("");
 
 	assert(nodes_and_rels_wrap);
 	nodes_and_rels_wrap->hasASelfLoop = false; // this will be changed if/when a self loop is found
@@ -378,12 +361,12 @@ ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName,
 }
 
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<NoDetails> &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<NoDetails> &);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedNoWeights > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedNoWeights > &);
 template 
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< WeightNoDir > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< WeightNoDir > &);
 
 } // namespace shmGraphRaw {

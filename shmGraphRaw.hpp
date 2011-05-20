@@ -48,8 +48,6 @@ typedef bmi :: multi_index_container<
 
 typedef boost :: unordered_map < int, boost :: unordered_set<int> > neighbours_to_relationships_map;
 
-struct PlainMem{};
-
 
 class StrH { // string handle. It just wraps an int that refers to the memory mapped file
 	int i;
@@ -85,7 +83,6 @@ public:
 	virtual const std :: set<int> & neighbours(int v) const = 0; // implemented in ReadableShmGraphTemplate<T>
 };
 
-template <class T>
 class ReadableShmGraphTemplate : public ReadableShmGraphBase { // this is mostly just an interface, but note that oppositeEndPoint is defined in this class
 private:
 	mutable std :: map<int, std :: set<int> > neighbours_cache;
@@ -101,7 +98,7 @@ public:
 		}
 		return neighs;
 	}
-	virtual const typename boost :: unordered_set<int> & myRels(int n) const = 0;
+	virtual const boost :: unordered_set<int> & myRels(int n) const = 0;
 };
 
 struct EdgeDetailsInterface {
@@ -219,7 +216,7 @@ struct WeightNoDir {
 };
 
 template<class W>
-ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details);
+ReadableShmGraphTemplate * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details);
 
 struct SelfLoopsNotSupported : public std :: exception {
 };
