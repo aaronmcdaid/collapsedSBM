@@ -253,10 +253,8 @@ struct WeightNoDir {
 	} datumT; // the type needed to store the weights in each direction.
 };
 
-template<class T, class W>
-ReadableShmGraphTemplate<T> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char * directory = NULL);
-
-//typedef ReadableShmGraphTemplate<MapMem> ReadableShmGraph; // TODO: Deprecate this
+template<class W>
+ReadableShmGraphTemplate<PlainMem> * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details, const char * directory = NULL);
 
 struct SelfLoopsNotSupported : public std::exception {
 };
