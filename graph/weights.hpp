@@ -9,6 +9,7 @@ struct EdgeDetailsInterface {
 	virtual long double getl2h(const int relId) const = 0;
 	virtual long double geth2l(const int relId) const = 0;
 	virtual void new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight) = 0;
+	virtual ~EdgeDetailsInterface();
 };
 
 template <class W>
@@ -18,6 +19,7 @@ struct EdgeDetails : public EdgeDetailsInterface {
 	void new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight);
 	long double getl2h(const int relId) const ; // this returns the value in the undirected case, and it handles self loops
 	long double geth2l(const int relId) const ; // this is only relevant in directed graphs.
+	~ EdgeDetails();
 };
 
 struct NoDetails { // unweighted, undirected

@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetails< graph :: weights :: NoDetails > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: NoDetails >();
+		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: NoDetails >();
 		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		g.reset(shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		// dumpGraph(g.get(), *edge_details);
@@ -152,21 +152,21 @@ int main(int argc, char **argv) {
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights >();
+		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
 		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir >();
+		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights >();
+		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);

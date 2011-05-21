@@ -132,6 +132,7 @@ struct ObjectiveFunction {
 	bool isTwoSided(const int i, const int j) const; // should the other direction be included when counting the edges?
 	long double relevantWeight(const int i, const int j, const State :: EdgeCounts *edge_counts) const; // this might include the other direction, if it's undirected
 	long int numberOfPairsInBlock(const int i, const int j, const Labelling *edge_counts) const;
+	virtual ~ ObjectiveFunction() {}
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);

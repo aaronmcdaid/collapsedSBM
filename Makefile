@@ -22,6 +22,7 @@ CXXFLAGS=       \
           -Wuninitialized   \
           -Wunused-parameter    \
           -Wunused             \
+          -Wnon-virtual-dtor            \
           -Wall -Wformat -Werror -I./boost_1_41_0
 
 boost_1_41_0:

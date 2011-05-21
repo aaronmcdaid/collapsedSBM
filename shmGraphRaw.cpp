@@ -53,6 +53,9 @@ struct StrH :: hasher {
 bool StrH :: operator == (StrH r) const { return this->i == r.i; }
 int StrH :: get_underlying_id() const { return this->i; }
 
+StringArray :: ~StringArray() {
+}
+
 static size_t hashSHMString (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &s) { std :: string s2(s.c_str()); return boost :: hash<std :: string>() (s2); } // TODO: Make the index now how to hash itself
 static bool equalSHMStrings (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &l , const shm_string &r) { return 0 == strcmp(l.c_str(), r.c_str()); }
 class StringWithId_Mic_WrapRO : public StringArray {

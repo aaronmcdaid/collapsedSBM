@@ -1,7 +1,15 @@
 #include "weights.hpp"
+
+using namespace std;
+
 namespace graph {
 namespace weights {
 
+	template <class W>
+	EdgeDetails<W> :: ~EdgeDetails() {
+	}
+	EdgeDetailsInterface :: ~EdgeDetailsInterface() {
+	}
 	template <class W>
 	int EdgeDetails<W> :: size() const {
 		return this->dw.size();
@@ -40,6 +48,10 @@ template int         EdgeDetails<NoDetails>              :: size()  const;
 template int         EdgeDetails<DirectedLDoubleWeights> :: size()  const;
 template int         EdgeDetails<DirectedNoWeights>      :: size()  const;
 template int         EdgeDetails<WeightNoDir>            :: size()  const;
+template             EdgeDetails<NoDetails>              :: ~EdgeDetails();
+template             EdgeDetails<DirectedLDoubleWeights> :: ~EdgeDetails();
+template             EdgeDetails<DirectedNoWeights>      :: ~EdgeDetails();
+template             EdgeDetails<WeightNoDir>            :: ~EdgeDetails();
 } // namespace weights
 } // namespace graph
 
