@@ -26,9 +26,7 @@ struct EdgeDetails : public EdgeDetailsInterface {
 	virtual long double getl2h(const int relId) const { // this returns the value in the undirected case, and it handles self loops
 		return this->dw.at(relId).getl2h();
 	}
-	virtual long double geth2l(const int relId) const { // this is only relevant in directed graphs.
-		return this->dw.at(relId).geth2l();
-	}
+	long double geth2l(const int relId) const ; // this is only relevant in directed graphs.
 };
 
 struct NoDetails { // unweighted, undirected
