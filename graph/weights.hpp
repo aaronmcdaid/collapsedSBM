@@ -1,3 +1,7 @@
+#include<vector>
+#include<string>
+#include<cassert>
+#include<sstream>
 namespace graph {
 namespace weights {
 
