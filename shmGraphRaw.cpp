@@ -301,8 +301,7 @@ DumbGraphRaw :: DumbGraphRaw(const std :: string &dir)
  * The funcs to read the text and load the object ...
  */
 
-template <class W>
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails<W> &edge_details) {
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetailsInterface *edge_details) {
 	DumbGraphRaw *nodes_and_rels_wrap = NULL;
 
 	assert(graphTextFileName);
@@ -346,7 +345,7 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 			}
 			int relId = nodes_and_rels_wrap->insertRel(edgeAsIds);
 
-			edge_details.new_rel(relId, edgeAsIds, weight);
+			edge_details->new_rel(relId, edgeAsIds, weight);
 
 			if(0)
 			cout << "line:"
@@ -360,13 +359,6 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 	return nodes_and_rels_wrap;
 }
 
-template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: NoDetails> &);
-template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights > &);
-template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights > &);
-template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetailsInterface *);
 
 } // namespace shmGraphRaw {

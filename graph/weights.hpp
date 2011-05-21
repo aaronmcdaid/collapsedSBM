@@ -8,6 +8,7 @@ namespace weights {
 struct EdgeDetailsInterface {
 	virtual long double getl2h(const int relId) const = 0;
 	virtual long double geth2l(const int relId) const = 0;
+	virtual void new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight) = 0;
 };
 
 template <class W>

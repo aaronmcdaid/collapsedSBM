@@ -102,8 +102,7 @@ public:
 	virtual const boost :: unordered_set<int> & myRels(int n) const = 0;
 };
 
-template<class W>
-ReadableShmGraphTemplate * loadEdgeList(const char * graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails<W> &edge_details);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetailsInterface *edge_details);
 
 struct SelfLoopsNotSupported : public std :: exception {
 };
