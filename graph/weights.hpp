@@ -13,19 +13,9 @@ struct EdgeDetailsInterface {
 template <class W>
 struct EdgeDetails : public EdgeDetailsInterface {
 	std :: vector < typename W :: datumT > dw; // the directions and weights of all the edges
-	int size() const {
-		return this->dw.size();
-	}
-	void new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight) {
-		if(relId == (int)this->dw.size())
-			this->dw.push_back( typename W :: datumT() );
-		assert(relId <  (int)this->dw.size());
-		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
-		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
-	}
-	virtual long double getl2h(const int relId) const { // this returns the value in the undirected case, and it handles self loops
-		return this->dw.at(relId).getl2h();
-	}
+	int size() const;
+	void new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight);
+	long double getl2h(const int relId) const ; // this returns the value in the undirected case, and it handles self loops
 	long double geth2l(const int relId) const ; // this is only relevant in directed graphs.
 };
 
