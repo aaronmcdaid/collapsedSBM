@@ -28,9 +28,10 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm :: GraphType *g, const int commandLineK, const shmGraphRaw :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
+void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
 void runMMSB(const sbm :: GraphType *g, const int commandLineK);
 
+#if 0
 // static
 void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > & edge_details) {
 	PP(g->numNodes());
@@ -90,6 +91,7 @@ void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: 
 			<< endl;
 	}
 }
+#endif
 
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
@@ -139,10 +141,10 @@ int main(int argc, char **argv) {
 
 	sbm :: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g;
-	auto_ptr<shmGraphRaw :: EdgeDetailsInterface> edge_details_;
+	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails >();
+		graph :: weights :: EdgeDetails< graph :: weights :: NoDetails > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: NoDetails >();
 		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
 		g.reset(shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
@@ -150,21 +152,21 @@ int main(int argc, char **argv) {
 	}
 	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights >();
+		graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
 		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir >();
+		graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
 	}
 	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
 		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > *edge_details = new shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights >();
+		graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights > *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights >();
 		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, *edge_details));
 		// dumpGraph(g.get(), *edge_details);
 		edge_details_.reset(edge_details);
@@ -1288,7 +1290,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm :: GraphType *g, const int commandLineK, const shmGraphRaw :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	PP2(g->numNodes(), g->numRels());
 	sbm :: State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
 

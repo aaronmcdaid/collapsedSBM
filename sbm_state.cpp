@@ -58,7 +58,7 @@ namespace sbm {
 			return l.first < r.first;
 		}
 	};
-	State :: State(const GraphType * const g, const shmGraphRaw :: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
+	State :: State(const GraphType * const g, const graph :: weights :: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -505,7 +505,7 @@ namespace sbm {
 					y.resize(j+1);
 				return y.at(j);
 	}
-	State :: EdgeCounts :: EdgeCounts(const EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
+	State :: EdgeCounts :: EdgeCounts(const graph :: weights :: EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
 	}
 	void State :: EdgeCounts :: inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
 		assert(cl1 >= 0); // && cl1 < this->_k);

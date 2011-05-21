@@ -302,7 +302,7 @@ DumbGraphRaw :: DumbGraphRaw(const std :: string &dir)
  */
 
 template <class W>
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<W> &edge_details) {
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails<W> &edge_details) {
 	DumbGraphRaw *nodes_and_rels_wrap = NULL;
 
 	assert(graphTextFileName);
@@ -361,12 +361,12 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 }
 
 template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails<NoDetails> &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: NoDetails> &);
 template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedLDoubleWeights > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights > &);
 template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< DirectedNoWeights > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights > &);
 template 
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, EdgeDetails< WeightNoDir > &);
+ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir > &);
 
 } // namespace shmGraphRaw {

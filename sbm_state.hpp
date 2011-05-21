@@ -56,12 +56,12 @@ struct ObjectiveFunction;
 
 struct State {
 	const GraphType * const _g; // the graph
-	const shmGraphRaw :: EdgeDetailsInterface * const _edge_details;
+	const graph :: weights :: EdgeDetailsInterface * const _edge_details;
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
-	explicit State(const GraphType * const g, const shmGraphRaw :: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
+	explicit State(const GraphType * const g, const graph :: weights :: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
 
 	Labelling	labelling;
 	// the clustering
@@ -85,10 +85,10 @@ struct State {
 
 	// counting the edges between each pair of clusters
 	struct EdgeCounts {
-		const shmGraphRaw :: EdgeDetailsInterface * const _edge_details;
+		const graph :: weights :: EdgeDetailsInterface * const _edge_details;
 		mutable std :: vector< std :: vector<long double> > counts;
 		long double externalEdgeWeight;
-		EdgeCounts(const shmGraphRaw :: EdgeDetailsInterface *edge_details);
+		EdgeCounts(const graph :: weights :: EdgeDetailsInterface *edge_details);
 		void   inform(const int cl1, const int cl2, int relId) ; // inform us of an edge between cl1 and cl2
 		void uninform(const int cl1, const int cl2, int relId) ; // UNinform us of an edge between cl1 and cl2
 		long double & at(int i,int j) ;
