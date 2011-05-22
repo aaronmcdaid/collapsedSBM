@@ -84,7 +84,7 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 	PP(file_name);
 	typedef typename NodeNameT :: value_type t;
 	{ // first pass: just store the node names
-		ifstream f(file_name.c_str());
+		ifstream f(file_name.c_str(), ios_base :: in | ios_base :: binary);
 		string line;
 		set<t> set_of_node_names; // This will store all the node names.
 		while( getline(f, line) ) {
@@ -102,7 +102,7 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		assert(modifiable_network->ordered_node_names.size() == set_of_node_names.size());
 	}
 	{ // second pass. Find all the distinct relationships (node_id_1, node_id_2; where node_id_1 <= node_id_2)
-		ifstream f(file_name.c_str());
+		ifstream f(file_name.c_str(), ios_base :: in | ios_base :: binary);
 		string line;
 		set< pair<int32_t,int32_t> > set_of_relationships; // every edge, ignoring direction, will be included here
 		while( getline(f, line) ) {
