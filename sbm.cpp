@@ -1,4 +1,5 @@
 #include "graph/network.hpp"
+#include "graph/loading.hpp"
 using namespace std;
 #include <algorithm>
 #include <vector>
@@ -144,6 +145,7 @@ int main(int argc, char **argv) {
 	{
 		// Try the new graph loader
 		std :: auto_ptr<graph :: Network> network(new graph :: Network());
+		graph :: loading :: read_edge_list_from_file( network.get(), edgeListFileName );
 	}
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);

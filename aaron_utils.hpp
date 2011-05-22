@@ -26,12 +26,9 @@ enum {FALSE=0, TRUE=1};
 #define Pn(...) do { P(__VA_ARGS__); fputc('\n', stdout); } while (0)
 #define Perrorn(...) do { Perror(__VA_ARGS__); fputc('\n', stderr); } while (0)
 //#define PP(x) Pn("%s:%s", #x, show(x).c_str())
-#define PP(x) cout << #x << ":" << x << endl
+#include "pp.hpp"
 #define PPt(x) cout << #x << ":" << x << '\t'
 #define PPnn(x) cout << #x << ":" << x
-#define PP2(x,y) cout << #x << ',' << #y << ":\t" << x << " , " << y << endl
-#define PP3(x,y,z)             cout << #x << ',' << #y << ',' << #z                              << ":\t" << x << " , " << y << " , " << z << endl
-#define PP4(x,y,z,w)           cout << #x << ',' << #y << ',' << #z << ',' << #w                 << ":\t" << x << " , " << y << " , " << z << " , " << w << endl
 #define PPLg(x) Pn("%s:%20.11Lg", #x, x)
 std :: string thousandsSeparated(uint64 x);
 #define PPdec(x) cout << #x << ":" << thousandsSeparated(x) << endl
