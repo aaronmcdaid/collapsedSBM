@@ -17,18 +17,18 @@ class ReadableShmGraphBase : public graph :: VerySimpleGraph {
 public:
 	bool hasASelfLoop;
 	virtual ~ReadableShmGraphBase();
-	virtual int numNodes() const = 0;
-	virtual int numRels() const = 0;
-	virtual const std :: pair<int, int> & EndPoints(int relId) const = 0;
-	virtual bool are_connected(int v1, int v2) const = 0;
-	virtual int oppositeEndPoint(int relId, int oneEnd) const; // impure function.
+	virtual int32_t numNodes() const = 0;
+	virtual int32_t numRels() const = 0;
+	virtual const std :: pair<int32_t, int32_t> & EndPoints(int32_t relId) const = 0;
+	virtual bool are_connected(int32_t v1, int32_t v2) const = 0;
+	virtual int32_t oppositeEndPoint(int32_t relId, int32_t oneEnd) const; // impure function.
 
-	virtual std :: pair<const char*, const char*> EndPointsAsStrings(int relId) const = 0;
-	virtual const char * NodeAsString(int v) const = 0;
-	virtual int StringToNodeId(const char *s) const = 0;
-	virtual std :: string WhichNode(int v) const; // impure function
+	virtual std :: pair<const char*, const char*> EndPointsAsStrings(int32_t relId) const = 0;
+	virtual const char * NodeAsString(int32_t v) const = 0;
+	virtual int32_t StringToNodeId(const char *s) const = 0;
+	virtual std :: string WhichNode(int32_t v) const; // impure function
 
-	virtual int degree(int v) const = 0; // implemented in ReadableShmGraphTemplate<T>
+	virtual int32_t degree(int32_t v) const = 0; // implemented in ReadableShmGraphTemplate<T>
 };
 
 class ReadableShmGraphTemplate : public ReadableShmGraphBase { // this is mostly just an interface, but note that oppositeEndPoint is defined in this class
