@@ -28,13 +28,14 @@ template <class NodeNameT>
 struct ModifiableNetwork : public Network<NodeNameT> { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
 	typedef typename NodeNameT :: value_type t;
 	vector< t > ordered_node_names;
+	vector< pair<int32_t,int32_t> > ordered_relationships;
 	ModifiableNetwork(const bool directed, const bool weighted) : Network<NodeNameT>(directed, weighted) {
 	}
 	virtual ~ ModifiableNetwork() throw() {
 	}
-	int find_ordered_node_names_offset(const t &node_name) {
+	int32_t find_ordered_node_names_offset(const t &node_name) {
 		// node_name must be in this->ordered_node_names. Now to find *where* it is.
-		const int offset = lower_bound(this->ordered_node_names.begin(), this->ordered_node_names.end(), node_name) - this->ordered_node_names.begin();
+		const int32_t offset = lower_bound(this->ordered_node_names.begin(), this->ordered_node_names.end(), node_name) - this->ordered_node_names.begin();
 		assert( this->ordered_node_names.at(offset) == node_name);
 		return offset;
 	}
@@ -103,13 +104,22 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 	{ // second pass. Find all the distinct relationships (node_id_1, node_id_2; where node_id_1 <= node_id_2)
 		ifstream f(file_name.c_str());
 		string line;
+		set< pair<int32_t,int32_t> > set_of_relationships; // every edge, ignoring direction, will be included here
 		while( getline(f, line) ) {
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
 			ThreeStrings t = parseLine(line);
-			const int source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
-			const int target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
+			int source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
+			int target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
+			if(source_node_id > target_node_id)
+				swap(source_node_id, target_node_id);
+			set_of_relationships.insert( make_pair(source_node_id, target_node_id) );
 			PP2(source_node_id, target_node_id);
 		}
+		PP(set_of_relationships.size());
+		for( typename set< pair<int32_t,int32_t> > :: const_iterator i = set_of_relationships.begin() ; i != set_of_relationships.end(); i++) {
+			modifiable_network->ordered_relationships.push_back(*i);
+		}
+		PP(modifiable_network->ordered_relationships.size());
 	}
 }
 
