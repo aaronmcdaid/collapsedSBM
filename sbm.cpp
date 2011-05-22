@@ -1,6 +1,7 @@
 using namespace std;
 #include <algorithm>
 #include <vector>
+#include <fstream>
 #include <map>
 
 #include <getopt.h>

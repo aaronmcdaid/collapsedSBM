@@ -2,18 +2,31 @@
 
 #include <vector>
 #include <memory>
-
-#include <boost/interprocess/containers/string.hpp>
-using namespace boost :: interprocess;
-
-
+#include <fstream>
 #include <string.h>
 
 #include "aaron_utils.hpp"
 
-
-
 namespace shmGraphRaw {
+
+struct idT{}; // dummy tag type for use in boost :: interprocess index names
+struct nameT{}; // dummy tag type for use in boost :: interprocess index names
+struct nodeIdsT{}; // dummy tag type for use in boost :: interprocess index names
+struct relationship
+{
+	int         relId;
+	typedef std :: pair<int,int> relPairType;
+	std :: pair<int,int>		nodeIds;
+	relationship( int id_ , const std :: pair<int,int> &nodes_);
+};
+typedef bmi :: multi_index_container<
+ 		relationship,
+  		bmi :: indexed_by<
+	 		bmi :: hashed_unique  <bmi :: tag<idT>,  BOOST_MULTI_INDEX_MEMBER(relationship,int,relId)>,
+	 		bmi :: hashed_unique  <bmi :: tag<nodeIdsT>,BOOST_MULTI_INDEX_MEMBER(relationship,relationship :: relPairType,nodeIds)>
+		>
+> relationship_set;
+typedef boost :: unordered_map < int, boost :: unordered_set<int> > neighbours_to_relationships_map;
 
 ReadableShmGraphBase ::~ReadableShmGraphBase() {
 }
@@ -36,56 +49,13 @@ std :: string ReadableShmGraphBase :: WhichNode(int v) const {
 }
 
 struct fileDoesNotExistException {};
-struct invalideGraphFileFormatException {};
-
-typedef MMapType  :: allocator<char>:: type              char_allocator;
-typedef bip :: basic_string<char, std :: char_traits<char>, char_allocator> shm_string; // not to be confused with std :: basic_string
-
+struct invalidGraphFileFormatException {};
 
 /*
  * strings. Every string, including but not limited to node names, to be stored in a mmaped file
  */
 
 
-static size_t hashSHMString (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &s) { std :: string s2(s.c_str()); return boost :: hash<std :: string>() (s2); } // TODO: Make the index now how to hash itself
-static bool equalSHMStrings (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &l , const shm_string &r) { return 0 == strcmp(l.c_str(), r.c_str()); }
-class StringWithId_Mic_WrapRO : public strings :: StringArray {
-public:
-	struct StringWithId { // every string, even those that are NOT node names, will be stored just once in a single mmap file.
-		int         id;
-		shm_string  s;
-		StringWithId( int id_
-	        	, const char *s_
-	        	, const char_allocator &a)
-	   	: id(id_), s(s_, a)
-		{}
-	};
-	typedef bmi :: multi_index_container<
-  	StringWithId,
-  	bmi :: indexed_by<
-	 	bmi :: hashed_unique  <bmi :: tag<idT>,  BOOST_MULTI_INDEX_MEMBER(StringWithId,int,id)>,
-	 	bmi :: hashed_unique  <bmi :: tag<nameT>,BOOST_MULTI_INDEX_MEMBER(StringWithId,shm_string,s)>
-		>,
-  	MMapType  :: allocator<StringWithId>:: type
-	> StringWithId_Mic;
-private:
-	const StringWithId_Mic * const d;
-public:
-	explicit StringWithId_Mic_WrapRO(MMapType &segment_strings)
-			: d( segment_strings.find<StringWithId_Mic> ("StringWithId_Mic") . first)
-		{
-		}
-	virtual const char * operator[] (strings :: StrH sh) const {
-		StringWithId_Mic :: index_iterator<idT>:: type i = d->get<idT>().find(sh.get_underlying_id());
-		assert(i != d->get<idT>().end() );
-		return i->s.c_str();
-	}
-	virtual strings :: StrH StringToStringId(const char *s) const {
-		StringWithId_Mic :: index_iterator<nameT>:: type i = d->get<nameT>().find(s, hashSHMString, equalSHMStrings);
-		assert(i != d->get<nameT>().end() );
-		return strings :: StrH(i->id); // TODO: Remove Duplication of the two implementations of StringArrays members (and look for other dupes?)
-	}
-};
 class ModifiableStringArray : public strings :: StringArray {
 public:
 	virtual size_t size() const = 0;
@@ -166,7 +136,6 @@ protected:
 public:
 	virtual int numNodes() const;
 	virtual int numRels()  const;
-	virtual int numNodesWithAtLeastOneRel()  const;
 	virtual const boost :: unordered_set<int> & myRels(int n) const;
 	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
 	virtual const char * NodeAsString(int v) const;
@@ -176,7 +145,6 @@ public:
 };
 /* virtual */ int DumbGraphReadableTemplate :: numNodes() const { return nodesRO->size(); }
 /* virtual */ int DumbGraphReadableTemplate :: numRels()  const { return relationshipsRO->size(); }
-/* virtual */ int DumbGraphReadableTemplate :: numNodesWithAtLeastOneRel()  const { return neighbouring_relationshipsRO->size(); }
 /* virtual */ const boost :: unordered_set<int> & DumbGraphReadableTemplate :: myRels(int n) const {
 		shmGraphRaw :: neighbours_to_relationships_map :: const_iterator i = neighbouring_relationshipsRO->find(n);
 		if(i == neighbouring_relationshipsRO->end()) { // it's possible to add a node without any corresponding edges. Must check for this.
@@ -228,7 +196,7 @@ public:
 		assert(this->strings_wrap == this->strings_wrapRO.get()); // delete strings_wrap; // DO NOT delete here, the auto_ptr already has it
 		// delete nodes; delete relationships; delete neighbouring_relationships; // seems like you can't/shouldn't delete objects like this
 	}
-	explicit DumbGraphRaw(const std :: string &dir);
+	explicit DumbGraphRaw();
 	int insertNode(strings :: StrH node_name) {
 		shmGraphRaw :: nodeWithName_Set :: index_iterator<nameT>:: type i = nodes->get<nameT>().find(node_name);
 		if(i == nodes->get<nameT>().end()) {
@@ -276,7 +244,7 @@ public:
 		}
 	}
 };
-DumbGraphRaw :: DumbGraphRaw(const std :: string &dir)
+DumbGraphRaw :: DumbGraphRaw()
 {
 		nodes         = new shmGraphRaw :: nodeWithName_Set();
 		relationships = new shmGraphRaw :: relationship_set();
@@ -291,35 +259,24 @@ DumbGraphRaw :: DumbGraphRaw(const std :: string &dir)
 }
 
 
-/*
- * The funcs to read the text and load the object ...
- */
 
 ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetailsInterface *edge_details) {
-	DumbGraphRaw *nodes_and_rels_wrap = NULL;
-
 	assert(graphTextFileName);
-	nodes_and_rels_wrap = new DumbGraphRaw("");
+	DumbGraphRaw *nodes_and_rels_wrap = new DumbGraphRaw();
 
 	assert(nodes_and_rels_wrap);
 	nodes_and_rels_wrap->hasASelfLoop = false; // this will be changed if/when a self loop is found
 
-		// PP(nodes_and_rels_wrap->strings_wrap->size());
-
-		// PP(nodes_and_rels_wrap->numNodes());
-		// PP(nodes_and_rels_wrap->numNodesWithAtLeastOneRel());
-		// PP(nodes_and_rels_wrap->numRels());
-
-		ifstream graphTextStream(graphTextFileName); 
-		if(!graphTextStream.is_open())
-			throw fileDoesNotExistException();
-		forEach(const std :: string &s, amd :: rangeOverStream(graphTextStream)) {
+	ifstream graphTextStream(graphTextFileName); 
+	if(!graphTextStream.is_open())
+		throw fileDoesNotExistException();
+	forEach(const std :: string &s, amd :: rangeOverStream(graphTextStream)) {
 			istringstream oneLine(s);
 			amd :: RangeOverStream fields(oneLine, " \t");
-			!fields.empty() || ({ throw invalideGraphFileFormatException(); 0; });
+			!fields.empty() || ({ throw invalidGraphFileFormatException(); 0; });
 			std :: string l = fields.front();
 			fields.popFront();
-			!fields.empty() || ({ throw invalideGraphFileFormatException(); 0; });
+			!fields.empty() || ({ throw invalidGraphFileFormatException(); 0; });
 			std :: string r = fields.front();
 			
 			fields.popFront();
@@ -341,18 +298,8 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 
 			edge_details->new_rel(relId, edgeAsIds, weight);
 
-			if(0)
-			cout << "line:"
-				<< "\t" << relId
-				<< "\t" << edgeAsIds.first << '"' << l << '"'
-				<< '\t' << edgeAsIds.second << '"' << r << '"'
-				<< '\t' << '"' << weight << '"'
-				<< endl;
-		}
-
+	}
 	return nodes_and_rels_wrap;
 }
-
-ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const bool selfloops_allowed, graph :: weights :: EdgeDetailsInterface *);
 
 } // namespace shmGraphRaw {
