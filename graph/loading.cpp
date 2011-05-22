@@ -13,24 +13,34 @@ using namespace std;
 namespace graph {
 namespace loading {
 
+template <class NodeNameT>
 struct ModifiableNetwork;
-static void read_edge_list_from_file(ModifiableNetwork *network, const string file_name);
+template <class NodeNameT>
+static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *network, const string file_name);
+template
+static void read_edge_list_from_file(ModifiableNetwork<NodeNameIsInt32> *network, const string file_name);
+template
+static void read_edge_list_from_file(ModifiableNetwork<NodeNameIsString> *network, const string file_name);
 typedef pair< pair<string, string> , string> ThreeStrings;
 static ThreeStrings parseLine(const string &lineOrig);
 
-struct ModifiableNetwork : public Network { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
-	vector<string> ordered_node_names;
-	ModifiableNetwork(const bool directed, const bool weighted) : Network(directed, weighted) {
+template <class NodeNameT>
+struct ModifiableNetwork : public Network<NodeNameT> { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
+	typedef typename NodeNameT :: value_type t;
+	vector< t > ordered_node_names;
+	ModifiableNetwork(const bool directed, const bool weighted) : Network<NodeNameT>(directed, weighted) {
 	}
 	virtual ~ ModifiableNetwork() throw() {
 	}
-	int find_ordered_node_names_offset(const string &node_name) {
+	int find_ordered_node_names_offset(const t &node_name) {
 		// node_name must be in this->ordered_node_names. Now to find *where* it is.
 		const int offset = lower_bound(this->ordered_node_names.begin(), this->ordered_node_names.end(), node_name) - this->ordered_node_names.begin();
 		assert( this->ordered_node_names.at(offset) == node_name);
 		return offset;
 	}
 };
+template struct ModifiableNetwork<graph :: NodeNameIsInt32>;
+template struct ModifiableNetwork<graph :: NodeNameIsString>;
 
 static ThreeStrings parseLine(const string &lineOrig) {
 	PP(lineOrig);
@@ -61,7 +71,8 @@ static ThreeStrings parseLine(const string &lineOrig) {
 	return t;
 }
 
-static void read_edge_list_from_file(ModifiableNetwork *modifiable_network, const string file_name) {
+template <class NodeNameT>
+static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_network, const string file_name) {
 	assert(modifiable_network->ordered_node_names.empty());
 	/*
 	 * This will make *three* passes:
@@ -70,19 +81,20 @@ static void read_edge_list_from_file(ModifiableNetwork *modifiable_network, cons
 	 * - Finally, now that the node_names, node_ids and relationship_ids are sorted, read the network into the prepared datastructures, including the weights
 	 */
 	PP(file_name);
+	typedef typename NodeNameT :: value_type t;
 	{ // first pass: just store the node names
 		ifstream f(file_name.c_str());
 		string line;
-		set<string> set_of_node_names; // This will store all the node names. Re
+		set<t> set_of_node_names; // This will store all the node names.
 		while( getline(f, line) ) {
 			// There might be a '\r' at the end of this line (dammit!)
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
 			ThreeStrings t = parseLine(line);
-			set_of_node_names.insert(t.first.first);
-			set_of_node_names.insert(t.first.second);
+			set_of_node_names.insert( NodeNameT :: fromString(t.first.first) );
+			set_of_node_names.insert( NodeNameT :: fromString(t.first.second) );
 		}
 		PP(set_of_node_names.size());
-		for( set<string> :: const_iterator i = set_of_node_names.begin(); i != set_of_node_names.end(); i++) {
+		for( typename set<t> :: const_iterator i = set_of_node_names.begin() ; i != set_of_node_names.end(); i++) {
 			modifiable_network->ordered_node_names.push_back(*i);
 		}
 		PP(modifiable_network->ordered_node_names.size());
@@ -94,17 +106,22 @@ static void read_edge_list_from_file(ModifiableNetwork *modifiable_network, cons
 		while( getline(f, line) ) {
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
 			ThreeStrings t = parseLine(line);
-			const int source_node_id = modifiable_network->find_ordered_node_names_offset(t.first.first);
-			const int target_node_id = modifiable_network->find_ordered_node_names_offset(t.first.second);
+			const int source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
+			const int target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
 			PP2(source_node_id, target_node_id);
 		}
 	}
 }
 
-std :: auto_ptr<Network> make_Network_from_edge_list(const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
-	ModifiableNetwork *network = new ModifiableNetwork(directed, weighted);
-	read_edge_list_from_file(network, file_name);
-	return auto_ptr<Network>(network);
+std :: auto_ptr< graph :: NetworkInt32 > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
+	ModifiableNetwork<NodeNameIsInt32> *network = new ModifiableNetwork<NodeNameIsInt32>(directed, weighted);
+	read_edge_list_from_file<NodeNameIsInt32> (network, file_name);
+	return auto_ptr<NetworkInt32 >(network);
+}
+std :: auto_ptr< graph :: NetworkString > make_Network_from_edge_list_string (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
+	ModifiableNetwork<NodeNameIsString> *network = new ModifiableNetwork<NodeNameIsString>(directed, weighted);
+	read_edge_list_from_file<NodeNameIsString> (network, file_name);
+	return auto_ptr<NetworkString >(network);
 }
 
 BadlyFormattedLine :: BadlyFormattedLine(int _line_number, std :: string _bad_line) : line_number(_line_number), bad_line(_bad_line) {

@@ -15,7 +15,8 @@ struct BadlyFormattedLine : public std :: exception {
 	virtual ~ BadlyFormattedLine() throw();
 };
 	
-std :: auto_ptr<Network> make_Network_from_edge_list(const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine);
+std :: auto_ptr< graph :: Network<graph :: NodeNameIsInt32>  > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine);
+std :: auto_ptr< graph :: Network<graph :: NodeNameIsString> > make_Network_from_edge_list_string(const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine);
 
 } // namespace loading
 } // namespace graph
