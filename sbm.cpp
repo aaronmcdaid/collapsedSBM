@@ -13,7 +13,6 @@ using namespace std;
 #include "aaron_utils.hpp"
 #include "shmGraphRaw.hpp"
 #include "sbm_state.hpp"
-#include "mmsb_state.hpp"
 #include "scf.hpp"
 #include "sbm.hpp"
 
@@ -29,7 +28,6 @@ struct UsageMessage {
 };
 
 void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
-void runMMSB(const sbm :: GraphType *g, const int commandLineK);
 
 #if 0
 // static
@@ -1402,87 +1400,4 @@ void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: we
 	}
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
-}
-
-void runMMSB(const sbm :: GraphType *g, const int commandLineK) {
-	assert(commandLineK > 1);
-	PP2(g->numNodes(), g->numRels());
-	sbm :: MMSBstate s(g);
-	PP(s._N);
-	// s.P_zs_given_K();
-	// cout << endl;
-
-	while(s._k < commandLineK)
-		s.appendEmptyCluster();
-	PP(s._k);
-
-	s.P_zs_given_K();
-	cout << endl;
-
-	if(0) {
-		/* 18 3 4 5 7
-		 * 10 12 17 2 8
-		 * 1 11 13 14 6
-		 * 15 16 19 20 9
-		 */
-		const int comm1[] = {18,3,4,5,7,-1};
-		const int comm2[] = {10,12,17,2,8,-1};
-		const int comm3[] = {1,11,13,14,6,-1};
-		const int comm4[] = {15,16,19,20,9,-1};
-		const int * comms[] = {comm1,comm2,comm3,comm4,NULL};
-		for(int commid=1; commid<4;commid++) {
-			const int * comm = comms[commid];
-			for(const int *commW = comm; *commW != -1; commW++) {
-				const int W = *commW;
-				PP(W);
-				const int w = g->StringToNodeId(printfstring("%d", W).c_str());
-				for(int v = 0; v<s._N;v++) {
-					if(w!=v)
-						s.performMoveAndUpdateEdges(w,v,commid);
-				}
-			}
-		}
-	}
-	// with SIMPLER_Z==0.5, pmf(GT) == 2271.4
-	// with SIMPLER_Z==2.0, pmf(GT) ==  536.319
-	if(1) { // random initialization
-		for(int w=0; w<s._N; w++) {
-			for(int v=0; v<s._N; v++) {
-				if(w!=v) {
-					const int randomID = drand48()*s._k;
-					if(randomID>0)
-						s.performMoveAndUpdateEdges(w,v,randomID);
-				}
-			}
-		}
-	}
-
-	s.P_zs_given_K();
-	cout << endl;
-
-	long double deltas = 0.0L;
-
-	for(int i=0; i<=100000000; i++) {
-		const int w=g->numNodes() * drand48();
-		const int v=g->numNodes() * drand48();
-		if(w!=v) {
-			const long double pre = s.pmf_slow();
-			const long double delta = s.MetropolisMoveOnePair(w,v,4*drand48());
-			const long double post = s.pmf_slow();
-			PP3(pre,delta,post);
-			PP(pre+delta - post);
-			assert(VERYCLOSE(pre+delta , post));
-			deltas += delta;
-		}
-		if(i%1==0) {
-			PP(i);
-			s.P_zs_given_K();
-			PP(deltas);
-			cout << endl;
-		}
-	}
-
-	s.P_zs_given_K();
-	PP(deltas);
-	cout << endl;
 }
