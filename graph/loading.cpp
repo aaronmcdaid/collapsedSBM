@@ -86,7 +86,7 @@ static ThreeStrings parseLine(const string &lineOrig) {
 
 template <class NodeNameT>
 static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_network, const string file_name) {
-	assert(modifiable_network->ordered_node_names.empty());
+	assert(modifiable_network && modifiable_network->ordered_node_names.empty());
 	/*
 	 * This will make *three* passes:
 	 * - One pass to identify all the node names (strings in the text file) and then to sort them so that consecutive-integer IDs can be assigned to them (respecting the order of the strings)
@@ -120,12 +120,12 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		while( getline(f, line) ) {
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
 			ThreeStrings t = parseLine(line);
-			int32_t source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
-			int32_t target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
-			if(source_node_id > target_node_id)
-				swap(source_node_id, target_node_id);
-			set_of_relationships.insert( make_pair(source_node_id, target_node_id) );
-			PP2(source_node_id, target_node_id);
+			int32_t one_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
+			int32_t another_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
+			if(one_node_id > another_node_id)
+				swap(one_node_id, another_node_id);
+			set_of_relationships.insert( make_pair(one_node_id, another_node_id) );
+			PP2(one_node_id, another_node_id);
 		}
 		for( typename set< pair<int32_t,int32_t> > :: const_iterator i = set_of_relationships.begin() ; i != set_of_relationships.end(); i++) {
 			tmp_ordered_relationships.push_back(*i);
@@ -154,6 +154,27 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 			}
 		}
 
+	}
+
+	{ // third pass. Assigning weights to the edges
+		assert(modifiable_network->edge_weights.get());
+		ifstream f(file_name.c_str(), ios_base :: in | ios_base :: binary);
+		string line;
+		while( getline(f, line) ) {
+			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
+			ThreeStrings t = parseLine(line);
+			PP3(t.first.first, t.first.second, t.second);
+			const int32_t source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
+			const int32_t target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
+			int32_t one_node_id = source_node_id;
+			int32_t another_node_id = target_node_id;
+			if(one_node_id > another_node_id)
+				swap(one_node_id, another_node_id);
+			int32_t relationship_id = lower_bound(tmp_ordered_relationships.begin(), tmp_ordered_relationships.end(), make_pair(one_node_id, another_node_id)) - tmp_ordered_relationships.begin();
+			assert( tmp_ordered_relationships.at(relationship_id).first  == one_node_id );
+			assert( tmp_ordered_relationships.at(relationship_id).second == another_node_id );
+			modifiable_network->edge_weights->new_rel(relationship_id, make_pair(source_node_id, target_node_id), t.second);
+		}
 	}
 
 	MyVSG * tmp_plain_graph = new MyVSG();

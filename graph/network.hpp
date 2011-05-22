@@ -45,7 +45,7 @@ struct Network {
 	 * The nodes will have string names, and the edges might have directionality and weights
 	 */
 	std :: auto_ptr<const graph :: VerySimpleGraph> plain_graph;
-	std :: auto_ptr<const graph :: weights :: EdgeDetailsInterface> edge_weights;
+	std :: auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_weights;
 public: // I should make the above private some time!
 	virtual ~ Network() throw(); // this forces derivations to declare a destructor.
 	Network(const bool directed, const bool weighted);
