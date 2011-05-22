@@ -1,3 +1,4 @@
+#include "graph/network.hpp"
 using namespace std;
 #include <algorithm>
 #include <vector>
@@ -140,6 +141,10 @@ int main(int argc, char **argv) {
 	sbm :: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g;
 	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
+	{
+		// Try the new graph loader
+		std :: auto_ptr<graph :: Network> network(new graph :: Network());
+	}
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
 		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: NoDetails >();

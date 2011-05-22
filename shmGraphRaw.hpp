@@ -1,8 +1,6 @@
 #ifndef SHMGRAPHRAW_H
 #define SHMGRAPHRAW_H
 
-#include "strings.hpp"
-
 #include <vector> 
 #include <sstream> 
 
@@ -11,21 +9,11 @@
 
 #include "Range.hpp"
 
+#include "graph/graph.hpp"
 #include "graph/weights.hpp"
 namespace shmGraphRaw {
 
-
-class VerySimpleGraph { // consecutive ints. No attributes, or directions, or anything
-public:
-	virtual int numNodes() const = 0;
-	virtual int numRels() const = 0;
-	virtual ~ VerySimpleGraph() {}
-};
-
-
-
-
-class ReadableShmGraphBase : public VerySimpleGraph {
+class ReadableShmGraphBase : public graph :: VerySimpleGraph {
 public:
 	bool hasASelfLoop;
 	virtual ~ReadableShmGraphBase();

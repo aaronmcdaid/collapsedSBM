@@ -1,3 +1,6 @@
+#ifndef _GRAPH_WEIGHTS_
+#define _GRAPH_WEIGHTS_
+
 #include<vector>
 #include<string>
 #include<cassert>
@@ -114,3 +117,5 @@ struct WeightNoDir {
 
 } // namespace weights
 } // namespace graph
+
+#endif

@@ -1,3 +1,4 @@
+#include "graph/strings.hpp"
 #include "shmGraphRaw.hpp"
 
 #include <vector>
