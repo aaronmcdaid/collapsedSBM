@@ -3,9 +3,15 @@
 #include <vector>
 #include <memory>
 #include <fstream>
+#include <sstream>
 #include <string.h>
+#include <boost/unordered_map.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+namespace bmi = boost :: multi_index;
 
-#include "aaron_utils.hpp"
 
 namespace shmGraphRaw {
 
@@ -41,7 +47,7 @@ int ReadableShmGraphBase :: oppositeEndPoint(int relId, int oneEnd) const {
 		}
 }
 std :: string ReadableShmGraphBase :: WhichNode(int v) const {
-		ostringstream s;
+	std ::ostringstream s;
 		s << "\"";
 		s << this->NodeAsString(v); // (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
 		s << "\"";
@@ -137,7 +143,7 @@ public:
 	virtual int numNodes() const;
 	virtual int numRels()  const;
 	virtual const boost :: unordered_set<int> & myRels(int n) const;
-	virtual pair<const char*, const char*> EndPointsAsStrings(int relId) const;
+	virtual std :: pair<const char*, const char*> EndPointsAsStrings(int relId) const;
 	virtual const char * NodeAsString(int v) const;
 	virtual int StringToNodeId(const char *s) const;
 	virtual const std :: pair<int, int> & EndPoints(int relId) const;
@@ -153,12 +159,12 @@ public:
 		else
 			return i->second;
 	}
-/* virtual */ pair<const char*, const char*> DumbGraphReadableTemplate :: EndPointsAsStrings(int relId) const {
+/* virtual */ std :: pair<const char*, const char*> DumbGraphReadableTemplate :: EndPointsAsStrings(int relId) const {
 		assert(relId >=0 && relId < this->numRels() );
-		const pair<int,int> &endpoints = relationshipsRO->get<idT>().find(relId)->nodeIds;
+		const std :: pair<int,int> &endpoints = relationshipsRO->get<idT>().find(relId)->nodeIds;
 		const char *l = this->NodeAsString(endpoints.first); // (*strings_wrap)[nodes->get<idT>().find(endpoints.first )->string_h];
 		const char *r = this->NodeAsString(endpoints.second);// (*strings_wrap)[nodes->get<idT>().find(endpoints.second)->string_h];
-		return make_pair(l,r);
+		return std :: make_pair(l,r);
 	}
 /* virtual */ const char * DumbGraphReadableTemplate :: NodeAsString(int v) const {
 		return (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
@@ -177,9 +183,9 @@ public:
 	}
 /* virtual */ bool DumbGraphReadableTemplate :: are_connected(int v1, int v2) const {
 		if(v1 > v2)
-			swap(v1,v2);
+			std :: swap(v1,v2);
 		assert (v1 <= v2);
-		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(make_pair(v1,v2)) );
+		return (relationshipsRO->get<nodeIdsT>().end() != relationshipsRO->get<nodeIdsT>().find(std :: make_pair(v1,v2)) );
 	}
 
 class DumbGraphRaw : public DumbGraphReadableTemplate {
@@ -210,9 +216,9 @@ public:
 			return i->id ;
 		}
 	}
-	int insertRel(pair<int,int> p) {
+	int insertRel(std :: pair<int,int> p) {
 		if(p.first > p.second)
-			swap(p.first, p.second);
+			std :: swap(p.first, p.second);
 		assert(p.first <= p.second);
 		shmGraphRaw :: relationship_set :: index_iterator<nodeIdsT>:: type i = relationships->get<nodeIdsT>().find(p);
 		if(i == relationships->get<nodeIdsT>().end()) {
@@ -227,13 +233,13 @@ public:
 				{
 					i = neighbouring_relationships->find(p.first);
 					if(i == neighbouring_relationships->end())
-						i = neighbouring_relationships->insert( make_pair(p.first, empty_set_for_neighbours) ) .first ;
+						i = neighbouring_relationships->insert( std :: make_pair(p.first, empty_set_for_neighbours) ) .first ;
 					i->second.insert(relId);
 				}
 				{
 					i = neighbouring_relationships->find(p.second);
 					if(i == neighbouring_relationships->end())
-						i = neighbouring_relationships->insert( make_pair(p.second, empty_set_for_neighbours) ) .first ;
+						i = neighbouring_relationships->insert( std :: make_pair(p.second, empty_set_for_neighbours) ) .first ;
 					i->second.insert(relId);
 				}
 			}
@@ -267,11 +273,11 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 	assert(nodes_and_rels_wrap);
 	nodes_and_rels_wrap->hasASelfLoop = false; // this will be changed if/when a self loop is found
 
-	ifstream graphTextStream(graphTextFileName); 
+	std :: ifstream graphTextStream(graphTextFileName); 
 	if(!graphTextStream.is_open())
 		throw fileDoesNotExistException();
 	forEach(const std :: string &s, amd :: rangeOverStream(graphTextStream)) {
-			istringstream oneLine(s);
+			std :: istringstream oneLine(s);
 			amd :: RangeOverStream fields(oneLine, " \t");
 			!fields.empty() || ({ throw invalidGraphFileFormatException(); 0; });
 			std :: string l = fields.front();
@@ -285,7 +291,7 @@ ReadableShmGraphTemplate * loadEdgeList(const char *graphTextFileName, const boo
 				weight.resize(weight.length()-1);
 			}
 
-			pair<int,int> edgeAsIds = make_pair(
+			std :: pair<int,int> edgeAsIds = std :: make_pair(
 					nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(l))
 					,nodes_and_rels_wrap->insertNode(nodes_and_rels_wrap->strings_wrap->insert(r))
 				);
