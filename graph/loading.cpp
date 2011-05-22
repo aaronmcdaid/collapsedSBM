@@ -103,18 +103,13 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 			set_of_node_names.insert( NodeNameT :: fromString(t.first.first) );
 			set_of_node_names.insert( NodeNameT :: fromString(t.first.second) );
 		}
-		PP(set_of_node_names.size());
 		for( typename set<t> :: const_iterator i = set_of_node_names.begin() ; i != set_of_node_names.end(); i++) {
 			modifiable_network->ordered_node_names.push_back(*i);
 		}
-		PP(modifiable_network->ordered_node_names.size());
 		assert(modifiable_network->ordered_node_names.size() == set_of_node_names.size());
 	}
 
-	const int N = modifiable_network->ordered_node_names.size();
-	// before starting the second pass, we are able to create the vsg object to store the underlying plain graph.
-	MyVSG * tmp_plain_graph = new MyVSG();
-
+	vector< pair<int32_t,int32_t> > tmp_ordered_relationships;
 	{ // second pass. Find all the distinct relationships (node_id_1, node_id_2; where node_id_1 <= node_id_2)
 		ifstream f(file_name.c_str(), ios_base :: in | ios_base :: binary);
 		string line;
@@ -129,13 +124,15 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 			set_of_relationships.insert( make_pair(source_node_id, target_node_id) );
 			PP2(source_node_id, target_node_id);
 		}
-		PP(set_of_relationships.size());
 		for( typename set< pair<int32_t,int32_t> > :: const_iterator i = set_of_relationships.begin() ; i != set_of_relationships.end(); i++) {
-			tmp_plain_graph->ordered_relationships.push_back(*i);
+			tmp_ordered_relationships.push_back(*i);
 		}
-		PP(tmp_plain_graph->ordered_relationships.size());
+		assert(set_of_relationships.size() == tmp_ordered_relationships.size());
 	}
 
+	MyVSG * tmp_plain_graph = new MyVSG();
+	tmp_plain_graph->ordered_relationships.swap(tmp_ordered_relationships);
+	const int N = modifiable_network->ordered_node_names.size();
 	const int R = tmp_plain_graph->ordered_relationships.size();
 	tmp_plain_graph->N = N;
 	tmp_plain_graph->R = R;
