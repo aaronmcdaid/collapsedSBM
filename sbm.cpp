@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
 	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
 	{
 		// Try the new graph loader
-		std :: auto_ptr<graph :: Network> network(new graph :: Network());
+		std :: auto_ptr<graph :: Network> network(new graph :: Network(args_info.directed_flag, args_info.weighted_flag));
 		graph :: loading :: read_edge_list_from_file( network.get(), edgeListFileName );
 	}
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei

@@ -14,6 +14,8 @@ struct Network {
 	std :: auto_ptr<graph :: VerySimpleGraph> vsg;
 	std :: auto_ptr<strings :: StringArray> string_array;
 	std :: auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_weights;
+	Network(const bool directed, const bool weighted);
+	virtual ~ Network();
 };
 
 } // namespace graph
