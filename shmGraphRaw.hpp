@@ -1,6 +1,8 @@
 #ifndef SHMGRAPHRAW_H
 #define SHMGRAPHRAW_H
 
+#include "strings.hpp"
+
 #include <set> 
 #include <map> 
 #include <vector> 
@@ -11,7 +13,6 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 namespace bip = boost :: interprocess;
-
 typedef boost :: interprocess :: managed_mapped_file MMapType; // typedef boost :: interprocess :: managed_shared_memory MMapType;
 
 #include <boost/unordered_set.hpp>
@@ -50,21 +51,7 @@ typedef bmi :: multi_index_container<
 typedef boost :: unordered_map < int, boost :: unordered_set<int> > neighbours_to_relationships_map;
 
 
-class StrH { // string handle. It just wraps an int that refers to the memory mapped file
-	int i;
-public:
-	explicit StrH(int _i);
-	bool operator == (StrH r) const;
-	struct hasher;
-	int get_underlying_id() const; // Shouldn't really call this too much.
-};
 
-class StringArray {
-public:
-	virtual const char * operator[] (StrH s) const = 0;
-	virtual StrH StringToStringId(const char *s) const = 0;
-	virtual ~StringArray();
-};
 
 class ReadableShmGraphBase {
 public:

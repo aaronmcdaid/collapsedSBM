@@ -46,19 +46,10 @@ typedef bip :: basic_string<char, std :: char_traits<char>, char_allocator> shm_
  * strings. Every string, including but not limited to node names, to be stored in a mmaped file
  */
 
-StrH :: StrH(int _i) : i(_i) {}
-struct StrH :: hasher {
-	size_t operator() (StrH s)         const { return boost :: hash_value(s.i); }
-};
-bool StrH :: operator == (StrH r) const { return this->i == r.i; }
-int StrH :: get_underlying_id() const { return this->i; }
-
-StringArray :: ~StringArray() {
-}
 
 static size_t hashSHMString (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &s) { std :: string s2(s.c_str()); return boost :: hash<std :: string>() (s2); } // TODO: Make the index now how to hash itself
 static bool equalSHMStrings (const boost :: container :: basic_string<char, std :: char_traits<char>, std :: allocator<char> > &l , const shm_string &r) { return 0 == strcmp(l.c_str(), r.c_str()); }
-class StringWithId_Mic_WrapRO : public StringArray {
+class StringWithId_Mic_WrapRO : public strings :: StringArray {
 public:
 	struct StringWithId { // every string, even those that are NOT node names, will be stored just once in a single mmap file.
 		int         id;
@@ -84,26 +75,26 @@ public:
 			: d( segment_strings.find<StringWithId_Mic> ("StringWithId_Mic") . first)
 		{
 		}
-	virtual const char * operator[] (StrH sh) const {
+	virtual const char * operator[] (strings :: StrH sh) const {
 		StringWithId_Mic :: index_iterator<idT>:: type i = d->get<idT>().find(sh.get_underlying_id());
 		assert(i != d->get<idT>().end() );
 		return i->s.c_str();
 	}
-	virtual StrH StringToStringId(const char *s) const {
+	virtual strings :: StrH StringToStringId(const char *s) const {
 		StringWithId_Mic :: index_iterator<nameT>:: type i = d->get<nameT>().find(s, hashSHMString, equalSHMStrings);
 		assert(i != d->get<nameT>().end() );
-		return StrH(i->id); // TODO: Remove Duplication of the two implementations of StringArrays members (and look for other dupes?)
+		return strings :: StrH(i->id); // TODO: Remove Duplication of the two implementations of StringArrays members (and look for other dupes?)
 	}
 };
-class ModifiableStringArray : public StringArray {
+class ModifiableStringArray : public strings :: StringArray {
 public:
 	virtual size_t size() const = 0;
-	virtual StrH insert(const char * s) = 0;
-        virtual StrH insert(std :: string &s) {
+	virtual strings :: StrH insert(const char * s) = 0;
+        virtual strings :: StrH insert(std :: string &s) {
 			return insert(s.c_str());
 	}
-	virtual const char * operator[] (StrH sh) const = 0;
-	virtual StrH StringToStringId(const char *s) const = 0;
+	virtual const char * operator[] (strings :: StrH sh) const = 0;
+	virtual strings :: StrH StringToStringId(const char *s) const = 0;
 };
 class ModifiableStringArrayInPlainMemory : public ModifiableStringArray {
 private:
@@ -116,24 +107,24 @@ public:
 	virtual size_t size() const {
 		return the_strings.size();
 	}
-	virtual StrH insert(const char * s) {
+	virtual strings :: StrH insert(const char * s) {
 		std :: string str(s);
 		if(string2id.count(str)==0) {
 			int nextID = the_strings.size();
 			string2id[str] = nextID;
 			assert((int)string2id.size() == nextID+1);
 			the_strings.push_back(str);
-			return StrH(nextID);
+			return strings :: StrH(nextID);
 		} else {
-			return StrH(string2id.at(str));
+			return strings :: StrH(string2id.at(str));
 		}
 	}
-	virtual const char * operator[] (StrH sh) const {
+	virtual const char * operator[] (strings :: StrH sh) const {
 		return the_strings.at(sh.get_underlying_id()).c_str();
 	}
-	virtual StrH StringToStringId(const char *s) const {
+	virtual strings :: StrH StringToStringId(const char *s) const {
 		std :: string str(s);
-		return StrH(string2id.at(str));
+		return strings :: StrH(string2id.at(str));
 	}
 };
 
@@ -143,9 +134,9 @@ public:
  */
 struct nodeWithName {
 	int         id;
-	StrH  string_h;
+	strings :: StrH  string_h;
 	nodeWithName( int _id
-	        , StrH _string_h
+	        , strings :: StrH _string_h
 	        )
 	   : id(_id), string_h(_string_h)
 	{}
@@ -154,7 +145,7 @@ typedef bmi :: multi_index_container<
 		nodeWithName,
 		bmi :: indexed_by<
 			bmi :: hashed_unique  <bmi :: tag<idT>,  BOOST_MULTI_INDEX_MEMBER(nodeWithName,int,id)>,
-			bmi :: hashed_unique  <bmi :: tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,StrH,string_h) ,StrH :: hasher>
+			bmi :: hashed_unique  <bmi :: tag<nameT>,BOOST_MULTI_INDEX_MEMBER(nodeWithName,strings :: StrH,string_h) ,strings :: StrH :: hasher>
 		>
 	> nodeWithName_Set;
 
@@ -170,7 +161,7 @@ protected:
 	const shmGraphRaw :: nodeWithName_Set *nodesRO;
 	const shmGraphRaw :: relationship_set *relationshipsRO;
 	const shmGraphRaw :: neighbours_to_relationships_map *neighbouring_relationshipsRO;
-	std :: auto_ptr<const StringArray> strings_wrapRO;
+	std :: auto_ptr<const strings :: StringArray> strings_wrapRO;
 	const boost :: unordered_set<int> *empty_set_for_neighboursRO;
 public:
 	virtual int numNodes() const;
@@ -205,7 +196,7 @@ public:
 		return (*strings_wrapRO)[nodesRO->get<idT>().find(v )->string_h];
 	}
 /* virtual */ int DumbGraphReadableTemplate :: StringToNodeId(const char *s) const {
-		StrH string_handle = strings_wrapRO->StringToStringId(s);
+		strings :: StrH string_handle = strings_wrapRO->StringToStringId(s);
 		// assert (0==strcmp(s , (*strings_wrapRO)[string_handle]));
 		shmGraphRaw :: nodeWithName_Set :: index_iterator<nameT>:: type i = nodesRO->get<nameT>().find(string_handle );
 		assert(i != nodesRO->get<nameT>().end());
@@ -238,7 +229,7 @@ public:
 		// delete nodes; delete relationships; delete neighbouring_relationships; // seems like you can't/shouldn't delete objects like this
 	}
 	explicit DumbGraphRaw(const std :: string &dir);
-	int insertNode(StrH node_name) {
+	int insertNode(strings :: StrH node_name) {
 		shmGraphRaw :: nodeWithName_Set :: index_iterator<nameT>:: type i = nodes->get<nameT>().find(node_name);
 		if(i == nodes->get<nameT>().end()) {
 			int proposedNewId = nodes->size();
