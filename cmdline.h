@@ -38,8 +38,6 @@ struct gengetopt_args_info
   const char *git_version_help; /**< @brief detailed version description help description.  */
   int verbose_flag;	/**< @brief detailed debugging (default=off).  */
   const char *verbose_help; /**< @brief detailed debugging help description.  */
-  int mmsb_flag;	/**< @brief Airoldi's MMSB (default=off).  */
-  const char *mmsb_help; /**< @brief Airoldi's MMSB help description.  */
   int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
   char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
   const char *K_help; /**< @brief Number of clusters, K help description.  */
@@ -80,7 +78,6 @@ struct gengetopt_args_info
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int git_version_given ;	/**< @brief Whether git-version was given.  */
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
-  unsigned int mmsb_given ;	/**< @brief Whether mmsb was given.  */
   unsigned int K_given ;	/**< @brief Whether K was given.  */
   unsigned int directed_given ;	/**< @brief Whether directed was given.  */
   unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */

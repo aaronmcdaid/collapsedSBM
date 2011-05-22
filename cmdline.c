@@ -32,7 +32,6 @@ const char *gengetopt_args_info_help[] = {
   "  -V, --version               Print version and exit",
   "      --git-version           detailed version description  (default=off)",
   "  -v, --verbose               detailed debugging  (default=off)",
-  "  -m, --mmsb                  Airoldi's MMSB  (default=off)",
   "  -K, --K=INT                 Number of clusters, K  (default=`-1')",
   "  -d, --directed              directed  (default=off)",
   "  -w, --weighted              weighted  (default=off)",
@@ -76,7 +75,6 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->version_given = 0 ;
   args_info->git_version_given = 0 ;
   args_info->verbose_given = 0 ;
-  args_info->mmsb_given = 0 ;
   args_info->K_given = 0 ;
   args_info->directed_given = 0 ;
   args_info->weighted_given = 0 ;
@@ -98,7 +96,6 @@ void clear_args (struct gengetopt_args_info *args_info)
 {
   args_info->git_version_flag = 0;
   args_info->verbose_flag = 0;
-  args_info->mmsb_flag = 0;
   args_info->K_arg = -1;
   args_info->K_orig = NULL;
   args_info->directed_flag = 0;
@@ -132,21 +129,20 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->version_help = gengetopt_args_info_help[1] ;
   args_info->git_version_help = gengetopt_args_info_help[2] ;
   args_info->verbose_help = gengetopt_args_info_help[3] ;
-  args_info->mmsb_help = gengetopt_args_info_help[4] ;
-  args_info->K_help = gengetopt_args_info_help[5] ;
-  args_info->directed_help = gengetopt_args_info_help[6] ;
-  args_info->weighted_help = gengetopt_args_info_help[7] ;
-  args_info->selfloop_help = gengetopt_args_info_help[8] ;
-  args_info->seed_help = gengetopt_args_info_help[9] ;
-  args_info->GT_vector_help = gengetopt_args_info_help[10] ;
-  args_info->algo_gibbs_help = gengetopt_args_info_help[11] ;
-  args_info->algo_m3_help = gengetopt_args_info_help[12] ;
-  args_info->iterations_help = gengetopt_args_info_help[13] ;
-  args_info->initGT_help = gengetopt_args_info_help[14] ;
-  args_info->model_scf_help = gengetopt_args_info_help[15] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[16] ;
-  args_info->mega_help = gengetopt_args_info_help[17] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[18] ;
+  args_info->K_help = gengetopt_args_info_help[4] ;
+  args_info->directed_help = gengetopt_args_info_help[5] ;
+  args_info->weighted_help = gengetopt_args_info_help[6] ;
+  args_info->selfloop_help = gengetopt_args_info_help[7] ;
+  args_info->seed_help = gengetopt_args_info_help[8] ;
+  args_info->GT_vector_help = gengetopt_args_info_help[9] ;
+  args_info->algo_gibbs_help = gengetopt_args_info_help[10] ;
+  args_info->algo_m3_help = gengetopt_args_info_help[11] ;
+  args_info->iterations_help = gengetopt_args_info_help[12] ;
+  args_info->initGT_help = gengetopt_args_info_help[13] ;
+  args_info->model_scf_help = gengetopt_args_info_help[14] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[15] ;
+  args_info->mega_help = gengetopt_args_info_help[16] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[17] ;
   
 }
 
@@ -278,8 +274,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "git-version", 0, 0 );
   if (args_info->verbose_given)
     write_into_file(outfile, "verbose", 0, 0 );
-  if (args_info->mmsb_given)
-    write_into_file(outfile, "mmsb", 0, 0 );
   if (args_info->K_given)
     write_into_file(outfile, "K", args_info->K_orig, 0);
   if (args_info->directed_given)
@@ -560,7 +554,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "version",	0, NULL, 'V' },
         { "git-version",	0, NULL, 0 },
         { "verbose",	0, NULL, 'v' },
-        { "mmsb",	0, NULL, 'm' },
         { "K",	1, NULL, 'K' },
         { "directed",	0, NULL, 'd' },
         { "weighted",	0, NULL, 'w' },
@@ -578,7 +571,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { NULL,	0, NULL, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvmK:dwsi:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -600,16 +593,6 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           if (update_arg((void *)&(args_info->verbose_flag), 0, &(args_info->verbose_given),
               &(local_args_info.verbose_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "verbose", 'v',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'm':	/* Airoldi's MMSB.  */
-        
-        
-          if (update_arg((void *)&(args_info->mmsb_flag), 0, &(args_info->mmsb_given),
-              &(local_args_info.mmsb_given), optarg, 0, 0, ARG_FLAG,
-              check_ambiguity, override, 1, 0, "mmsb", 'm',
               additional_error))
             goto failure;
         

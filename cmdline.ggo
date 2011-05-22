@@ -3,7 +3,6 @@ version "0.1"
 purpose "Fit models to network data"
 option  "git-version"        - "detailed version description"        flag       off
 option  "verbose"            v "detailed debugging"                  flag       off
-option  "mmsb"               m "Airoldi's MMSB"                      flag       off
 option  "K"                  K "Number of clusters, K"               int        default="-1" no
 option  "directed"           d "directed"                            flag       off
 option  "weighted"           w "weighted"                            flag       off

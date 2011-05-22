@@ -110,7 +110,6 @@ int main(int argc, char **argv) {
 	// const char * directoryForOutput = args_info.inputs[1];
 	PP(edgeListFileName);
 	// PP(directoryForOutput);
-	PP(args_info.mmsb_flag);
 	PP(args_info.K_arg);
 	PP(args_info.directed_flag);
 	PP(args_info.weighted_flag);
