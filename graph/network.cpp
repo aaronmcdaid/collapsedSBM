@@ -15,6 +15,6 @@ namespace graph {
 			}
 		}
 	}
-	Network :: ~ Network() {
+	Network :: ~ Network() throw() {
 	}
 } // namespace graph
