@@ -23,12 +23,21 @@ template
 static void read_edge_list_from_file(ModifiableNetwork<NodeNameIsString> *network, const string file_name);
 typedef pair< pair<string, string> , string> ThreeStrings;
 static ThreeStrings parseLine(const string &lineOrig);
+class MyVSG;
+
+/* try to put all the  forward-declares above this line */
+
+struct MyVSG : public VerySimpleGraph {
+	int N, R;
+	vector< pair<int32_t,int32_t> > ordered_relationships;
+	int numNodes() const { return this->N; }
+	int numRels() const { return this->R; }
+};
 
 template <class NodeNameT>
 struct ModifiableNetwork : public Network<NodeNameT> { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
 	typedef typename NodeNameT :: value_type t;
 	vector< t > ordered_node_names;
-	vector< pair<int32_t,int32_t> > ordered_relationships;
 	ModifiableNetwork(const bool directed, const bool weighted) : Network<NodeNameT>(directed, weighted) {
 	}
 	virtual ~ ModifiableNetwork() throw() {
@@ -101,6 +110,11 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		PP(modifiable_network->ordered_node_names.size());
 		assert(modifiable_network->ordered_node_names.size() == set_of_node_names.size());
 	}
+
+	const int N = modifiable_network->ordered_node_names.size();
+	// before starting the second pass, we are able to create the vsg object to store the underlying plain graph.
+	MyVSG * tmp_plain_graph = new MyVSG();
+
 	{ // second pass. Find all the distinct relationships (node_id_1, node_id_2; where node_id_1 <= node_id_2)
 		ifstream f(file_name.c_str(), ios_base :: in | ios_base :: binary);
 		string line;
@@ -117,10 +131,17 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		}
 		PP(set_of_relationships.size());
 		for( typename set< pair<int32_t,int32_t> > :: const_iterator i = set_of_relationships.begin() ; i != set_of_relationships.end(); i++) {
-			modifiable_network->ordered_relationships.push_back(*i);
+			tmp_plain_graph->ordered_relationships.push_back(*i);
 		}
-		PP(modifiable_network->ordered_relationships.size());
+		PP(tmp_plain_graph->ordered_relationships.size());
 	}
+
+	const int R = tmp_plain_graph->ordered_relationships.size();
+	tmp_plain_graph->N = N;
+	tmp_plain_graph->R = R;
+
+	modifiable_network->plain_graph.reset(tmp_plain_graph);
+	PP2(modifiable_network->numNodes(), modifiable_network->numRels());
 }
 
 std :: auto_ptr< graph :: NetworkInt32 > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
