@@ -4,7 +4,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <map>
+#include <vector>
+#include <set>
+#include <algorithm>
 
 using namespace std;
 
@@ -17,10 +19,17 @@ typedef pair< pair<string, string> , string> ThreeStrings;
 static ThreeStrings parseLine(const string &lineOrig);
 
 struct ModifiableNetwork : public Network { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
-	std :: auto_ptr< map<string, int> > ordered_node_names;
+	vector<string> ordered_node_names;
 	ModifiableNetwork(const bool directed, const bool weighted) : Network(directed, weighted) {
 	}
-	virtual ~ ModifiableNetwork() throw() { }
+	virtual ~ ModifiableNetwork() throw() {
+	}
+	int find_ordered_node_names_offset(const string &node_name) {
+		// node_name must be in this->ordered_node_names. Now to find *where* it is.
+		const int offset = lower_bound(this->ordered_node_names.begin(), this->ordered_node_names.end(), node_name) - this->ordered_node_names.begin();
+		assert( this->ordered_node_names.at(offset) == node_name);
+		return offset;
+	}
 };
 
 static ThreeStrings parseLine(const string &lineOrig) {
@@ -52,18 +61,47 @@ static ThreeStrings parseLine(const string &lineOrig) {
 	return t;
 }
 
-static void read_edge_list_from_file(ModifiableNetwork *network, const string file_name) {
+static void read_edge_list_from_file(ModifiableNetwork *modifiable_network, const string file_name) {
+	assert(modifiable_network->ordered_node_names.empty());
+	/*
+	 * This will make *three* passes:
+	 * - One pass to identify all the node names (strings in the text file) and then to sort them so that consecutive-integer IDs can be assigned to them (respecting the order of the strings)
+	 * - A second pass to identify all the unique relationships that exist, then they will be sorted
+	 * - Finally, now that the node_names, node_ids and relationship_ids are sorted, read the network into the prepared datastructures, including the weights
+	 */
 	PP(file_name);
-	ifstream f(file_name.c_str());
-	string line;
-	while( getline(f, line) ) {
-		// There might be a '\r' at the end of this line (dammit!)
-		if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
-		ThreeStrings t = parseLine(line);
+	{ // first pass: just store the node names
+		ifstream f(file_name.c_str());
+		string line;
+		set<string> set_of_node_names; // This will store all the node names. Re
+		while( getline(f, line) ) {
+			// There might be a '\r' at the end of this line (dammit!)
+			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
+			ThreeStrings t = parseLine(line);
+			set_of_node_names.insert(t.first.first);
+			set_of_node_names.insert(t.first.second);
+		}
+		PP(set_of_node_names.size());
+		for( set<string> :: const_iterator i = set_of_node_names.begin(); i != set_of_node_names.end(); i++) {
+			modifiable_network->ordered_node_names.push_back(*i);
+		}
+		PP(modifiable_network->ordered_node_names.size());
+		assert(modifiable_network->ordered_node_names.size() == set_of_node_names.size());
+	}
+	{ // second pass. Find all the distinct relationships (node_id_1, node_id_2; where node_id_1 <= node_id_2)
+		ifstream f(file_name.c_str());
+		string line;
+		while( getline(f, line) ) {
+			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
+			ThreeStrings t = parseLine(line);
+			const int source_node_id = modifiable_network->find_ordered_node_names_offset(t.first.first);
+			const int target_node_id = modifiable_network->find_ordered_node_names_offset(t.first.second);
+			PP2(source_node_id, target_node_id);
+		}
 	}
 }
 
-std :: auto_ptr<Network> make_Network_from_edge_list(const std :: string file_name, const bool directed, const bool weighted) {
+std :: auto_ptr<Network> make_Network_from_edge_list(const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
 	ModifiableNetwork *network = new ModifiableNetwork(directed, weighted);
 	read_edge_list_from_file(network, file_name);
 	return auto_ptr<Network>(network);
