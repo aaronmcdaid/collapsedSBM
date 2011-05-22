@@ -32,6 +32,7 @@ struct MyVSG : public VerySimpleGraph {
 	vector< pair<int32_t,int32_t> > ordered_relationships;
 	int numNodes() const { return this->N; }
 	int numRels() const { return this->R; }
+	virtual const std :: pair<int32_t, int32_t> & EndPoints(int32_t rel_id) const { assert(rel_id >= 0 && rel_id < this->R); return this->ordered_relationships.at(rel_id); }
 };
 
 template <class NodeNameT>
@@ -117,8 +118,8 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		while( getline(f, line) ) {
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
 			ThreeStrings t = parseLine(line);
-			int source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
-			int target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
+			int32_t source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
+			int32_t target_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.second) );
 			if(source_node_id > target_node_id)
 				swap(source_node_id, target_node_id);
 			set_of_relationships.insert( make_pair(source_node_id, target_node_id) );
@@ -132,8 +133,8 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 
 	MyVSG * tmp_plain_graph = new MyVSG();
 	tmp_plain_graph->ordered_relationships.swap(tmp_ordered_relationships);
-	const int N = modifiable_network->ordered_node_names.size();
-	const int R = tmp_plain_graph->ordered_relationships.size();
+	const int32_t N = modifiable_network->ordered_node_names.size();
+	const int32_t R = tmp_plain_graph->ordered_relationships.size();
 	tmp_plain_graph->N = N;
 	tmp_plain_graph->R = R;
 
@@ -152,7 +153,7 @@ std :: auto_ptr< graph :: NetworkString > make_Network_from_edge_list_string (co
 	return auto_ptr<NetworkString >(network);
 }
 
-BadlyFormattedLine :: BadlyFormattedLine(int _line_number, std :: string _bad_line) : line_number(_line_number), bad_line(_bad_line) {
+BadlyFormattedLine :: BadlyFormattedLine(int32_t _line_number, std :: string _bad_line) : line_number(_line_number), bad_line(_bad_line) {
 }
 const char* BadlyFormattedLine :: what() const throw() {
 	ostringstream s;
