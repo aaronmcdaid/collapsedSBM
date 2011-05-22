@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <limits>
 #include <algorithm>
 
 using namespace std;
@@ -29,7 +30,8 @@ class MyVSG;
 
 struct MyVSG : public VerySimpleGraph {
 	int N, R;
-	vector< pair<int32_t,int32_t> > ordered_relationships;
+	vector< pair<int32_t,int32_t> > ordered_relationships; // the relationships, to be ordered by the node_ids inside them.
+	vector< vector<int32_t> > node_to_relationships_map; // for each node, the *relationships* it is in. In order
 	int numNodes() const { return this->N; }
 	int numRels() const { return this->R; }
 	virtual const std :: pair<int32_t, int32_t> & EndPoints(int32_t rel_id) const { assert(rel_id >= 0 && rel_id < this->R); return this->ordered_relationships.at(rel_id); }
@@ -131,14 +133,39 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		assert(set_of_relationships.size() == tmp_ordered_relationships.size());
 	}
 
+	const int32_t N = modifiable_network->ordered_node_names.size();
+	const int32_t R = tmp_ordered_relationships.size();
+
+	vector< vector<int32_t> > tmp_node_to_relationships_map(N);
+	{ // before the third phase (reading weights), we able to complete the VSG object, by populating the list of relationships.
+		for(int r = 0; r < R; r++) {
+			const pair<int32_t, int32_t> rel = tmp_ordered_relationships.at(r);
+			tmp_node_to_relationships_map.at(rel.first).push_back(rel.second);
+			if(rel.first != rel.second)
+				tmp_node_to_relationships_map.at(rel.second).push_back(rel.first);
+		}
+		// each individual vector should, I think, now be already sorted. I will now check that to be sure!
+		for(int n=0; n<N; n++) {
+			const vector<int32_t> & one_nodes_rels = tmp_node_to_relationships_map.at(n);
+			int x = std :: numeric_limits<int>().min()  ;
+			for (size_t i = 0; i < one_nodes_rels.size(); i++) {
+				assert(x < one_nodes_rels.at(i));
+				x = one_nodes_rels.at(i);
+			}
+		}
+
+	}
+
 	MyVSG * tmp_plain_graph = new MyVSG();
 	tmp_plain_graph->ordered_relationships.swap(tmp_ordered_relationships);
-	const int32_t N = modifiable_network->ordered_node_names.size();
-	const int32_t R = tmp_plain_graph->ordered_relationships.size();
+	tmp_plain_graph->node_to_relationships_map.swap(tmp_node_to_relationships_map);
 	tmp_plain_graph->N = N;
 	tmp_plain_graph->R = R;
-
 	modifiable_network->plain_graph.reset(tmp_plain_graph);
+	assert(tmp_plain_graph);
+	tmp_plain_graph = NULL;
+	assert(!tmp_plain_graph);
+
 	PP2(modifiable_network->numNodes(), modifiable_network->numRels());
 }
 
