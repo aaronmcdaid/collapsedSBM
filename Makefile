@@ -8,7 +8,7 @@ MAIN=sbm
 all: tags boost_1_41_0 ${MAIN}
 
 clean:
-	-rm tags ${MAIN} *.o
+	-rm tags ${MAIN} *.o */*.o
 
 tags:
 	ctags *.[ch]pp
