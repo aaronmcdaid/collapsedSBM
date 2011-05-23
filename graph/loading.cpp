@@ -38,10 +38,10 @@ struct MyVSG : public VerySimpleGraph {
 };
 
 template <class NodeNameT>
-struct ModifiableNetwork : public Network<NodeNameT> { // Network is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
+struct ModifiableNetwork : public NetworkInterface<NodeNameT> { // NetworkInterface is the read-only interface we want to expose, but this is the derived class that will do the heavy lifting
 	typedef typename NodeNameT :: value_type t;
 	vector< t > ordered_node_names;
-	ModifiableNetwork(const bool directed, const bool weighted) : Network<NodeNameT>(directed, weighted) {
+	ModifiableNetwork(const bool directed, const bool weighted) : NetworkInterface<NodeNameT>(directed, weighted) {
 	}
 	virtual ~ ModifiableNetwork() throw() {
 	}

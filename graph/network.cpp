@@ -2,7 +2,7 @@
 namespace graph {
 
 template <class NodeNameT>
-Network<NodeNameT> :: Network(const bool directed, const bool weighted) {
+NetworkInterface<NodeNameT> :: NetworkInterface(const bool directed, const bool weighted) {
 	if(directed) {
 		if(weighted) {
 			edge_weights.reset(new graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights >());
@@ -18,11 +18,11 @@ Network<NodeNameT> :: Network(const bool directed, const bool weighted) {
 	}
 }
 template <class NodeNameT>
-Network<NodeNameT> :: ~ Network() throw() {
+NetworkInterface<NodeNameT> :: ~ NetworkInterface() throw() {
 }
 
-template Network<NodeNameIsInt32>  :: Network(const bool directed, const bool weighted);
-template Network<NodeNameIsString> :: Network(const bool directed, const bool weighted);
-template Network<NodeNameIsInt32>  :: ~Network();
-template Network<NodeNameIsString> :: ~Network();
+template NetworkInterface<NodeNameIsInt32>  :: NetworkInterface(const bool directed, const bool weighted);
+template NetworkInterface<NodeNameIsString> :: NetworkInterface(const bool directed, const bool weighted);
+template NetworkInterface<NodeNameIsInt32>  :: ~NetworkInterface();
+template NetworkInterface<NodeNameIsString> :: ~NetworkInterface();
 } // namespace graph
