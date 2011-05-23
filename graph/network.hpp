@@ -11,6 +11,7 @@ namespace graph {
 
 template <class NodeNameT>
 struct NetworkInterface;
+struct NetworkInterfaceConvertedToString ; // Any NodeNameT (int or string) should be able to implement this.
 
 struct NodeNameIsInt32; // the default node_name type. It's nice to have the names sorted by this, so that "10" comes after "2"
 struct NodeNameIsString; // .. but if the user wants to specify arbitrary strings in their edge list, they can do so explicitly.
@@ -40,8 +41,18 @@ struct NodeNameIsString {
 		return s;
 	}
 };
+
+struct NetworkInterfaceConvertedToString  { // Any NodeNameT (int or string) should be able to implement this.
+	virtual std :: string node_name_as_string(int32_t node_id) = 0;
+	virtual const graph :: VerySimpleGraphInterface * get_plain_graph() const = 0;
+	virtual int32_t numNodes() const { return this->get_plain_graph()->numNodes(); } // make these pure, and hide the members from this interface
+	virtual int32_t numRels()  const { return this->get_plain_graph()->numRels(); }
+
+	virtual ~NetworkInterfaceConvertedToString();
+};
+
 template <class NodeNameT>
-struct NetworkInterface {
+struct NetworkInterface : public NetworkInterfaceConvertedToString {
 	/* A NetworkInterface is a VerySimpleGraphInterface with some extra attributes.
 	 * The nodes will have string names, and the edges might have directionality and weights
 	 */
@@ -50,8 +61,11 @@ struct NetworkInterface {
 public: // I should make the above private some time!
 	virtual ~ NetworkInterface() throw(); // this forces derivations to declare a destructor, I think.
 	NetworkInterface(const bool directed, const bool weighted);
-	virtual int32_t numNodes() const { assert(plain_graph.get()); return plain_graph->numNodes(); } // make these pure, and hide the members from this interface
-	virtual int32_t numRels()  const { assert(plain_graph.get()); return plain_graph->numRels(); }
+	// virtual NodeNameT name_of_node(const int32_t) const = 0;
+	virtual const graph :: VerySimpleGraphInterface * get_plain_graph() const {
+		assert(this->plain_graph.get());
+		return this->plain_graph.get();
+	}
 };
 
 } // namespace graph

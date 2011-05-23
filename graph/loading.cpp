@@ -1,4 +1,6 @@
 #include"loading.hpp"
+
+#include"saving.hpp"
 #include"../pp.hpp"
 
 #include <iostream>
@@ -54,7 +56,19 @@ struct ModifiableNetwork : public NetworkInterface<NodeNameT> { // NetworkInterf
 		assert( this->ordered_node_names.at(offset) == node_name);
 		return offset;
 	}
+	virtual std :: string node_name_as_string(int32_t node_id);
 };
+template<>
+std :: string ModifiableNetwork<NodeNameIsString> :: node_name_as_string(int32_t node_id) {
+	return this->ordered_node_names.at(node_id);
+}
+template<>
+std :: string ModifiableNetwork<NodeNameIsInt32> :: node_name_as_string(int32_t node_id) {
+	std :: ostringstream o;
+	o << this->ordered_node_names.at(node_id);
+	return o.str();
+}
+
 template struct ModifiableNetwork<graph :: NodeNameIsInt32>;
 template struct ModifiableNetwork<graph :: NodeNameIsString>;
 
@@ -191,6 +205,8 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 	assert(!tmp_plain_graph);
 
 	PP2(modifiable_network->numNodes(), modifiable_network->numRels());
+
+	graph :: saving :: print_Network_to_screen(modifiable_network);
 }
 
 std :: auto_ptr< graph :: NetworkInt32 > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
