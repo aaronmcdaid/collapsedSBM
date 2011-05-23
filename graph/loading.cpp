@@ -30,12 +30,12 @@ class MyVSG;
 
 struct MyVSG : public VerySimpleGraphInterface {
 	int N, R;
-	vector< pair<int32_t,int32_t> > ordered_relationships; // the relationships, to be ordered by the node_ids inside them.
+	vector< pair<int32_t,int32_t> > ordered_relationships; // the relationships, to be ordered by the node_ids inside them. .first <= .second
 	vector< vector<int32_t> > node_to_relationships_map; // for each node, the *relationships* it is in. In order
 	int numNodes() const { return this->N; }
 	int numRels() const { return this->R; }
 	virtual const std :: pair<int32_t, int32_t> & EndPoints(int32_t rel_id) const { assert(rel_id >= 0 && rel_id < this->R); return this->ordered_relationships.at(rel_id); }
-	virtual const std :: vector<int32_t> & neighbouring_rels_in_order(const int32_t node_id) {
+	virtual const std :: vector<int32_t> & neighbouring_rels_in_order(const int32_t node_id) const {
 		return this->node_to_relationships_map.at(node_id);
 	}
 };
