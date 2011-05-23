@@ -5,6 +5,7 @@
 #include "weights.hpp"
 #include <string>
 #include <memory>
+#include <vector>
 #include <cstdlib>
 namespace graph {
 
@@ -41,10 +42,10 @@ struct NodeNameIsString {
 };
 template <class NodeNameT>
 struct NetworkInterface {
-	/* A NetworkInterface is a VerySimpleGraph with some extra attributes.
+	/* A NetworkInterface is a VerySimpleGraphInterface with some extra attributes.
 	 * The nodes will have string names, and the edges might have directionality and weights
 	 */
-	std :: auto_ptr<const graph :: VerySimpleGraph> plain_graph;
+	std :: auto_ptr<const graph :: VerySimpleGraphInterface> plain_graph;
 	std :: auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_weights;
 public: // I should make the above private some time!
 	virtual ~ NetworkInterface() throw(); // this forces derivations to declare a destructor, I think.

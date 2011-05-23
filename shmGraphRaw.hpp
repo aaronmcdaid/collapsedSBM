@@ -13,7 +13,7 @@
 #include "graph/weights.hpp"
 namespace shmGraphRaw {
 
-class ReadableShmGraphBase : public graph :: VerySimpleGraph {
+class ReadableShmGraphBase /*: public graph :: VerySimpleGraphInterface*/ {
 public:
 	bool hasASelfLoop;
 	virtual ~ReadableShmGraphBase();
