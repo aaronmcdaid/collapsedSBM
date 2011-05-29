@@ -157,9 +157,10 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 	{ // before the third phase (reading weights), we able to complete the VSG object, by populating the list of relationships.
 		for(int r = 0; r < R; r++) {
 			const pair<int32_t, int32_t> rel = tmp_ordered_relationships.at(r);
-			tmp_node_to_relationships_map.at(rel.first).push_back(rel.second);
-			if(rel.first != rel.second)
-				tmp_node_to_relationships_map.at(rel.second).push_back(rel.first);
+			tmp_node_to_relationships_map.at(rel.first).push_back(r);
+			if(rel.first != rel.second) {
+				tmp_node_to_relationships_map.at(rel.second).push_back(r);
+			}
 		}
 		// each individual vector should, I think, now be already sorted. I will now check that to be sure!
 		for(int n=0; n<N; n++) {
