@@ -179,6 +179,7 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 		string line;
 		while( getline(f, line) ) {
 			if(!line.empty() && *line.rbegin() == '\r') { line.erase( line.length()-1, 1); }
+			PP(line);
 			ThreeStrings t = parseLine(line);
 			PP3(t.first.first, t.first.second, t.second);
 			const int32_t source_node_id = modifiable_network->find_ordered_node_names_offset( NodeNameT :: fromString(t.first.first)  );
@@ -190,6 +191,7 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 			int32_t relationship_id = lower_bound(tmp_ordered_relationships.begin(), tmp_ordered_relationships.end(), make_pair(one_node_id, another_node_id)) - tmp_ordered_relationships.begin();
 			assert( tmp_ordered_relationships.at(relationship_id).first  == one_node_id );
 			assert( tmp_ordered_relationships.at(relationship_id).second == another_node_id );
+			PP3(relationship_id, source_node_id, target_node_id);
 			modifiable_network->edge_weights->new_rel(relationship_id, make_pair(source_node_id, target_node_id), t.second);
 		}
 	}
