@@ -12,6 +12,7 @@ namespace graph {
 template <class NodeNameT>
 struct NetworkInterface;
 struct NetworkInterfaceConvertedToString ; // Any NodeNameT (int or string) should be able to implement this.
+struct NetworkInterfaceConvertedToStringWithWeights ;
 
 struct NodeNameIsInt32; // the default node_name type. It's nice to have the names sorted by this, so that "10" comes after "2"
 struct NodeNameIsString; // .. but if the user wants to specify arbitrary strings in their edge list, they can do so explicitly.
@@ -50,9 +51,12 @@ struct NetworkInterfaceConvertedToString  { // Any NodeNameT (int or string) sho
 
 	virtual ~NetworkInterfaceConvertedToString();
 };
+struct NetworkInterfaceConvertedToStringWithWeights : public NetworkInterfaceConvertedToString {
+	virtual const graph :: weights :: EdgeDetailsInterface * get_edge_weights() const = 0;
+};
 
 template <class NodeNameT>
-struct NetworkInterface : public NetworkInterfaceConvertedToString {
+struct NetworkInterface : public NetworkInterfaceConvertedToStringWithWeights {
 	/* A NetworkInterface is a VerySimpleGraphInterface with some extra attributes.
 	 * The nodes will have string names, and the edges might have directionality and weights
 	 */
@@ -65,6 +69,10 @@ public: // I should make the above private some time!
 	virtual const graph :: VerySimpleGraphInterface * get_plain_graph() const {
 		assert(this->plain_graph.get());
 		return this->plain_graph.get();
+	}
+	virtual const graph :: weights :: EdgeDetailsInterface * get_edge_weights() const {
+		assert(this->edge_weights.get());
+		return this->edge_weights.get();
 	}
 };
 

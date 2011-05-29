@@ -5,7 +5,7 @@
 namespace graph {
 namespace saving {
 
-void print_Network_to_screen( const NetworkInterfaceConvertedToString * net );
+void print_Network_to_screen( const NetworkInterfaceConvertedToStringWithWeights * net );
 
 } // namespace graph
 } // namespace saving
