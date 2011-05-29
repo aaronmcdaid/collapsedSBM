@@ -1,2 +1,2 @@
-"SBM: --mega"
+"SBM: Still using old loading code."
 "\n"

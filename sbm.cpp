@@ -144,7 +144,11 @@ int main(int argc, char **argv) {
 	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
 	{
 		// Try the new graph loader
-		std :: auto_ptr<graph :: NetworkInt32 > network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+		if(args_info.stringIDs_flag) {
+			std :: auto_ptr<graph :: NetworkString > network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+		} else {
+			std :: auto_ptr<graph :: NetworkInt32 > network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+		}
 	}
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
