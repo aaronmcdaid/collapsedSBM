@@ -209,8 +209,7 @@ static void read_edge_list_from_file(ModifiableNetwork<NodeNameT> *modifiable_ne
 	graph :: saving :: print_Network_to_screen(modifiable_network);
 }
 
-std :: auto_ptr< graph :: NetworkInt32 > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) {
-	ModifiableNetwork<NodeNameIsInt32> *network = new ModifiableNetwork<NodeNameIsInt32>(directed, weighted);
+std :: auto_ptr< graph :: NetworkInt32 > make_Network_from_edge_list_int32 (const std :: string file_name, const bool directed, const bool weighted) throw(BadlyFormattedLine) { ModifiableNetwork<NodeNameIsInt32> *network = new ModifiableNetwork<NodeNameIsInt32>(directed, weighted);
 	read_edge_list_from_file<NodeNameIsInt32> (network, file_name);
 	return auto_ptr<NetworkInt32 >(network);
 }
