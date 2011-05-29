@@ -1,4 +1,5 @@
 #include "weights.hpp"
+#include "../pp.hpp"
 
 using namespace std;
 
@@ -15,9 +16,9 @@ namespace weights {
 		return this->dw.size();
 	}
 	template <class W>
-	void EdgeDetails<W> :: new_rel(int relId, std :: pair<int,int> nodeIds, std :: string &weight) {
-		if(relId == (int)this->dw.size())
-			this->dw.push_back( typename W :: datumT() );
+	void EdgeDetails<W> :: new_rel(const int relId, std :: pair<int,int> nodeIds, std :: string &weight) {
+		if(relId >= (int)this->dw.size()) // no guarantee we'll be notified of the rels in order
+			this->dw.resize(relId+1);
 		assert(relId <  (int)this->dw.size());
 		this->dw.at(relId).inform(nodeIds.first > nodeIds.second, weight);
 		// this->dw.back().inform(nodeIds.first > nodeIds.second, weight);
