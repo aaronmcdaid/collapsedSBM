@@ -43,7 +43,7 @@ struct NodeNameIsString {
 };
 
 struct NetworkInterfaceConvertedToString  { // Any NodeNameT (int or string) should be able to implement this.
-	virtual std :: string node_name_as_string(int32_t node_id) = 0;
+	virtual std :: string node_name_as_string(int32_t node_id) const = 0;
 	virtual const graph :: VerySimpleGraphInterface * get_plain_graph() const = 0;
 	virtual int32_t numNodes() const { return this->get_plain_graph()->numNodes(); } // make these pure, and hide the members from this interface
 	virtual int32_t numRels()  const { return this->get_plain_graph()->numRels(); }

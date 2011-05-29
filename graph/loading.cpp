@@ -56,14 +56,14 @@ struct ModifiableNetwork : public NetworkInterface<NodeNameT> { // NetworkInterf
 		assert( this->ordered_node_names.at(offset) == node_name);
 		return offset;
 	}
-	virtual std :: string node_name_as_string(int32_t node_id);
+	virtual std :: string node_name_as_string(int32_t node_id) const;
 };
 template<>
-std :: string ModifiableNetwork<NodeNameIsString> :: node_name_as_string(int32_t node_id) {
+std :: string ModifiableNetwork<NodeNameIsString> :: node_name_as_string(int32_t node_id) const {
 	return this->ordered_node_names.at(node_id);
 }
 template<>
-std :: string ModifiableNetwork<NodeNameIsInt32> :: node_name_as_string(int32_t node_id) {
+std :: string ModifiableNetwork<NodeNameIsInt32> :: node_name_as_string(int32_t node_id) const {
 	std :: ostringstream o;
 	o << this->ordered_node_names.at(node_id);
 	return o.str();
