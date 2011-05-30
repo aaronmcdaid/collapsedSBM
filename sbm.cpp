@@ -25,7 +25,7 @@ const char gitstatus[] =
 #include "cmdline.h"
 
 
-template<typename T,typename V> T implicit_cast(V x) { return x; }
+template<typename T,typename V> T up_cast(V x) { return x; }
 
 
 struct UsageMessage {
@@ -80,8 +80,8 @@ int main(int argc, char **argv) {
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
 	std :: auto_ptr<sbm :: ObjectiveFunction> obj ( args_info.weighted_flag
-		? implicit_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)    )
-		: implicit_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)  )
+		? up_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)    )
+		: up_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)  )
 		);
 	std :: auto_ptr<graph :: NetworkInterfaceConvertedToStringWithWeights > network;
 	// Try the new graph loader
