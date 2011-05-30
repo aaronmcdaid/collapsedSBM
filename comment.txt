@@ -1,2 +1,2 @@
-"SBM: Compiles with the new loading code. same *convergence* with -dw Eurovision"
+"SBM: purging shmGraphRaw. same *convergence* with -dw Eurovision"
 "\n"

@@ -14,7 +14,6 @@ using namespace std;
 #include <gsl/gsl_rng.h>
 
 #include "aaron_utils.hpp"
-#include "shmGraphRaw.hpp"
 #include "sbm_state.hpp"
 #include "scf.hpp"
 #include "sbm.hpp"
@@ -25,6 +24,8 @@ const char gitstatus[] =
 ;
 #include "cmdline.h"
 
+
+template<typename T,typename V> T implicit_cast(V x) { return x; }
 
 
 struct UsageMessage {
@@ -78,44 +79,16 @@ int main(int argc, char **argv) {
 	PP(sbm :: ObjectiveFunction_Poisson :: s);
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
-	sbm :: ObjectiveFunction *obj = NULL;
-	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g;
-	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
+	std :: auto_ptr<sbm :: ObjectiveFunction> obj ( args_info.weighted_flag
+		? implicit_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)    )
+		: implicit_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)  )
+		);
 	std :: auto_ptr<graph :: NetworkInterfaceConvertedToStringWithWeights > network;
 	// Try the new graph loader
 	if(args_info.stringIDs_flag) {
 		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
 	} else {
 		network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
-	}
-	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
-		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: NoDetails >();
-		// auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
-		g.reset(shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
-		// dumpGraph(g.get(), *edge_details);
-		edge_details_.reset(edge_details);
-	}
-	if( args_info.directed_flag &&  !args_info.weighted_flag) { //   dir UNwei
-		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedNoWeights >();
-		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
-		// dumpGraph(g.get(), *edge_details);
-		edge_details_.reset(edge_details);
-	}
-	if(!args_info.directed_flag &&   args_info.weighted_flag) { // UNdir   wei
-		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: WeightNoDir >();
-		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
-		// dumpGraph(g.get(), *edge_details);
-		edge_details_.reset(edge_details);
-	}
-	if( args_info.directed_flag &&  args_info.weighted_flag) { //   dir   wei
-		obj= 	new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
-		graph :: weights :: EdgeDetailsInterface *edge_details = new graph :: weights :: EdgeDetails< graph :: weights :: DirectedLDoubleWeights >();
-		g.reset (shmGraphRaw :: loadEdgeList(edgeListFileName, args_info.selfloop_flag, edge_details));
-		// dumpGraph(g.get(), *edge_details);
-		edge_details_.reset(edge_details);
 	}
 
 	vector<int> groundTruth;
@@ -159,12 +132,8 @@ int main(int argc, char **argv) {
 		gsl_rng_set(r, args_info.seed_arg);
 		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
-		runSBM(network.get(), args_info.K_arg, obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
+		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
 	}
-	assert(edge_details_.get());
-	assert(g.get());
-	assert(obj);
-	delete obj;
 }
 
 void randomize(sbm :: State &s, const int K) { // randomize the partition and have K clusters in it
