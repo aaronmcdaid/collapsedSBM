@@ -1,2 +1,2 @@
-"SBM: purging shmGraphRaw. same *convergence* with -dw Eurovision"
+"SBM: via submodule"
 "\n"

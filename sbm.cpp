@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 	if(args_info.stringIDs_flag) {
 		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
 	} else {
-		network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+		network = graph :: loading :: make_Network_from_edge_list_int64(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
 	}
 
 	vector<int> groundTruth;
