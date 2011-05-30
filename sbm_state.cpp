@@ -74,7 +74,7 @@ namespace sbm {
 		// inform EdgeCounts of all the edges
 		this->total_edge_weight = 0.0L;
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std :: pair<int, int> & eps = this->_g->get_plain_graph()->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->vsg->EndPoints(relId);
 			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
@@ -346,7 +346,7 @@ namespace sbm {
 		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std :: pair<int, int> & eps = this->_g->get_plain_graph()->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->vsg->EndPoints(relId);
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
