@@ -834,7 +834,7 @@ void M3_old(sbm :: State &s) {
 	const sbm :: Cluster * CL1 = s.labelling.clusters.at(cl1);
 	const sbm :: Cluster * CL2 = s.labelling.clusters.at(cl2);
 	vector<int> allNodes;
-	boost :: unordered_map<int, int> statusQuoClustering;
+	std :: tr1 :: unordered_map<int, int> statusQuoClustering;
 	allNodes.insert(allNodes.end(), CL1->members.begin(), CL1->members.end());
 	allNodes.insert(allNodes.end(), CL2->members.begin(), CL2->members.end());
 	// PP(CL1->members.size());
