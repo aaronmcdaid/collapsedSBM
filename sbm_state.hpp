@@ -5,7 +5,9 @@
 #include <vector>
 #include <set>
 #include <gsl/gsl_sf.h>
-#include "shmGraphRaw.hpp"
+#include "graph/network.hpp"
+#include <cmath>
+
 
 static inline double LOG2GAMMA(const double x) {
 	assert(x>0);
@@ -17,7 +19,7 @@ static inline double LOG2FACT(const int x) {
 }
 
 namespace sbm {
-typedef shmGraphRaw :: ReadableShmGraphTemplate GraphType;
+typedef graph :: NetworkInterfaceConvertedToStringWithWeights GraphType;
 
 struct Cluster {
 private:
@@ -56,12 +58,13 @@ struct ObjectiveFunction;
 
 struct State {
 	const GraphType * const _g; // the graph
+	const graph :: VerySimpleGraphInterface * const vsg;
 	const graph :: weights :: EdgeDetailsInterface * const _edge_details;
 	long double total_edge_weight;
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
-	explicit State(const GraphType * const g, const graph :: weights :: EdgeDetailsInterface *edge_details, const bool numericIDs, const bool mega = false);
+	explicit State(const GraphType * const g, const bool numericIDs, const bool mega = false);
 
 	Labelling	labelling;
 	// the clustering

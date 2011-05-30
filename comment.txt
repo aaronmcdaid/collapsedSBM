@@ -1,2 +1,2 @@
-"SBM: Still using old loading code."
+"SBM: Compiles with the new loading code. same *convergence* with -dw Eurovision"
 "\n"

@@ -30,7 +30,7 @@ const char gitstatus[] =
 struct UsageMessage {
 };
 
-void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3, const  gengetopt_args_info &args_info);
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) ;
 
 #if 0
 // static
@@ -142,13 +142,12 @@ int main(int argc, char **argv) {
 	sbm :: ObjectiveFunction *obj = NULL;
 	auto_ptr<shmGraphRaw :: ReadableShmGraphTemplate > g;
 	auto_ptr<graph :: weights :: EdgeDetailsInterface> edge_details_;
-	{
-		// Try the new graph loader
-		if(args_info.stringIDs_flag) {
-			std :: auto_ptr<graph :: NetworkString > network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
-		} else {
-			std :: auto_ptr<graph :: NetworkInt32 > network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
-		}
+	std :: auto_ptr<graph :: NetworkInterfaceConvertedToStringWithWeights > network;
+	// Try the new graph loader
+	if(args_info.stringIDs_flag) {
+		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+	} else {
+		network = graph :: loading :: make_Network_from_edge_list_int32(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
 	}
 	if(!args_info.directed_flag && !args_info.weighted_flag) { // UNdir UNwei
 		obj= 	new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag);
@@ -213,9 +212,9 @@ int main(int argc, char **argv) {
 	if(args_info.model_scf_flag) {
 		gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
 		gsl_rng_set(r, args_info.seed_arg);
-		runSCF(g.get(), args_info.K_arg, edge_details_.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
+		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
-		runSBM(g.get(), args_info.K_arg, edge_details_.get(), obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
+		runSBM(network.get(), args_info.K_arg, obj, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
 	}
 	assert(edge_details_.get());
 	assert(g.get());
@@ -1298,9 +1297,9 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-void runSBM(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	PP2(g->numNodes(), g->numRels());
-	sbm :: State s(g, edge_details, !args_info.stringIDs_flag, args_info.mega_flag);
+	sbm :: State s(g, !args_info.stringIDs_flag, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();

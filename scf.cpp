@@ -21,12 +21,12 @@ static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm :: Objecti
 static long double my_gsl_cdf_beta_Pinv (const long double P, const long double a, const long double b);
 static long double my_gsl_cdf_beta_Qinv (const long double P, const long double a, const long double b);
 
-void runSCF(const sbm :: GraphType *g, const int commandLineK, const graph :: weights :: EdgeDetailsInterface * const edge_details, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const gsl_rng *r) {
+void runSCF(const sbm :: GraphType *g, const int commandLineK, const bool initializeToGT, const std :: vector<int> * const groundTruth, const int iterations, const gsl_rng *r) {
 	cout << endl << "Stochastic Community Finding" << endl << endl;
 	PP2(g->numNodes(), g->numRels());
 	assert(commandLineK == 2);
 
-	sbm :: State s(g, edge_details, true);
+	sbm :: State s(g, true);
 
 	sbm :: ObjectiveFunction *obj = new sbm :: ObjectiveFunction_Bernoulli(false, false, false);
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);

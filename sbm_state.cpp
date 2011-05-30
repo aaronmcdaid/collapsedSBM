@@ -1,6 +1,7 @@
 #include "sbm_state.hpp"
 #include "aaron_utils.hpp"
-using namespace shmGraphRaw;
+#include <tr1/unordered_set>
+#include <vector>
 namespace sbm {
 #define assertNonPositiveFinite(x) assertNonPositiveFinite_line(x, __LINE__)
 	long double assertNonPositiveFinite_line(const long double x, const int lineno) {
@@ -58,24 +59,24 @@ namespace sbm {
 			return l.first < r.first;
 		}
 	};
-	State :: State(const GraphType * const g, const graph :: weights :: EdgeDetailsInterface * edge_details, const bool numericIDs, const bool mega /* = false */) : _g(g), _edge_details(edge_details), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(edge_details) {
+	State :: State(const GraphType * const g, const bool numericIDs, const bool mega /* = false */) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
 		// inform EdgeCounts of all the edges
 		this->total_edge_weight = 0.0L;
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std :: pair<int, int> & eps = this->_g->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->_g->get_plain_graph()->EndPoints(relId);
 			// if(eps.first == eps.second) throw SelfLoopsNotSupported(); // We will assume that self loops have been dealt with appropriately elsewhere.
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			this->_edgeCounts.inform(cl1,cl2, relId);
-			this->total_edge_weight += edge_details->getl2h(relId) + edge_details->geth2l(relId);
+			this->total_edge_weight += this->_edge_details->getl2h(relId) + this->_edge_details->geth2l(relId);
 		}
 
 		// to ensure the nodes are dealt with in the order of their integer node name
 		for(int n=0; n<this->_N;n++) {
-			nodeNamesInOrder.push_back( make_pair(this->_g->NodeAsString(n), n));
+			nodeNamesInOrder.push_back( make_pair(this->_g->node_name_as_string(n), n));
 		}
 		assert( (int)nodeNamesInOrder.size() == this->_N);
 		if(numericIDs)
@@ -276,7 +277,7 @@ namespace sbm {
 		assert(this->_k == (int)this->labelling.clusters.size());
 		assert(this->_N == (int)this->labelling.cluster_id.size());
 		assert(this->_N == (int)this->labelling.its.size());
-		boost :: unordered_set<int> alreadyConsidered;
+		std :: tr1 :: unordered_set<int> alreadyConsidered;
 		long double sumVerify = 0.0L;
 		long double sumVerifyFacts = 0.0L;
 		long double sumVerifyInternal = 0.0L;
@@ -337,7 +338,7 @@ namespace sbm {
 		}
 		EdgeCounts edgeCountsVerification(this->_edge_details);
 		for(int relId = 0; relId < this->_g->numRels(); relId++) {
-			const std :: pair<int, int> & eps = this->_g->EndPoints(relId);
+			const std :: pair<int, int> & eps = this->_g->get_plain_graph()->EndPoints(relId);
 			const int cl1 = this->labelling.cluster_id.at(eps.first);
 			const int cl2 = this->labelling.cluster_id.at(eps.second);
 			edgeCountsVerification.inform(cl1,cl2,relId);
@@ -533,9 +534,9 @@ namespace sbm {
 	}
 	void State :: informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
 		assert(oldcl != newcl);
-		const boost :: unordered_set<int> & rels = this->_g->myRels(n);
+		const std :: vector<int32_t> & rels = this->vsg->neighbouring_rels_in_order(n);
 		forEach(const int relId, amd :: mk_range(rels)) {
-			const pair<int,int> eps = this->_g->EndPoints(relId);
+			const pair<int,int> eps = this->vsg->EndPoints(relId);
 			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);
 			const int sndClusterNew = this->labelling.cluster_id.at(eps.second);
 			int fstClusterOld = fstClusterNew;
