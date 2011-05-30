@@ -32,67 +32,6 @@ struct UsageMessage {
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) ;
 
-#if 0
-// static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: NoDetails > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std :: pair<int,int> eps = g->EndPoints(rel);
-		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< endl;
-	}
-}
-// static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedLDoubleWeights > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std :: pair<int,int> eps = g->EndPoints(rel);
-		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
-			<< endl;
-	}
-}
-// static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: DirectedNoWeights > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std :: pair<int,int> eps = g->EndPoints(rel);
-		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< '\t' << edge_details.dw.at(rel).first << ',' << edge_details.dw.at(rel).second
-			<< endl;
-	}
-}
-// static
-void dumpGraph(shmGraphRaw :: ReadableShmGraphTemplate *g, const shmGraphRaw :: EdgeDetails< shmGraphRaw :: WeightNoDir > & edge_details) {
-	PP(g->numNodes());
-	PP(g->numRels());
-	PP(g->hasASelfLoop);
-	for(int rel=0; rel<g->numRels(); rel++) {
-		std :: pair<int,int> eps = g->EndPoints(rel);
-		std :: pair<const char*, const char*> epsNames = g->EndPointsAsStrings(rel);
-		cout << rel
-			<< '\t' << eps.first << '"' << epsNames.first << '"'
-			<< '\t' << eps.second << '"' << epsNames.second << '"'
-			<< '\t' << edge_details.dw.at(rel).weight
-			<< endl;
-	}
-}
-#endif
 
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
@@ -180,13 +119,18 @@ int main(int argc, char **argv) {
 	}
 
 	vector<int> groundTruth;
+	if(args_info.GT_vector_given) {
+		cerr << " --GT.vector: ground truth temporarily not supported" << endl;
+		exit(1);
+	}
+#if 0
 	if(args_info.GT_vector_given) { //populate groundTruth based on the --GT.vector option
-		const int N = g->numNodes();
+		const int N = network->numNodes();
 		groundTruth.resize(N);
 		std :: ifstream GTvectorStream(args_info.GT_vector_arg);
 		set<int> nodeNamesInOrder__;
 		for(int v=0; v<N; v++) {
-			const bool wasInserted = nodeNamesInOrder__.insert( atoi(g->NodeAsString(v))).second;
+			const bool wasInserted = nodeNamesInOrder__.insert( atoi(network->node_name_as_string(v).c_str())).second;
 			assert(wasInserted);
 		}
 		assert((int)nodeNamesInOrder__.size() == N);
@@ -197,7 +141,7 @@ int main(int argc, char **argv) {
 			GTvectorStream >> z_i;
 			if(GTvectorStream.eof())
 				break;
-			const int i = g->StringToNodeId(printfstring("%d", nodeName).c_str());
+			const int i = network->node_name_as_string(printfstring("%d", nodeName).c_str());
 			groundTruth.at(i) = z_i;
 		}
 		if((int) groundTruth.size() != g->numNodes()) {
@@ -207,6 +151,7 @@ int main(int argc, char **argv) {
 			groundTruth.clear();
 		}
 	}
+#endif
 
 	srand48(args_info.seed_arg);
 	if(args_info.model_scf_flag) {
