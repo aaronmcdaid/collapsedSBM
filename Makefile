@@ -22,7 +22,7 @@ CXXFLAGS=       \
           -Wunused-parameter    \
           -Wunused             \
           -Wnon-virtual-dtor            \
-          -Wall -Wformat -Werror -Wextra
+          -Wall -Wformat -Werror -Wextra #-Wconversion # scf.cpp doesn't like -Wconversion
 
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lstdc++ -lrt

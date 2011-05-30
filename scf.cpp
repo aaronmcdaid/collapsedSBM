@@ -70,14 +70,21 @@ static void SCFiteration(const gsl_rng * r, sbm :: State &s, const sbm :: Object
 	metroNode(r, s, obj, reals, AR_metro);
 }
 
+template <typename T>
+static inline int32_t to_integer(T d) {
+	assert(isfinite(d));
+	assert(d == floor(d));
+	return floor(d);
+}
+
 static void newSCFreals(const gsl_rng * r, const sbm :: State &s, const sbm :: ObjectiveFunction *obj, SCFreals &reals) {
 	// PP3(reals.pi_0, reals.pi_1, reals.pi_2);
-	const int bg_pairs = obj->numberOfPairsInBlock(0,1, &s.labelling);
-	const int bg_edges = s._edgeCounts.read(0,1) + s._edgeCounts.read(1,0);
-	const int c1_pairs = obj->numberOfPairsInBlock(0,0, &s.labelling);
-	const int c1_edges = s._edgeCounts.read(0,0);
-	const int c2_pairs = obj->numberOfPairsInBlock(1,1, &s.labelling);
-	const int c2_edges = s._edgeCounts.read(1,1);
+	const int64_t bg_pairs = obj->numberOfPairsInBlock(0,1, &s.labelling);
+	const int bg_edges = to_integer(s._edgeCounts.read(0,1) + s._edgeCounts.read(1,0));
+	const int64_t c1_pairs = obj->numberOfPairsInBlock(0,0, &s.labelling);
+	const int c1_edges = to_integer(s._edgeCounts.read(0,0));
+	const int64_t c2_pairs = obj->numberOfPairsInBlock(1,1, &s.labelling);
+	const int c2_edges = to_integer(s._edgeCounts.read(1,1));
 	// PP2(bg_edges, bg_pairs);
 	// PP2(c1_edges, c1_pairs);
 	// PP2(c2_edges, c2_pairs);

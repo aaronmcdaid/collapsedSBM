@@ -83,11 +83,11 @@ int main(int argc, char **argv) {
 	PP(sbm :: ObjectiveFunction_Poisson :: s);
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
 
-	std :: auto_ptr<sbm :: ObjectiveFunction> obj ( args_info.weighted_flag
+	std :: auto_ptr<const sbm :: ObjectiveFunction> obj ( args_info.weighted_flag
 		? up_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)    )
 		: up_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Bernoulli(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)  )
 		);
-	std :: auto_ptr<graph :: NetworkInterfaceConvertedToStringWithWeights > network;
+	std :: auto_ptr<const graph :: NetworkInterfaceConvertedToStringWithWeights > network;
 	// Try the new graph loader
 	if(args_info.stringIDs_flag) {
 		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
@@ -148,7 +148,7 @@ void randomize(sbm :: State &s, const int K) { // randomize the partition and ha
 	}
 	cout << "Randomizing.. ";
 	for(int n=0; n<s._N; n++) {
-		const int newCluster = drand48() * s._k;
+		const int newCluster = static_cast<int>(drand48() * s._k);
 		if(newCluster != s.labelling.cluster_id.at(n))
 			s.moveNodeAndInformOfEdges2(n, newCluster);
 	}
@@ -189,7 +189,7 @@ format_flag_stack :: FormatFlagStack stack;
 	}
 	void AcceptanceRate :: dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
-		cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
+		cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * static_cast<double>(this->a)/this->n << " %" << stack.pop; // cout << static_cast<double>(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
 		cout << endl;
 		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {
@@ -199,7 +199,7 @@ format_flag_stack :: FormatFlagStack stack;
 					<< fixed
 					<< setw(4)
 					<< setprecision(1)
-					<< 100.0L * double(x.second)/x.first << " %" << endl
+					<< 100.0L * static_cast<double>(x.second)/x.first << " %" << endl
 				<< stack.pop ;
 			}
 		}
@@ -239,8 +239,8 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	// const long double preRandom_P_z_K = s.P_z_orders();
 	assert(AR);
 	const int pre_k = s._k;
-	const int left = drand48() * s._k;
-	int right_; do { right_ = drand48() * s._k; } while (left==right_);
+	const int left = static_cast<int>(drand48() * s._k);
+	int right_; do { right_ = static_cast<int>(drand48() * s._k); } while (left==right_);
 	const int right = right_;
 #ifdef M3_debugPrinting
 	PP3(s._k, left,right);
@@ -252,7 +252,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	forEach(int n, amd :: mk_range(lCluster->get_members())) { randomizedNodeIDs.push_back(n); }
 	forEach(int n, amd :: mk_range(rCluster->get_members())) { randomizedNodeIDs.push_back(n); }
 
-	const int M = randomizedNodeIDs.size();
+	const int M = (int)randomizedNodeIDs.size();
 	assert(M == lCluster->order() + rCluster->order());
 
 	random_shuffle(randomizedNodeIDs.begin(), randomizedNodeIDs.end());
@@ -450,7 +450,7 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		return 0.0L;
 	}
 	const int pre_k = s._k;
-	const int n = drand48() * s._N;
+	const int n = static_cast<int>(drand48() * s._N);
 	const int origClusterID = s.labelling.cluster_id.at(n);
 	const int isolatedClusterId = s._k;
 	assert(pre_k == isolatedClusterId);
@@ -635,11 +635,11 @@ long double MoneNode(sbm :: State &s, sbm :: ObjectiveFunction *obj, AcceptanceR
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
-	const int n = drand48() * s._N;
+	const int n = static_cast<int>(drand48() * s._N);
 	const int oldClusterID = s.labelling.cluster_id.at(n);
 	int newClusterID;
 	do {
-		newClusterID = drand48() * s._k;
+		newClusterID = static_cast<int>(drand48() * s._k);
 	} while (newClusterID == oldClusterID);
 	assert(newClusterID != oldClusterID);
 	// PP(oldClusterID);
@@ -1118,7 +1118,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			return 0.0L;
 		}
 		assert(s._k > 1);
-		const int clusterToProposeDelete = drand48() * s._k;
+		const int clusterToProposeDelete = static_cast<int>(drand48() * s._k);
 		if(s.labelling.clusters.at(clusterToProposeDelete)->order()>0) {
 			// can't delete this. Time to get out
 			assert(s._k==preK);
@@ -1201,7 +1201,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 				if(n==m)
 					cout << "    ";
 				else
-					cout << stack.push << setw(4) << int(100.0 * double(shared.at(n*N+m)) / denominator + 0.5) << stack.pop;
+					cout << stack.push << setw(4) << static_cast<int>(100.0 * static_cast<double>(shared.at(n*N+m)) / denominator + 0.5) << stack.pop;
 			}
 			const int my_cluster_id = s.labelling.cluster_id.at(node_name.second);
 			cout
@@ -1270,14 +1270,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
-				const int cl1 = s._k * drand48();
-				const int cl2 = s._k * drand48();
+				const int cl1 = static_cast<int>(s._k * drand48());
+				const int cl2 = static_cast<int>(s._k * drand48());
 				if(cl1 != cl2) {
 					s.swapClusters(cl1,cl2);
 				}
 			}
 		}
-		switch( int(drand48() * 3) ) {
+		switch( static_cast<int>(drand48() * 3) ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					pmf_track += MetropolisOnK(s, obj, &AR_metroK);

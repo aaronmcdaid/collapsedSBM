@@ -167,7 +167,7 @@ namespace sbm {
 	int Labelling :: moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		const int _k = int(this->clusters.size());
+		const int _k = static_cast<int>(this->clusters.size());
 		assert(newClusterID >= 0 && newClusterID < _k);
 		assert(oldClusterID >= 0 && oldClusterID < _k);
 		assert(newClusterID != oldClusterID);
@@ -268,7 +268,7 @@ namespace sbm {
 					pairsEncountered += pairs;
 					total_edge_weight_verification += edges;
 				}
-				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%ld", edges, pairs).c_str(), edges/double(pairs)) << " | ";
+				cout << printfstring("%10s %-#5.2Lf", printfstring("%Lg/%ld", edges, pairs).c_str(), edges/static_cast<double>(pairs)) << " | ";
 			}
 			cout << endl;
 		}
@@ -385,7 +385,7 @@ namespace sbm {
 	}
 
 	static double NMI(const vector<int> &left, const vector<int> &top) {
-		const int N = int(left.size());
+		const int N = static_cast<int>(left.size());
 		assert(left.size() == top.size());
 		map< pair<int,int> , int> joint;
 		map< int , int> left_marginal;
@@ -398,23 +398,23 @@ namespace sbm {
 		double mutual_information = 0.0;
 		double H_left = 0.0;
 		forEach( typeof(pair<const int,int>) & l, amd :: mk_range(left_marginal) ) {
-			const long double P_left  = double(left_marginal[l.first]) / N;
+			const double P_left  = static_cast<double>(left_marginal[l.first]) / N;
 			if(P_left > 0.0)
 				H_left += - P_left * log2(P_left);
 		}
 		assert(isfinite(H_left));
 		double H_top = 0.0;
 		forEach( typeof(pair<const int,int>) & t, amd :: mk_range(top_marginal) ) {
-			const long double P_top  = double(top_marginal[t.first]) / N;
+			const double P_top  = static_cast<double>(top_marginal[t.first]) / N;
 			if(P_top > 0.0)
 				H_top += - P_top * log2(P_top);
 		}
 		assert(isfinite(H_top));
 		forEach( typeof(pair<const int,int>) & l, amd :: mk_range(left_marginal) ) {
 			forEach( typeof(pair<const int,int>) & t, amd :: mk_range(top_marginal) ) {
-				const long double P_joint = double(joint[make_pair(l.first,t.first)]) / N;
-				const long double P_left  = double(left_marginal[l.first]) / N;
-				const long double P_top   = double( top_marginal[t.first]) / N;
+				const double P_joint = static_cast<double>(joint[make_pair(l.first,t.first)]) / N;
+				const double P_left  = static_cast<double>(left_marginal[l.first]) / N;
+				const double P_top   = static_cast<double>( top_marginal[t.first]) / N;
 				if(P_joint > 0.0)
 					mutual_information += P_joint * (log2(P_joint) - log2(P_left) - log2(P_top));
 				else
@@ -422,7 +422,7 @@ namespace sbm {
 			}
 		}
 		assert(isfinite(mutual_information));
-		const long double normalization = std :: max(H_left, H_top);
+		const double normalization = std :: max(H_left, H_top);
 		if(VERYCLOSE(mutual_information, 0.0L)) {
 			mutual_information = 0.0;
 		}
@@ -430,7 +430,7 @@ namespace sbm {
 		assert(mutual_information <= normalization);
 
 		if(normalization > 0.0) {
-			const long double nmi = mutual_information / normalization;
+			const double nmi = mutual_information / normalization;
 			assert(isfinite(nmi));
 			return nmi;
 		} else {
@@ -781,7 +781,7 @@ namespace sbm {
 		assert(edge_total >= 0);
 		assert(edge_total <= pairs);
 		// edges_bits += - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edges);
-		long double p2 = M_LOG2E * gsl_sf_lnbeta(edge_total + beta_1, pairs - edge_total + beta_2);
+		long double p2 = M_LOG2E * gsl_sf_lnbeta(static_cast<double>(edge_total + beta_1), static_cast<double>(pairs - edge_total + beta_2));
 		// long double p = - log2l(pairs + 1) - M_LOG2E * gsl_sf_lnchoose(pairs, edge_total);
 		// assert(VERYCLOSE(p,p2));
 		// assert(0.0 ==         gsl_sf_lnbeta(beta_1, beta_2)); // this'll be zero while \beta_1 = \beta_2 = 1
@@ -800,7 +800,7 @@ namespace sbm {
 		assert(y_b >= 0);
 		const long double s = ObjectiveFunction_Poisson :: s;
 		const long double theta = ObjectiveFunction_Poisson :: theta;
-		const long double log2p = LOG2GAMMA(s + y_b) + ( s+y_b) * -log2(p_b + 1.0L/theta) 
+		const long double log2p = LOG2GAMMA(s + y_b) + ( s+y_b) * -log2l(p_b + 1.0L/theta) 
 		       	-   LOG2GAMMA(s)  - s*log2(theta) // this denominator is important because it depends on the number of blocks.
 			;
 		// PP2(y_b, p_b);
