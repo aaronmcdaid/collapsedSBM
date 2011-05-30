@@ -1,7 +1,15 @@
 #include "sbm_state.hpp"
-#include "aaron_utils.hpp"
+
+#include "macros.hpp"
+#include "Range.hpp"
 #include <tr1/unordered_set>
 #include <vector>
+#include <map>
+#include <cmath>
+
+using namespace std;
+#define printfstring(...) ({ char str[1000]; sprintf(str, __VA_ARGS__) ; (std :: string (str)); })
+
 namespace sbm {
 #define assertNonPositiveFinite(x) assertNonPositiveFinite_line(x, __LINE__)
 	long double assertNonPositiveFinite_line(const long double x, const int lineno) {

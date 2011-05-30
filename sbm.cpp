@@ -2,6 +2,7 @@
 #include "graph/loading.hpp"
 using namespace std;
 #include <algorithm>
+#include <iomanip>
 #include <vector>
 #include <fstream>
 #include <map>
@@ -13,7 +14,9 @@ using namespace std;
 // #include <gsl/gsl_sf.h>
 #include <gsl/gsl_rng.h>
 
-#include "aaron_utils.hpp"
+#include "Range.hpp"
+#include "format_flag_stack/format_flag_stack.hpp"
+#include "macros.hpp"
 #include "sbm_state.hpp"
 #include "scf.hpp"
 #include "sbm.hpp"
@@ -27,6 +30,7 @@ const char gitstatus[] =
 
 template<typename T,typename V> T up_cast(V x) { return x; }
 
+using namespace std;
 
 struct UsageMessage {
 };
@@ -160,7 +164,7 @@ bool fiftyfifty() {
 		return false;
 }
 
-amd :: FormatFlagStack stack;
+format_flag_stack :: FormatFlagStack stack;
 
 	AcceptanceRate :: AcceptanceRate(const char * name) : n(0), a(0), _name(name) {
 		mostRecent.insert(make_pair(100,0));
@@ -185,7 +189,7 @@ amd :: FormatFlagStack stack;
 	}
 	void AcceptanceRate :: dump() const {
 		cout << "Acceptance Rate " << '"' << this->_name << "\": ";
-		 cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
+		cout << stack.push << fixed << setw(4) << setprecision(1) << 100.0L * double(this->a)/this->n << " %" << stack.pop; // cout << double(this->a)/this->n;
 		cout << "\t" << this->a << " / " << this->n;
 		cout << endl;
 		forEach(const typeof(pair<const int,int>) &x, amd :: mk_range(this->mostRecent)) {

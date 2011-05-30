@@ -32,7 +32,7 @@ CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} # -DNDEBUG
 #CXXFLAGS=              -O2                 
 
 #${MAIN}: CXXFLAGS += -DNDEBUG
-${MAIN}: gitstatus.o Range.o aaron_utils.o sbm_state.o cmdline.o scf.o graph/weights.o graph/strings.o graph/loading.o graph/network.o graph/saving.o graph/bloom.o
+${MAIN}: gitstatus.o Range.o sbm_state.o cmdline.o scf.o graph/weights.o graph/strings.o graph/loading.o graph/network.o graph/saving.o graph/bloom.o format_flag_stack/format_flag_stack.o
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 
