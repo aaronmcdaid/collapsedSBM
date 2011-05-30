@@ -22,7 +22,7 @@ CXXFLAGS=       \
           -Wunused-parameter    \
           -Wunused             \
           -Wnon-virtual-dtor            \
-          -Wall -Wformat -Werror
+          -Wall -Wformat -Werror -Wextra
 
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lstdc++ -lrt

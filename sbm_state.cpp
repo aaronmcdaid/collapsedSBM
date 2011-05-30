@@ -98,7 +98,7 @@ namespace sbm {
 	}
 	Cluster :: Cluster() : _order(0) {
 	}
-	const int Cluster :: order() const {
+	int Cluster :: order() const {
 		// assert( this->_order == (int)this->members.size() ) ;
 		return this->_order;
 	}
@@ -790,7 +790,7 @@ namespace sbm {
 		return p3;
 	}
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const long int p_b, bool isDiagonal) const { // virtual
+	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const long int p_b, bool /*isDiagonal*/) const { // virtual
 		if(p_b==0)
 			return 0.0L;
 		assert(p_b > 0);

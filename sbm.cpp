@@ -1068,7 +1068,7 @@ void M3_old(sbm :: State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
+static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj __attribute__((unused)), AcceptanceRate *AR) {
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;

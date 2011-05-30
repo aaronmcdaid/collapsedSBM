@@ -143,10 +143,10 @@ static long double pmf_scf_x_given_z(const sbm :: State &s, const sbm :: Objecti
 	return x0_z + x1_z + x2_z;
 }
 
-static bool metroNode(const gsl_rng * r, sbm :: State &s, const sbm :: ObjectiveFunction *obj, const SCFreals &reals, AcceptanceRate *AR_metro) {
+static bool metroNode(const gsl_rng *  , sbm :: State &s, const sbm :: ObjectiveFunction *obj, const SCFreals &reals, AcceptanceRate *AR_metro) {
 	assert(s._k==2);
 	const long double pre = pmf_scf_x_given_z(s, obj, reals) + s.P_z();
-	const int randomNode = drand48() * s._N;
+	const int randomNode = drand48() * s._N; // should use gsl maybe, to be consistent in the source of randomness?
 	const int oldCluster = s.labelling.cluster_id.at(randomNode);
 	const int newCluster = 1 - oldCluster;
 	// PP(pre);

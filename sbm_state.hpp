@@ -26,7 +26,7 @@ private:
 		int _order;
 		std :: list<int> members; // nodes ids of the members
 public:
-		const int order() const;
+		int order() const;
 		std :: list<int>:: iterator newMember(const int n);
 		void eraseMember(const std :: list<int>:: iterator it);
 		const std :: list<int> & get_members() const;
