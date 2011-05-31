@@ -438,6 +438,16 @@ namespace sbm {
 		}
 	}
 
+	static string cluster_id_to_string(const int cluster_id) {
+		ostringstream oss;
+		if(cluster_id<10)
+			cout << (char)('0' + cluster_id);
+		else if(cluster_id < 36)
+			cout << (char)('a' + cluster_id - 10);
+		else
+			cout << '<' << cluster_id << '>';
+		return oss.str();
+	}
 	void State :: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
@@ -454,12 +464,7 @@ namespace sbm {
 				const int n = node_name.second;
 				// PP2(n, this->_g->NodeAsString(n));
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
-				if(id_of_cluster<10)
-					cout << (char)('0' + id_of_cluster);
-				else if(id_of_cluster < 36)
-					cout << (char)('a' + id_of_cluster - 10);
-				else
-					cout << '<' << id_of_cluster << '>';
+				cout << cluster_id_to_string(id_of_cluster);
 			}
 			cout << endl;
 		}
@@ -469,7 +474,7 @@ namespace sbm {
 			forEach( const typeof(pair<string,int>) &node_name, amd :: mk_range(this->nodeNamesInOrder))
 			{
 				const int n = node_name.second;
-				cout << groundTruth->at(n);
+				cout << cluster_id_to_string(groundTruth->at(n));
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
 				z_vector.at(n) = id_of_cluster;
 			}
