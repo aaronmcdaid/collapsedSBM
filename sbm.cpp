@@ -6,6 +6,7 @@ using namespace std;
 #include <vector>
 #include <fstream>
 #include <map>
+#include <ctime>
 
 #include <getopt.h>
 #include <unistd.h>
@@ -1305,7 +1306,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			s.blockDetail(obj);
 			if(count_shared_cluster)
 				count_shared_cluster->dump(s);
-			cout << " end of check at i==" << i << endl;
+			cout << " end of check at i==" << i << ". (" << double(clock()) / CLOCKS_PER_SEC << " seconds)" << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
 		}
