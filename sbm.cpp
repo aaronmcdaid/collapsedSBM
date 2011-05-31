@@ -73,12 +73,18 @@ int main(int argc, char **argv) {
 	else
 		cout << "args_info.GT_vector_arg:<undefined>";
 	PP(args_info.model_scf_flag);
+	PP(args_info.assume_N_nodes_arg);
+
 
 	if(args_info.model_scf_flag) {
 		unless(args_info.K_arg == 2) {
 			cerr << "Usage error: Currently, the stochastic community finding model (uncollapsed) requires -K 2 as and argument. Exiting." << endl;
 			exit(1);
 		};
+	}
+	if(args_info.assume_N_nodes_arg > 0 && args_info.stringIDs_flag) {
+		cerr << endl << "Usage error: --stringIDs and --assume_N_nodes are not allowed together. Exiting." << endl;
+		exit(1);
 	}
 	PP(sbm :: ObjectiveFunction_Poisson :: s);
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
@@ -92,7 +98,7 @@ int main(int argc, char **argv) {
 	if(args_info.stringIDs_flag) {
 		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
 	} else {
-		network = graph :: loading :: make_Network_from_edge_list_int64(edgeListFileName, args_info.directed_flag, args_info.weighted_flag);
+		network = graph :: loading :: make_Network_from_edge_list_int64(edgeListFileName, args_info.directed_flag, args_info.weighted_flag, args_info.assume_N_nodes_arg);
 	}
 
 	vector<int> groundTruth;

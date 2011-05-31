@@ -73,6 +73,9 @@ struct gengetopt_args_info
   int printEveryNIters_arg;	/**< @brief How often to print an update (default='10').  */
   char * printEveryNIters_orig;	/**< @brief How often to print an update original value given at command line.  */
   const char *printEveryNIters_help; /**< @brief How often to print an update help description.  */
+  int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
+  char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
+  const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -92,6 +95,7 @@ struct gengetopt_args_info
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int mega_given ;	/**< @brief Whether mega was given.  */
   unsigned int printEveryNIters_given ;	/**< @brief Whether printEveryNIters was given.  */
+  unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "      --stringIDs             string IDs in the input  (default=off)",
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
   "      --printEveryNIters=INT  How often to print an update  (default=`10')",
+  "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
     0
 };
 
@@ -89,6 +90,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->stringIDs_given = 0 ;
   args_info->mega_given = 0 ;
   args_info->printEveryNIters_given = 0 ;
+  args_info->assume_N_nodes_given = 0 ;
 }
 
 static
@@ -117,6 +119,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->mega_flag = 0;
   args_info->printEveryNIters_arg = 10;
   args_info->printEveryNIters_orig = NULL;
+  args_info->assume_N_nodes_arg = 0;
+  args_info->assume_N_nodes_orig = NULL;
   
 }
 
@@ -143,6 +147,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->stringIDs_help = gengetopt_args_info_help[15] ;
   args_info->mega_help = gengetopt_args_info_help[16] ;
   args_info->printEveryNIters_help = gengetopt_args_info_help[17] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -232,6 +237,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->algo_m3_orig));
   free_string_field (&(args_info->iterations_orig));
   free_string_field (&(args_info->printEveryNIters_orig));
+  free_string_field (&(args_info->assume_N_nodes_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -302,6 +308,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "mega", 0, 0 );
   if (args_info->printEveryNIters_given)
     write_into_file(outfile, "printEveryNIters", args_info->printEveryNIters_orig, 0);
+  if (args_info->assume_N_nodes_given)
+    write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -568,6 +576,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "stringIDs",	0, NULL, 0 },
         { "mega",	0, NULL, 0 },
         { "printEveryNIters",	1, NULL, 0 },
+        { "assume_N_nodes",	1, NULL, 0 },
         { NULL,	0, NULL, 0 }
       };
 
@@ -779,6 +788,20 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
                 &(local_args_info.printEveryNIters_given), optarg, 0, "10", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "printEveryNIters", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Pre-create N nodes (0 to N-1), which may be left with zero degree.  */
+          else if (strcmp (long_options[option_index].name, "assume_N_nodes") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->assume_N_nodes_arg), 
+                 &(args_info->assume_N_nodes_orig), &(args_info->assume_N_nodes_given),
+                &(local_args_info.assume_N_nodes_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "assume_N_nodes", '-',
                 additional_error))
               goto failure;
           
