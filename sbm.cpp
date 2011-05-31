@@ -262,7 +262,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
 
 			const long double pre_z_K = s.P_z_orders();
-			s.moveNode(nToRemove, left);
+			{ const int old_cl_id = s.moveNode(nToRemove, left); assert(old_cl_id == isolatedClusterId); }
 			const long double post_z_K_left = s.P_z_orders();
 			s.moveNode(nToRemove, isolatedClusterId);
 			assert(pre_z_K == s.P_z_orders());
@@ -1198,6 +1198,10 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	PP2(g->numNodes(), g->numRels());
+	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
+		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
+		exit(1);
+	}
 	sbm :: State s(g, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);

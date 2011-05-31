@@ -152,8 +152,8 @@ namespace sbm {
 		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
 	}
-	void State :: moveNode(const int n, const int newClusterID) {
-		this->labelling.moveNode(n, newClusterID);
+	int State :: moveNode(const int n, const int newClusterID) {
+		return this->labelling.moveNode(n, newClusterID);
 	}
 	int State :: isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
