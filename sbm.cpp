@@ -1174,26 +1174,21 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	void dump(const sbm :: State & s) {
 		if(this->denominator == 0)
 			return;
-		assert((int)s.nodeNamesInOrder.size() == this->N);
+		assert(s._N == this->N);
 		cout << "  CountSharedCluster(" << this->denominator << ")" << endl;
-		//for(int n=0; n<N; n++)
-		forEach(const typeof(pair<string,int>) & node_name, amd :: mk_range(s.nodeNamesInOrder))
-		{
-			const int n = node_name.second;
-			//for(int m=0; m<N; m++)
-			forEach(const typeof(pair<string,int>) & node_name2, amd :: mk_range(s.nodeNamesInOrder))
-			{
-				const int m = node_name2.second;
+		for(int n=0; n<this->N; n++) {
+			const std :: string node_name = s._g->node_name_as_string(n);
+			for(int m=0; m<this->N; m++) {
 				if(n==m)
 					cout << "    ";
 				else
 					cout << stack.push << setw(4) << static_cast<int>(100.0 * static_cast<double>(shared.at(n*N+m)) / denominator + 0.5) << stack.pop;
 			}
-			const int my_cluster_id = s.labelling.cluster_id.at(node_name.second);
+			const int my_cluster_id = s.labelling.cluster_id.at(n);
 			cout
 				<< "\t" << setw(1 + my_cluster_id) << my_cluster_id
 				<< setw(s._k - my_cluster_id) << ""
-				<< " \"" << node_name.first << "\"";
+				<< " \"" << node_name << "\"";
 			cout << endl;
 		}
 	}
@@ -1203,7 +1198,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
 	PP2(g->numNodes(), g->numRels());
-	sbm :: State s(g, !args_info.stringIDs_flag, args_info.mega_flag);
+	sbm :: State s(g, args_info.mega_flag);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();

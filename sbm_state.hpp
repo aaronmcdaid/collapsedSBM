@@ -67,12 +67,11 @@ struct State {
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
-	explicit State(const GraphType * const g, const bool numericIDs, const bool mega = false);
+	explicit State(const GraphType * const g, const bool mega = false);
 
 	Labelling	labelling;
 	// the clustering
 	int _k; // the number of clusters (including empty ones)
-	std :: vector< std :: pair< std :: string, int> > nodeNamesInOrder; // numeric order by default, will fail if can't extract numbers
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

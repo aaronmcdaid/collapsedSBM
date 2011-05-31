@@ -44,30 +44,7 @@ namespace sbm {
 			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
 		}
 	}
-	struct StringNumericSorter {
-		bool operator() (const pair<string,int> &l, const pair<string,int> &r) const {
-			if(l.second == r.second) { // comparing with self
-				assert(l.first == r.first);
-				return false;
-			}
-			assert(l.second != r.second);
-			assert(l.first != r.first);
-			assert( atol(l.first.c_str()) != atol(r.first.c_str()));
-			return atol(l.first.c_str()) < atol(r.first.c_str());
-		}
-	};
-	struct StringStringSorter {
-		bool operator() (const pair<string,int> &l, const pair<string,int> &r) const {
-			if(l.second == r.second) { // comparing with self
-				assert(l.first == r.first);
-				return false;
-			}
-			assert(l.second != r.second);
-			assert(l.first != r.first);
-			return l.first < r.first;
-		}
-	};
-	State :: State(const GraphType * const g, const bool numericIDs, const bool mega /* = false */) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
+	State :: State(const GraphType * const g, const bool mega /* = false */) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -82,19 +59,6 @@ namespace sbm {
 			this->total_edge_weight += this->_edge_details->getl2h(relId) + this->_edge_details->geth2l(relId);
 		}
 
-		// to ensure the nodes are dealt with in the order of their integer node name
-		for(int n=0; n<this->_N;n++) {
-			nodeNamesInOrder.push_back( make_pair(this->_g->node_name_as_string(n), n));
-		}
-		assert( (int)nodeNamesInOrder.size() == this->_N);
-		if(numericIDs)
-			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringNumericSorter() );
-		else
-			sort(nodeNamesInOrder.begin(), nodeNamesInOrder.end(), StringStringSorter() );
-		cout << "nodeNamesInOrder:(" << this->_N << " nodes)" << endl;
-		forEach(typeof(pair<string, int>) &node_name, amd :: mk_range(nodeNamesInOrder)) {
-			if(!mega) PP2(node_name.first, node_name.second);
-		}
 	}
 	Cluster :: Cluster() : _order(0) {
 	}
@@ -459,9 +423,7 @@ namespace sbm {
 		PP(nonEmptyK);
 		PP(this->pmf(obj));
 		if (!this->_mega) {
-			forEach( const typeof(pair<string,int>) &node_name, amd :: mk_range(this->nodeNamesInOrder))
-			{
-				const int n = node_name.second;
+			for (int n=0; n < this->_N; n++) {
 				// PP2(n, this->_g->NodeAsString(n));
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
 				cout << cluster_id_to_string(id_of_cluster);
@@ -471,9 +433,7 @@ namespace sbm {
 		if(groundTruth) {
 			assert(!groundTruth->empty());
 			vector<int> z_vector(this->_N);
-			forEach( const typeof(pair<string,int>) &node_name, amd :: mk_range(this->nodeNamesInOrder))
-			{
-				const int n = node_name.second;
+			for (int n=0; n < this->_N; n++) {
 				cout << cluster_id_to_string(groundTruth->at(n));
 				const int id_of_cluster = this->labelling.cluster_id.at(n);
 				z_vector.at(n) = id_of_cluster;
