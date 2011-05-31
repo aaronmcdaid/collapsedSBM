@@ -37,7 +37,6 @@ struct UsageMessage {
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) ;
 
-
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
 	if (cmdline_parser (argc, argv, &args_info) != 0)
@@ -96,39 +95,26 @@ int main(int argc, char **argv) {
 	}
 
 	vector<int> groundTruth;
-	if(args_info.GT_vector_given) {
-		cerr << " --GT.vector: ground truth temporarily not supported" << endl;
-		exit(1);
-	}
-#if 0
 	if(args_info.GT_vector_given) { //populate groundTruth based on the --GT.vector option
-		const int N = network->numNodes();
-		groundTruth.resize(N);
+		assert(groundTruth.size()==0);
 		std :: ifstream GTvectorStream(args_info.GT_vector_arg);
-		set<int> nodeNamesInOrder__;
-		for(int v=0; v<N; v++) {
-			const bool wasInserted = nodeNamesInOrder__.insert( atoi(network->node_name_as_string(v).c_str())).second;
-			assert(wasInserted);
-		}
-		assert((int)nodeNamesInOrder__.size() == N);
-		forEach(const int nodeName, amd :: mk_range(nodeNamesInOrder__)) {
-			if(!GTvectorStream.is_open())
-				break;
+		int n=0;
+		while(1) {
 			int z_i;
 			GTvectorStream >> z_i;
-			if(GTvectorStream.eof())
+			if(GTvectorStream.fail())
 				break;
-			const int i = network->node_name_as_string(printfstring("%d", nodeName).c_str());
-			groundTruth.at(i) = z_i;
+			groundTruth.push_back(z_i);
+			++n;
 		}
-		if((int) groundTruth.size() != g->numNodes()) {
-			cerr << "Error: the GT.vector file \"" << args_info.GT_vector_arg << "\" has " << groundTruth.size() << " lines. "
-				<< "I was expecting " << g->numNodes() << "lines."
+		if((int) groundTruth.size() != network->numNodes() || GTvectorStream.eof()==false ) {
+			cerr << endl << "Error: the GT.vector file \"" << args_info.GT_vector_arg << "\" has " << groundTruth.size() << " valid lines (positive integers only). "
+				<< "I was expecting " << network->numNodes() << " lines."
 				<< endl;
 			groundTruth.clear();
+			exit(1);
 		}
 	}
-#endif
 
 	srand48(args_info.seed_arg);
 	if(args_info.model_scf_flag) {

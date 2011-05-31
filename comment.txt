@@ -1,2 +1,2 @@
-"SBM: via submodule"
+"SBM: getting --GT to work again"
 "\n"
