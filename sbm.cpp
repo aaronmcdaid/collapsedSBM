@@ -203,7 +203,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 	return b;
 }
 
-long double delta_P_z_x__1RowOfBlocks(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
+static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
 long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative) {
 	// 1. Choose two clusters at random
@@ -545,7 +545,7 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		;
 }
 
-long double delta_P_z_x__1RowOfBlocks(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
+static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
 		// moving 1 isolated node into one cluster will affect some blocks.
 		// We're only interested in the blocks of clusters whose id is < pre_k
 		// i.e. there may have been many nodes isolated as part of the M3 move, but we're not interested in the interactions between them.
