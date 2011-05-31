@@ -26,7 +26,7 @@ void runSCF(const sbm :: GraphType *g, const int commandLineK, const bool initia
 	PP2(g->numNodes(), g->numRels());
 	assert(commandLineK == 2);
 
-	sbm :: State s(g, true);
+	sbm :: State s(g, false); // why true here?
 
 	sbm :: ObjectiveFunction *obj = new sbm :: ObjectiveFunction_Bernoulli(false, false, false);
 	s.shortSummary(obj, groundTruth); s.summarizeEdgeCounts(); s.blockDetail(obj);
