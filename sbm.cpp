@@ -1253,12 +1253,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	PP(pmf_track);
 
 	AcceptanceRate AR_metroK("metroK");
-	AcceptanceRate AR_metro1Node("metro1Node");
+	// AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
 	AcceptanceRate AR_M3("M3");
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
 	for(int i=1; i<=iterations; i++) {
+		PP3(i, s._k, s.labelling.NonEmptyClusters);
 		if(0) {
 			if(s._k > 1) // && drand48() < 0.01)
 			{
@@ -1304,7 +1305,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			s.shortSummary(obj, groundTruth);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
-			AR_metro1Node.dump();
+			// AR_metro1Node.dump();
 			AR_gibbs.dump();
 			AR_M3.dump();
 			AR_M3little.dump();
