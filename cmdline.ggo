@@ -9,8 +9,10 @@ option  "weighted"           w "weighted"                            flag       
 option  "selfloop"           s "selfloops allowed"                   flag       off
 option  "seed"               - "seed to drand48()"                   int        default="0" no
 option  "GT.vector"          - "The ground truth. a file with N lines. Starts from ZERO." string  no
+option  "algo.metroK"        - "Use the simple Metropolis move on K"            int       default="1" no
 option  "algo.gibbs"         - "Use the simple Gibbs in the algorithm"          int       default="1" no
 option  "algo.m3"            - "Use M3 in the algorithm"                        int       default="1" no
+option  "algo.ejectabsorb"   - "Use N+F's eject-absorb move"                    int       default="0" no
 option  "iterations"         i "How many iterations"                 int       default="120000" no
 option  "initGT"             - "Initialize to the ground truth"      flag       off
 option  "model.scf"          - "Stochastic community finding"        flag       off
