@@ -14,6 +14,7 @@ using namespace std;
 #include <float.h>
 // #include <gsl/gsl_sf.h>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 #include "Range.hpp"
 #include "format_flag_stack/format_flag_stack.hpp"
@@ -36,7 +37,7 @@ using namespace std;
 struct UsageMessage {
 };
 
-static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) ;
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) ;
 
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
@@ -66,6 +67,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_metroK_arg);
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_m3_arg);
+	PP(args_info.algo_ejectabsorb_arg);
 	PP(args_info.initGT_flag);
 	PP(args_info.stringIDs_flag);
 	PP(args_info.mega_flag);
@@ -125,12 +127,12 @@ int main(int argc, char **argv) {
 	}
 
 	srand48(args_info.seed_arg);
+	gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
+	gsl_rng_set(r, args_info.seed_arg);
 	if(args_info.model_scf_flag) {
-		gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
-		gsl_rng_set(r, args_info.seed_arg);
 		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
-		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info);
+		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info, r);
 	}
 }
 
@@ -1161,6 +1163,129 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 	}
 }
 
+static const long double a = 1.0; // this is 'a' as described in Nobile & Fearnside in section 3.2 ('Moves that change k'), except I'm just hardcoding at 1 for the moment, Uniform(0,1)
+static long double EjectAbsorb_prop_prob_split(const int small_k, const int n_jBoth, const int n_j1, const int n_j2) {
+	assert(small_k >= 1);
+	const double proposalProbForMerge = small_k == 1 ? 0.0 : 0.5;
+	return
+			log2l(1.0-proposalProbForMerge) // probability of trying to split
+			+ log2l(small_k)           // probability of selecting j1 to be the target of the split
+			+ LOG2GAMMA(2 * a) - LOG2GAMMA(a) - LOG2GAMMA(a) // from section 3.2 of N+F 2001
+			+ LOG2GAMMA(a + n_j1) + LOG2GAMMA(a + n_j2) - LOG2GAMMA(2*a + n_jBoth)
+			;
+}
+static long double EjectAbsorb_prop_prob_merge(const int small_k) {
+	assert(small_k >= 1);
+	return
+	-1 // log2l(0.5) , proposing a merge when k >= 2
+	+ log2l(small_k)
+	;
+}
+static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
+	assert(obj);
+	cout << "EjectAbsorb" << endl;
+	// we propose either to split, or to merge, two communities.
+	const long double pre = s.pmf(obj);
+	const double proposalProbForMerge = s._k == 1 ? 0.0 : 0.5;
+	PP2(s._k, proposalProbForMerge);
+	if(drand48() < proposalProbForMerge) {
+		assert(proposalProbForMerge == 0.5);
+		assert(s._k >= 2);
+		cout << "Absorb" << endl;
+		const int j2 = s._k - 1;
+		const int j1 = drand48() * (s._k - 1);
+		PP(__LINE__);
+		assert(j1 >= 0 && j1 < j2);
+		const int n_j1 = s.labelling.clusters.at(j1)->order();
+		const int n_j2 = s.labelling.clusters.at(j2)->order();
+		const std :: vector<int> j2_members(s.labelling.clusters.at(j2)->get_members().begin(), s.labelling.clusters.at(j2)->get_members().end());
+		// apply a merge
+		For(i, j2_members) {
+			const int shouldBej2 = s.moveNodeAndInformOfEdges(*i, j1);
+			assert(j2 == shouldBej2);
+		}
+		const int n_jBoth = s.labelling.clusters.at(j1)->order();
+		assert(n_jBoth == n_j1 + n_j2);
+		PP3(n_j1, n_j2, n_jBoth);
+		PP(s._k);
+		s.deleteClusterFromTheEnd();
+		PP(s._k);
+		const long double post = s.pmf(obj);
+		PP3(pre,post, post-pre);
+		PP(__LINE__);
+
+		const long double full_proposal_probability = EjectAbsorb_prop_prob_merge(s._k);
+		const long double reverse_proposal_probability = EjectAbsorb_prop_prob_split(s._k, n_jBoth, n_j1, n_j2);
+
+		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
+		if(log2l(drand48()) < acceptance_probability) { // accept
+			PP(__LINE__);
+			AR->notify(true);
+			PP(__LINE__);
+			return post-pre;
+		} else { // reject, split 'em again
+			PP(__LINE__);
+			AR->notify(false);
+			const int new_cluster_id = s.appendEmptyCluster();
+			assert(new_cluster_id == j2);
+			For(j2_member, j2_members) {
+				PP(__LINE__);
+				const int shouldBej1 = s.moveNodeAndInformOfEdges(*j2_member, new_cluster_id);
+				assert(j1 == shouldBej1);
+			}
+			PP(__LINE__);
+			return 0.0;
+		}
+
+		return post-pre;
+	} else {
+		cout << "Eject" << endl;
+		// apply a split
+		// choose a cluster at random to split in two
+		const int j1 = drand48() * s._k;
+		const int j2 = s._k;
+		assert(j1 >= 0 && j1 < j2);
+		const std :: vector<int> j1_members(s.labelling.clusters.at(j1)->get_members().begin(), s.labelling.clusters.at(j1)->get_members().end());
+		const int n_jBoth = j1_members.size();
+		s.appendEmptyCluster();
+		const long double p_E = gsl_ran_beta(r, a, a);
+		int n_j2 = 0;
+		int n_j1 = 0;
+		For(j1_member, j1_members) {
+			if(drand48() < p_E) {
+				const int shouldBej1 = s.moveNodeAndInformOfEdges(*j1_member, j2);
+				assert(j1 == shouldBej1);
+				++ n_j2;
+			} else
+				++ n_j1;
+		}
+		assert(n_jBoth == n_j1 + n_j2);
+		// gotta calculate the proposal probability properly
+		const long double full_proposal_probability = EjectAbsorb_prop_prob_split(s._k - 1, n_jBoth, n_j1, n_j2);
+		const long double reverse_proposal_probability = EjectAbsorb_prop_prob_merge(s._k - 1);
+			;
+
+		const long double post = s.pmf(obj);
+		PP3(pre,post, post-pre);
+		PP(__LINE__);
+
+		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
+		if(log2l(drand48()) < acceptance_probability) { // accept
+			AR->notify(true);
+			return post-pre;
+		} else { // reject
+			AR->notify(false);
+			const std :: vector<int> j2_members(s.labelling.clusters.at(j2)->get_members().begin(), s.labelling.clusters.at(j2)->get_members().end());
+			For(j2_member, j2_members) {
+				const int shouldBej2 = s.moveNodeAndInformOfEdges(*j2_member, j1);
+				assert(j2 == shouldBej2);
+			}
+			s.deleteClusterFromTheEnd();
+			return 0.0;
+		}
+	}
+}
+
 struct CountSharedCluster { // for each *pair* of nodes, how often they share the same cluster
 	const int N;
 	int denominator;
@@ -1204,7 +1329,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
 
-static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info) {
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) {
 	PP2(g->numNodes(), g->numRels());
 	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
@@ -1259,6 +1384,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3("M3");
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
+	AcceptanceRate AR_ea  ("EjectAbsorb");
 	for(int i=1; i<=iterations; i++) {
 		PP3(i, s._k, s.labelling.NonEmptyClusters);
 		if(0) {
@@ -1271,7 +1397,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			}
 		}
-		switch( static_cast<int>(drand48() * 3) ) {
+		switch( static_cast<int>(drand48() * 4) ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
@@ -1285,6 +1411,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			break; case 2:
 				if(algo_m3)
 					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+			break; case 3:
+				if(args_info.algo_ejectabsorb_arg)
+					pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
 		}
 		if(i > 30000)
 		if(count_shared_cluster)
@@ -1310,6 +1439,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_metroK.dump();
 			// AR_metro1Node.dump();
 			AR_gibbs.dump();
+			AR_ea.dump();
 			AR_M3.dump();
 			AR_M3little.dump();
 			AR_M3very.dump();
