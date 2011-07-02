@@ -61,6 +61,9 @@ struct gengetopt_args_info
   int algo_metroK_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
   char * algo_metroK_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
   const char *algo_metroK_help; /**< @brief Use the simple Metropolis move on K help description.  */
+  int algo_1node_arg;	/**< @brief Use the simple Metropolis on one node (default='1').  */
+  char * algo_1node_orig;	/**< @brief Use the simple Metropolis on one node original value given at command line.  */
+  const char *algo_1node_help; /**< @brief Use the simple Metropolis on one node help description.  */
   int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
   char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
   const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
@@ -99,6 +102,7 @@ struct gengetopt_args_info
   unsigned int seed_given ;	/**< @brief Whether seed was given.  */
   unsigned int GT_vector_given ;	/**< @brief Whether GT.vector was given.  */
   unsigned int algo_metroK_given ;	/**< @brief Whether algo.metroK was given.  */
+  unsigned int algo_1node_given ;	/**< @brief Whether algo.1node was given.  */
   unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
   unsigned int algo_m3_given ;	/**< @brief Whether algo.m3 was given.  */
   unsigned int algo_ejectabsorb_given ;	/**< @brief Whether algo.ejectabsorb was given.  */

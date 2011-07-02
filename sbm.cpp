@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
 	PP(args_info.iterations_arg);
 	PP(args_info.algo_metroK_arg);
 	PP(args_info.algo_gibbs_arg);
+	PP(args_info.algo_1node_arg);
 	PP(args_info.algo_m3_arg);
 	PP(args_info.algo_ejectabsorb_arg);
 	PP(args_info.initGT_flag);
@@ -626,8 +627,8 @@ static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm ::
 		return delta_blocks;
 }
 
-// static
-long double MoneNode(sbm :: State &s, sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
+static
+long double MoneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
@@ -1379,7 +1380,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	PP(pmf_track);
 
 	AcceptanceRate AR_metroK("metroK");
-	// AcceptanceRate AR_metro1Node("metro1Node");
+	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
 	AcceptanceRate AR_M3("M3");
 	AcceptanceRate AR_M3little("M3lConservative");
@@ -1397,14 +1398,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			}
 		}
-		switch( static_cast<int>(drand48() * 4) ) {
+		switch( static_cast<int>(drand48() * 5) ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 					}
 				} else
-					assert(commandLineK == s._k);
+					assert(commandLineK == s._k); // this'll fail with ejectabsorb!
 			break; case 1:
 				if(algo_gibbs)
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
@@ -1414,6 +1415,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			break; case 3:
 				if(args_info.algo_ejectabsorb_arg)
 					pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
+			break; case 4:
+				if(args_info.algo_1node_arg)
+					pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		}
 		if(i > 30000)
 		if(count_shared_cluster)
@@ -1437,7 +1441,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			s.shortSummary(obj, groundTruth);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
-			// AR_metro1Node.dump();
+			AR_metro1Node.dump();
 			AR_gibbs.dump();
 			AR_ea.dump();
 			AR_M3.dump();

@@ -10,6 +10,7 @@ option  "selfloop"           s "selfloops allowed"                   flag       
 option  "seed"               - "seed to drand48()"                   int        default="0" no
 option  "GT.vector"          - "The ground truth. a file with N lines. Starts from ZERO." string  no
 option  "algo.metroK"        - "Use the simple Metropolis move on K"            int       default="1" no
+option  "algo.1node"         - "Use the simple Metropolis on one node"          int       default="1" no
 option  "algo.gibbs"         - "Use the simple Gibbs in the algorithm"          int       default="1" no
 option  "algo.m3"            - "Use M3 in the algorithm"                        int       default="1" no
 option  "algo.ejectabsorb"   - "Use N+F's eject-absorb move"                    int       default="0" no

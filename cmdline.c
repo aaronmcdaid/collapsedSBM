@@ -43,6 +43,7 @@ const char *gengetopt_args_info_help[] = {
   "      --seed=INT              seed to drand48()  (default=`0')",
   "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
   "      --algo.metroK=INT       Use the simple Metropolis move on K  \n                                (default=`1')",
+  "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`1')",
   "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
   "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
   "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`0')",
@@ -89,6 +90,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->seed_given = 0 ;
   args_info->GT_vector_given = 0 ;
   args_info->algo_metroK_given = 0 ;
+  args_info->algo_1node_given = 0 ;
   args_info->algo_gibbs_given = 0 ;
   args_info->algo_m3_given = 0 ;
   args_info->algo_ejectabsorb_given = 0 ;
@@ -118,6 +120,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->GT_vector_orig = NULL;
   args_info->algo_metroK_arg = 1;
   args_info->algo_metroK_orig = NULL;
+  args_info->algo_1node_arg = 1;
+  args_info->algo_1node_orig = NULL;
   args_info->algo_gibbs_arg = 1;
   args_info->algo_gibbs_orig = NULL;
   args_info->algo_m3_arg = 1;
@@ -153,16 +157,17 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->seed_help = gengetopt_args_info_help[8] ;
   args_info->GT_vector_help = gengetopt_args_info_help[9] ;
   args_info->algo_metroK_help = gengetopt_args_info_help[10] ;
-  args_info->algo_gibbs_help = gengetopt_args_info_help[11] ;
-  args_info->algo_m3_help = gengetopt_args_info_help[12] ;
-  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[13] ;
-  args_info->iterations_help = gengetopt_args_info_help[14] ;
-  args_info->initGT_help = gengetopt_args_info_help[15] ;
-  args_info->model_scf_help = gengetopt_args_info_help[16] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[17] ;
-  args_info->mega_help = gengetopt_args_info_help[18] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[19] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[20] ;
+  args_info->algo_1node_help = gengetopt_args_info_help[11] ;
+  args_info->algo_gibbs_help = gengetopt_args_info_help[12] ;
+  args_info->algo_m3_help = gengetopt_args_info_help[13] ;
+  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[14] ;
+  args_info->iterations_help = gengetopt_args_info_help[15] ;
+  args_info->initGT_help = gengetopt_args_info_help[16] ;
+  args_info->model_scf_help = gengetopt_args_info_help[17] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[18] ;
+  args_info->mega_help = gengetopt_args_info_help[19] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[20] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[21] ;
   
 }
 
@@ -251,6 +256,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->GT_vector_arg));
   free_string_field (&(args_info->GT_vector_orig));
   free_string_field (&(args_info->algo_metroK_orig));
+  free_string_field (&(args_info->algo_1node_orig));
   free_string_field (&(args_info->algo_gibbs_orig));
   free_string_field (&(args_info->algo_m3_orig));
   free_string_field (&(args_info->algo_ejectabsorb_orig));
@@ -314,6 +320,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "GT.vector", args_info->GT_vector_orig, 0);
   if (args_info->algo_metroK_given)
     write_into_file(outfile, "algo.metroK", args_info->algo_metroK_orig, 0);
+  if (args_info->algo_1node_given)
+    write_into_file(outfile, "algo.1node", args_info->algo_1node_orig, 0);
   if (args_info->algo_gibbs_given)
     write_into_file(outfile, "algo.gibbs", args_info->algo_gibbs_orig, 0);
   if (args_info->algo_m3_given)
@@ -599,6 +607,7 @@ cmdline_parser_internal (
         { "seed",	1, NULL, 0 },
         { "GT.vector",	1, NULL, 0 },
         { "algo.metroK",	1, NULL, 0 },
+        { "algo.1node",	1, NULL, 0 },
         { "algo.gibbs",	1, NULL, 0 },
         { "algo.m3",	1, NULL, 0 },
         { "algo.ejectabsorb",	1, NULL, 0 },
@@ -744,6 +753,20 @@ cmdline_parser_internal (
                 &(local_args_info.algo_metroK_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.metroK", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Use the simple Metropolis on one node.  */
+          else if (strcmp (long_options[option_index].name, "algo.1node") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_1node_arg), 
+                 &(args_info->algo_1node_orig), &(args_info->algo_1node_given),
+                &(local_args_info.algo_1node_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.1node", '-',
                 additional_error))
               goto failure;
           
