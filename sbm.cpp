@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
 	PP(args_info.selfloop_flag);
 	PP(args_info.seed_arg);
 	PP(args_info.iterations_arg);
+	PP(args_info.algo_metroK_arg);
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_m3_arg);
 	PP(args_info.initGT_flag);
@@ -1273,7 +1274,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		switch( static_cast<int>(drand48() * 3) ) {
 			break; case 0:
 				if(commandLineK == -1) {
-					pmf_track += MetropolisOnK(s, obj, &AR_metroK);
+					if(args_info.algo_metroK_arg) {
+						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
+					}
 				} else
 					assert(commandLineK == s._k);
 			break; case 1:
