@@ -1387,7 +1387,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_ea  ("EjectAbsorb");
 	for(int i=1; i<=iterations; i++) {
 		PP3(i, s._k, s.labelling.NonEmptyClusters);
-		if(0) {
+		if(1) { /// more swapping
 			if(s._k > 1) // && drand48() < 0.01)
 			{
 				const int cl1 = static_cast<int>(s._k * drand48());
