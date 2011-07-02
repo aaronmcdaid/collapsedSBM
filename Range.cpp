@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <cstring>
+#include <cstdio>
 
 namespace amd {
 

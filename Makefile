@@ -39,6 +39,6 @@ gitstatus.txt:
 	{ git log | head -n 1 ; git status ; } | head -n 20 | sed -re 's/"/\\"/g ; s/^/"/g; s/$$/\\n"/g; ' > gitstatus.txt
 gitstatus.o: comment.txt  gitstatus.txt
 
-cmdline.c:
+cmdline.c.FORCE:
 	# remake cmdline.c . But it's OK unless you change the .ggo file. You'll need gengetopt(1) to be able to run this.
 	gengetopt  --unamed-opts < cmdline.ggo
