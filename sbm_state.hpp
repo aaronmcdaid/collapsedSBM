@@ -85,6 +85,7 @@ struct State {
 
 	// summaries
 	void shortSummary(const ObjectiveFunction *obj, const std :: vector<int> *groundTruth) const;
+	void KandClusterSizes() const;
 	void summarizeEdgeCounts() const ;
 	void blockDetail(const ObjectiveFunction *obj) const ;
 

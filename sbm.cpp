@@ -1387,7 +1387,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
 	for(int i=1; i<=iterations; i++) {
-		PP3(i, s._k, s.labelling.NonEmptyClusters);
+		cout
+			<< "Iteration:\t" << i
+			<< "\tk0\t" << s._k
+			<< "\tk1\t" << s.labelling.NonEmptyClusters
+			<< "\t"
+			;
+		s.KandClusterSizes();
 		if(1) { /// more swapping
 			if(s._k > 1) // && drand48() < 0.01)
 			{

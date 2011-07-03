@@ -445,7 +445,9 @@ namespace sbm {
 				<< " %"
 				<< endl;
 		}
-
+		this->KandClusterSizes();
+	}
+	void State :: KandClusterSizes() const {
 		vector<int> cluster_sizes;
 		for(int k=0; k<this->_k; k++) {
 			cluster_sizes.push_back(this->labelling.clusters.at(k)->order());
