@@ -1123,7 +1123,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			return 0.0L;
 		}
 		if(clusterToProposeDelete != s._k-1) {
-			cout << "swapped during deletion"; PP2(clusterToProposeDelete , s._k-1);
+			// cout << "swapped during deletion "; PP2(clusterToProposeDelete , s._k-1);
 			s.swapClusters(clusterToProposeDelete , s._k-1);
 		}
 		assert(s.labelling.clusters.back()->order()==0);
@@ -1184,18 +1184,17 @@ static long double EjectAbsorb_prop_prob_merge(const int small_k) {
 }
 static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
 	assert(obj);
-	cout << "EjectAbsorb" << endl;
+	// cout << "EjectAbsorb" << endl;
 	// we propose either to split, or to merge, two communities.
 	const long double pre = s.pmf(obj);
 	const double proposalProbForMerge = s._k == 1 ? 0.0 : 0.5;
-	PP2(s._k, proposalProbForMerge);
+	// PP2(s._k, proposalProbForMerge);
 	if(drand48() < proposalProbForMerge) {
 		assert(proposalProbForMerge == 0.5);
 		assert(s._k >= 2);
-		cout << "Absorb" << endl;
+		// cout << "Absorb" << endl;
 		const int j2 = s._k - 1;
 		const int j1 = drand48() * (s._k - 1);
-		PP(__LINE__);
 		assert(j1 >= 0 && j1 < j2);
 		const int n_j1 = s.labelling.clusters.at(j1)->order();
 		const int n_j2 = s.labelling.clusters.at(j2)->order();
@@ -1207,40 +1206,31 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		}
 		const int n_jBoth = s.labelling.clusters.at(j1)->order();
 		assert(n_jBoth == n_j1 + n_j2);
-		PP3(n_j1, n_j2, n_jBoth);
-		PP(s._k);
 		s.deleteClusterFromTheEnd();
-		PP(s._k);
 		const long double post = s.pmf(obj);
-		PP3(pre,post, post-pre);
-		PP(__LINE__);
+		// PP3(pre,post, post-pre);
 
 		const long double full_proposal_probability = EjectAbsorb_prop_prob_merge(s._k);
 		const long double reverse_proposal_probability = EjectAbsorb_prop_prob_split(s._k, n_jBoth, n_j1, n_j2);
 
 		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
 		if(log2l(drand48()) < acceptance_probability) { // accept
-			PP(__LINE__);
 			AR->notify(true);
-			PP(__LINE__);
 			return post-pre;
 		} else { // reject, split 'em again
-			PP(__LINE__);
 			AR->notify(false);
 			const int new_cluster_id = s.appendEmptyCluster();
 			assert(new_cluster_id == j2);
 			For(j2_member, j2_members) {
-				PP(__LINE__);
 				const int shouldBej1 = s.moveNodeAndInformOfEdges(*j2_member, new_cluster_id);
 				assert(j1 == shouldBej1);
 			}
-			PP(__LINE__);
 			return 0.0;
 		}
 
 		return post-pre;
 	} else {
-		cout << "Eject" << endl;
+		// cout << "Eject" << endl;
 		// apply a split
 		// choose a cluster at random to split in two
 		const int j1 = drand48() * s._k;
@@ -1267,8 +1257,7 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 			;
 
 		const long double post = s.pmf(obj);
-		PP3(pre,post, post-pre);
-		PP(__LINE__);
+		// PP3(pre,post, post-pre);
 
 		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
 		if(log2l(drand48()) < acceptance_probability) { // accept
