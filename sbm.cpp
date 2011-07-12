@@ -326,13 +326,13 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 			s.moveNode(n, left);
 			const long double post_z_K_left = s.P_z_orders();
 			s.moveNode(n, isolatedClusterId);
-			assert(pre_z_K == s.P_z_orders());
+			assert(VERYCLOSE(pre_z_K , s.P_z_orders()));
 			const long double delta_z_K_left = post_z_K_left - pre_z_K;
 			assert(isfinite(delta_z_K_left));
 			s.moveNode(n, right);
 			const long double post_z_K_right = s.P_z_orders();
 			s.moveNode(n, isolatedClusterId);
-			assert(pre_z_K == s.P_z_orders());
+			assert(VERYCLOSE(pre_z_K , s.P_z_orders()));
 			const long double delta_z_K_right = post_z_K_right - pre_z_K;
 			assert(isfinite(delta_z_K_right));
 			// PP2(delta_z_K_left,delta_z_K_right);
