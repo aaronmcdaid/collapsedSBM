@@ -70,7 +70,7 @@ struct gengetopt_args_info
   int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
   char * algo_m3_orig;	/**< @brief Use M3 in the algorithm original value given at command line.  */
   const char *algo_m3_help; /**< @brief Use M3 in the algorithm help description.  */
-  int algo_ejectabsorb_arg;	/**< @brief Use N+F's eject-absorb move (default='0').  */
+  int algo_ejectabsorb_arg;	/**< @brief Use N+F's eject-absorb move (default='1').  */
   char * algo_ejectabsorb_orig;	/**< @brief Use N+F's eject-absorb move original value given at command line.  */
   const char *algo_ejectabsorb_help; /**< @brief Use N+F's eject-absorb move help description.  */
   int iterations_arg;	/**< @brief How many iterations (default='120000').  */
