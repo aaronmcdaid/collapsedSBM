@@ -276,13 +276,13 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 			{ const int old_cl_id = s.moveNode(nToRemove, left); assert(old_cl_id == isolatedClusterId); }
 			const long double post_z_K_left = s.P_z_orders();
 			s.moveNode(nToRemove, isolatedClusterId);
-			assert(pre_z_K == s.P_z_orders());
+			assert(VERYCLOSE(pre_z_K, s.P_z_orders()));
 			const long double delta_z_K_left = post_z_K_left - pre_z_K;
 			assert(isfinite(delta_z_K_left));
 			s.moveNode(nToRemove, right);
 			const long double post_z_K_right = s.P_z_orders();
 			s.moveNode(nToRemove, isolatedClusterId);
-			assert(pre_z_K == s.P_z_orders());
+			assert(VERYCLOSE(pre_z_K, s.P_z_orders()));
 			const long double delta_z_K_right = post_z_K_right - pre_z_K;
 			assert(isfinite(delta_z_K_right));
 			// PP2(delta_z_K_left,delta_z_K_right);
@@ -481,7 +481,7 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 				s.moveNode(n, t);
 				const long double post_z_K = s.P_z_orders();
 				s.moveNode(n, isolatedClusterId);
-				assert(pre_z_K == s.P_z_orders());
+				assert(VERYCLOSE(pre_z_K, s.P_z_orders()));
 				delta_P_z_K_IfIMoveIntoClusterT.at(t) = post_z_K - pre_z_K;
 		}
 
