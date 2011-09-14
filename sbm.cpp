@@ -1408,8 +1408,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(algo_m3)
 					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
 			break; case 3:
-				if(args_info.algo_ejectabsorb_arg)
-					pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
+				if(commandLineK == -1) {
+					if(args_info.algo_ejectabsorb_arg)
+						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
+				}
 			break; case 4:
 				if(args_info.algo_1node_arg)
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
