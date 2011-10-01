@@ -1375,6 +1375,12 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
+
+	// some variables to check the PMP, i.e. the single most-visited state
+	map< pair<int, vector<int> >, int> pmp_table;
+	pair< pair<int, vector<int> >, int> best_pmp_so_far(make_pair(0, vector<int>()), 0);
+	int64_t num_states_checked_for_pmp = 0;
+
 	for(int i=1; i<=iterations; i++) {
 		cout
 			<< "Iteration:\t" << i
@@ -1416,9 +1422,19 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(args_info.algo_1node_arg)
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
 		}
-		if(i > 30000)
-		if(count_shared_cluster)
-			count_shared_cluster->consume(s.labelling.cluster_id);
+		if(i > 30000) {
+			if(count_shared_cluster)
+				count_shared_cluster->consume(s.labelling.cluster_id);
+		}
+		if(i > 30000) {
+			{ // PMP
+				pmp_table[ make_pair(s._k, s.labelling.cluster_id) ]++;
+				const pair< pair<int, vector<int> >, int> &ref_to_latest = *pmp_table.find( make_pair(s._k, s.labelling.cluster_id) );
+				if(ref_to_latest.second > best_pmp_so_far.second)
+					best_pmp_so_far = ref_to_latest;
+				++num_states_checked_for_pmp;
+			}
+		}
 
 		// PP(i);
 		// const long double pre = s.pmf(obj);
@@ -1436,6 +1452,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);
+			PP3(num_states_checked_for_pmp, best_pmp_so_far.second, best_pmp_so_far.first.first);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
 			AR_metro1Node.dump();
