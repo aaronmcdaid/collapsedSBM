@@ -21,3 +21,4 @@ option  "stringIDs"          - "string IDs in the input"             flag       
 option  "mega"               - "dumb down the algorithm for *big* networks"  flag       off
 option  "printEveryNIters"   - "How often to print an update"        int        default="10" no
 option  "assume_N_nodes"     - "Pre-create N nodes (0 to N-1), which may be left with zero degree"       int        default="0" no
+option  "alpha"              a "alpha. How uniform the cluster sizes"        float        default="1" no

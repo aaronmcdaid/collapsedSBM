@@ -44,7 +44,7 @@ namespace sbm {
 			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
 		}
 	}
-	State :: State(const GraphType * const g, const bool mega /* = false */) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(1.0L), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
+	State :: State(const GraphType * const g, const bool mega /* = false */, const double alpha /*=1.0*/) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(alpha), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 

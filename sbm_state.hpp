@@ -67,7 +67,7 @@ struct State {
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
-	explicit State(const GraphType * const g, const bool mega = false);
+	explicit State(const GraphType * const g, const bool mega = false, const double alpha = 1.0);
 
 	Labelling	labelling;
 	// the clustering

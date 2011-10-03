@@ -54,6 +54,7 @@ const char *gengetopt_args_info_help[] = {
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
   "      --printEveryNIters=INT  How often to print an update  (default=`10')",
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
+  "  -a, --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
     0
 };
 
@@ -61,6 +62,7 @@ typedef enum {ARG_NO
   , ARG_FLAG
   , ARG_STRING
   , ARG_INT
+  , ARG_FLOAT
 } cmdline_parser_arg_type;
 
 static
@@ -101,6 +103,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->mega_given = 0 ;
   args_info->printEveryNIters_given = 0 ;
   args_info->assume_N_nodes_given = 0 ;
+  args_info->alpha_given = 0 ;
 }
 
 static
@@ -138,6 +141,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->printEveryNIters_orig = NULL;
   args_info->assume_N_nodes_arg = 0;
   args_info->assume_N_nodes_orig = NULL;
+  args_info->alpha_arg = 1;
+  args_info->alpha_orig = NULL;
   
 }
 
@@ -168,6 +173,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->mega_help = gengetopt_args_info_help[19] ;
   args_info->printEveryNIters_help = gengetopt_args_info_help[20] ;
   args_info->assume_N_nodes_help = gengetopt_args_info_help[21] ;
+  args_info->alpha_help = gengetopt_args_info_help[22] ;
   
 }
 
@@ -263,6 +269,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->iterations_orig));
   free_string_field (&(args_info->printEveryNIters_orig));
   free_string_field (&(args_info->assume_N_nodes_orig));
+  free_string_field (&(args_info->alpha_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -342,6 +349,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "printEveryNIters", args_info->printEveryNIters_orig, 0);
   if (args_info->assume_N_nodes_given)
     write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
+  if (args_info->alpha_given)
+    write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -514,6 +523,9 @@ int update_arg(void *field, char **orig_field,
   case ARG_INT:
     if (val) *((int *)field) = strtol (val, &stop_char, 0);
     break;
+  case ARG_FLOAT:
+    if (val) *((float *)field) = (float)strtod (val, &stop_char);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -529,6 +541,7 @@ int update_arg(void *field, char **orig_field,
   /* check numeric conversion */
   switch(arg_type) {
   case ARG_INT:
+  case ARG_FLOAT:
     if (val && !(stop_char && *stop_char == '\0')) {
       fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
       return 1; /* failure */
@@ -618,10 +631,11 @@ cmdline_parser_internal (
         { "mega",	0, NULL, 0 },
         { "printEveryNIters",	1, NULL, 0 },
         { "assume_N_nodes",	1, NULL, 0 },
+        { "alpha",	1, NULL, 'a' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:a:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -697,6 +711,18 @@ cmdline_parser_internal (
               &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "iterations", 'i',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'a':	/* alpha. How uniform the cluster sizes.  */
+        
+        
+          if (update_arg( (void *)&(args_info->alpha_arg), 
+               &(args_info->alpha_orig), &(args_info->alpha_given),
+              &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
+              check_ambiguity, override, 0, 0,
+              "alpha", 'a',
               additional_error))
             goto failure;
         

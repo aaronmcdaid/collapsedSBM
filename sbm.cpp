@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
 	PP(args_info.initGT_flag);
 	PP(args_info.stringIDs_flag);
 	PP(args_info.mega_flag);
+	PP(args_info.alpha_arg);
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -1325,7 +1326,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
 		exit(1);
 	}
-	sbm :: State s(g, args_info.mega_flag);
+	sbm :: State s(g, args_info.mega_flag, args_info.alpha_arg);
 
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();

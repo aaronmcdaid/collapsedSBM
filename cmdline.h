@@ -90,6 +90,9 @@ struct gengetopt_args_info
   int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
   char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
   const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
+  float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='1').  */
+  char * alpha_orig;	/**< @brief alpha. How uniform the cluster sizes original value given at command line.  */
+  const char *alpha_help; /**< @brief alpha. How uniform the cluster sizes help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -113,6 +116,7 @@ struct gengetopt_args_info
   unsigned int mega_given ;	/**< @brief Whether mega was given.  */
   unsigned int printEveryNIters_given ;	/**< @brief Whether printEveryNIters was given.  */
   unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
+  unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
