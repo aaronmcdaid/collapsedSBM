@@ -1428,12 +1428,27 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				count_shared_cluster->consume(s.labelling.cluster_id);
 		}
 		if(i > 30000) {
-			if(s.labelling.cluster_id.at(0)==0) { // PMP
-				pmp_table[ make_pair(s._k, s.labelling.cluster_id) ]++;
-				const pair< pair<int, vector<int> >, int> &ref_to_latest = *pmp_table.find( make_pair(s._k, s.labelling.cluster_id) );
-				if(ref_to_latest.second > best_pmp_so_far.second)
-					best_pmp_so_far = ref_to_latest;
-				++num_states_checked_for_pmp;
+			vector<int> clustering_copy( s.labelling.cluster_id );
+			// let's put them in order before checking for PMP. this is a cheap form of label-switching
+			int neg_id = -1;
+			// find the first non-neg id, rename them all, and then try again
+			for(int i=0; i<s._N; i++) {
+				const int nonneg_id = clustering_copy.at(i);
+				if(nonneg_id >= 0) {
+					for(int j=0; j<s._N; j++) {
+						if(clustering_copy.at(j)==nonneg_id)
+							clustering_copy.at(j)=neg_id;
+					}
+					-- neg_id;
+				}
+			}
+			assert(-neg_id == s.labelling.NonEmptyClusters+1);
+			{
+					pmp_table[ make_pair(s._k, clustering_copy) ]++;
+					const pair< pair<int, vector<int> >, int> &ref_to_latest = *pmp_table.find( make_pair(s._k, clustering_copy) );
+					if(ref_to_latest.second > best_pmp_so_far.second)
+						best_pmp_so_far = ref_to_latest;
+					++num_states_checked_for_pmp;
 			}
 		}
 
@@ -1453,7 +1468,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);
-			PP3(num_states_checked_for_pmp, best_pmp_so_far.second, best_pmp_so_far.first.first);
+			PP4(num_states_checked_for_pmp, best_pmp_so_far.second, 100.0*best_pmp_so_far.second/num_states_checked_for_pmp , best_pmp_so_far.first.first);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
 			AR_metro1Node.dump();
