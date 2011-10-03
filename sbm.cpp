@@ -1427,7 +1427,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				count_shared_cluster->consume(s.labelling.cluster_id);
 		}
 		if(i > 30000) {
-			{ // PMP
+			if(s.labelling.cluster_id.at(0)==0) { // PMP
 				pmp_table[ make_pair(s._k, s.labelling.cluster_id) ]++;
 				const pair< pair<int, vector<int> >, int> &ref_to_latest = *pmp_table.find( make_pair(s._k, s.labelling.cluster_id) );
 				if(ref_to_latest.second > best_pmp_so_far.second)
