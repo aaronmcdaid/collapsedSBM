@@ -28,7 +28,7 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 		return;
 	}
 	if(k==K) { // all assigned, print and return
-		PP(score_so_far);
+		// PP(score_so_far);
 		if(score_so_far > best_score_so_far) {
 			best_score_so_far = score_so_far;
 			best_relabellings_so_far.clear();
@@ -37,13 +37,12 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 			vector<int> inverse(K, -1);
 			for (int j=0; j<K; j++) {
 				const int x = already_taken.at(j);
-				PP(x);
+				// PP(x);
 				inverse.at(x) = j;
 			}
-			For(rel, inverse) {
-				PP(*rel);
-			}
-			best_relabellings_so_far.push_back(already_taken);
+			// For(rel, inverse) { PP(*rel); }
+			// best_relabellings_so_far.push_back(already_taken);
+			best_relabellings_so_far.push_back(inverse);
 		}
 		return;
 	}
@@ -54,7 +53,7 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 			already_taken.at(new_k) = k;
 			assert(k_by_k.at(k).at(new_k) <= 0);
 			const int new_score_so_far = score_so_far + k_by_k.at(k).at(new_k);
-			PP3(k,new_k, new_score_so_far);
+			// PP3(k,new_k, new_score_so_far);
 			recurse(K, k_by_k, k+1, already_taken, new_score_so_far, best_score_so_far, best_relabellings_so_far);
 			already_taken.at(new_k) = -1;
 		}
@@ -68,8 +67,11 @@ const vector<int> find_best_labellings(const int K, const vector< vector<int> > 
 	vector< vector<int> > best_relabellings_so_far;
 	recurse(K, k_by_k, 0, already_taken, 0, best_score_so_far, best_relabellings_so_far);
 	PP(best_relabellings_so_far.size());
-	assert(1==best_relabellings_so_far.size());
-	return best_relabellings_so_far.at(0);
+	PP(best_score_so_far);
+	assert(best_score_so_far == 0);
+	assert(1<=best_relabellings_so_far.size());
+	const int offset = drand48() * best_relabellings_so_far.size();
+	return best_relabellings_so_far.at(offset);
 }
 
 int main() {
@@ -101,9 +103,10 @@ int main() {
 	typedef tr1 :: unordered_map< pair<int,int> , int, hash_pair> node_k_counts_t; // each node,cluster pair and how often it was assigned
 
 	node_k_counts_t node_k_counts;
+	int num_kz_so_far = 0;
 	For(kz, kzs) {
 		const int K = kz->first;
-		PP2(K, kz->second.at(0));
+		PP3(num_kz_so_far, K, kz->second.at(0));
 		// decide which relabelling to use:
 		// - try an optimisitc relabelling first
 		// - else fail
@@ -124,7 +127,7 @@ int main() {
 				const int z_i = kz->second.at(n);
 				for(int k=0; k<K; k++) {
 					k_by_k.at(z_i).at(k) += node_k_counts[make_pair(n,k)];
-					PP3(z_i, k, k_by_k.at(z_i).at(k));
+					// PP3(z_i, k, k_by_k.at(z_i).at(k));
 				}
 			}
 			// the aim now is to find a nice relabelling that maximizes the sums in k_by_k
@@ -144,6 +147,14 @@ int main() {
 
 		assert(int(relabelling.size()) == K);
 		vector<int> relabelled_z;
+		int verification_score = 0;
+		for(int n=0; n<N; n++) {
+			const int z_i = kz->second.at(n);
+			const int rel_z_i = relabelling.at(z_i);
+			verification_score += node_k_counts[make_pair(n, rel_z_i)];
+		}
+		// PP3(K,verification_score, num_kz_so_far);
+		// assert(verification_score >= 74 * num_kz_so_far);
 		for(int n=0; n<N; n++) {
 			relabelled_z.push_back(relabelling.at(kz->second.at(n)));
 		}
@@ -151,6 +162,7 @@ int main() {
 			const int relabelled_z_i = relabelled_z.at(n);
 			node_k_counts[make_pair(n,relabelled_z_i)] ++;
 		}
+		++ num_kz_so_far;
 		// if(kz != kzs.begin()) exit(1);
 	}
 }
