@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <tr1/unordered_map>
 #include "macros.hpp"
 using namespace std;
@@ -21,9 +22,16 @@ struct hash_pair {
 	}
 };
 
-void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vector<bool> &already_taken, const int score_so_far) {
+void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vector<bool> &already_taken, const int score_so_far, int & best_score_so_far) {
+	if(score_so_far < best_score_so_far) {
+		// it can only get worse! return
+		return;
+	}
 	if(k==K) { // all assigned, print and return
 		PP(score_so_far);
+		if(score_so_far > best_score_so_far) {
+			best_score_so_far = score_so_far;
+		}
 		return;
 	}
 	assert(k<K);
@@ -34,16 +42,17 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 			assert(k_by_k.at(k).at(new_k) <= 0);
 			const int new_score_so_far = score_so_far + k_by_k.at(k).at(new_k);
 			PP3(k,new_k, new_score_so_far);
-			recurse(K, k_by_k, k+1, already_taken, new_score_so_far);
+			recurse(K, k_by_k, k+1, already_taken, new_score_so_far, best_score_so_far);
 			already_taken.at(new_k) = false;
 		}
 	}
 }
 
 void find_best_labellings(const int K, const vector< vector<int> > &k_by_k) {
+	int best_score_so_far = numeric_limits<int>::min();
 	assert(K == int(k_by_k.size()));
 	vector<bool> already_taken(K, false);
-	recurse(K, k_by_k, 0, already_taken, 0);
+	recurse(K, k_by_k, 0, already_taken, 0, best_score_so_far);
 }
 
 int main() {
