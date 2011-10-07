@@ -22,7 +22,7 @@ struct hash_pair {
 	}
 };
 
-void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vector<int> &already_taken, const int score_so_far, int & best_score_so_far, vector< vector<int> > & best_relabellings_so_far) {
+void recurse(const int K, const vector< vector<int64_t> > &k_by_k, const int k, vector<int> &already_taken, const int64_t score_so_far, int64_t & best_score_so_far, vector< vector<int> > & best_relabellings_so_far) {
 	if(score_so_far < best_score_so_far) {
 		// it can only get worse! return
 		return;
@@ -52,7 +52,7 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 		if(already_taken.at(new_k) == -1) {
 			already_taken.at(new_k) = k;
 			assert(k_by_k.at(k).at(new_k) <= 0);
-			const int new_score_so_far = score_so_far + k_by_k.at(k).at(new_k);
+			const int64_t new_score_so_far = score_so_far + k_by_k.at(k).at(new_k);
 			// PP3(k,new_k, new_score_so_far);
 			recurse(K, k_by_k, k+1, already_taken, new_score_so_far, best_score_so_far, best_relabellings_so_far);
 			already_taken.at(new_k) = -1;
@@ -60,18 +60,17 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 	}
 }
 
-const vector<int> find_best_labellings(const int K, const vector< vector<int> > &k_by_k) {
-	int best_score_so_far = numeric_limits<int>::min();
+const pair<int64_t, vector<int> > find_best_labellings(const int K, const vector< vector<int64_t> > &k_by_k) {
+	int64_t best_score_so_far = numeric_limits<int>::min();
 	assert(K == int(k_by_k.size()));
 	vector<int> already_taken(K, -1);
 	vector< vector<int> > best_relabellings_so_far;
 	recurse(K, k_by_k, 0, already_taken, 0, best_score_so_far, best_relabellings_so_far);
 	PP(best_relabellings_so_far.size());
 	PP(best_score_so_far);
-	assert(best_score_so_far == 0);
 	assert(1<=best_relabellings_so_far.size());
 	const int offset = drand48() * best_relabellings_so_far.size();
-	return best_relabellings_so_far.at(offset);
+	return make_pair(best_score_so_far,  best_relabellings_so_far.at(offset));
 }
 
 int main() {
@@ -121,7 +120,7 @@ int main() {
 		} else {
 
 			// but first, build the K*K table of relabelling scores.
-			vector< vector<int> > k_by_k(K, vector<int>(K,0));
+			vector< vector<int64_t> > k_by_k(K, vector<int64_t>(K,0));
 			// k_by_k is like a summary of node_k_counts, but where the nodes are summed into their clusters.
 			for(int n=0; n<74; n++) {
 				const int z_i = kz->second.at(n);
@@ -134,14 +133,33 @@ int main() {
 
 			// to enable optimization, subtract from each row of k its maximum.
 			for(int k=0; k<K; k++) {
-				vector<int> & this_row = k_by_k.at(k);
-				const int max_in_this_row = *max_element(this_row.begin(),this_row.end());
+				vector<int64_t> & this_row = k_by_k.at(k);
+				const int64_t max_in_this_row = *max_element(this_row.begin(),this_row.end());
 				For(y, this_row) {
 					*y -= max_in_this_row;
 				}
 			}
-			const vector<int> one_of_the_best_labellings = find_best_labellings(K, k_by_k);
-			For(x, one_of_the_best_labellings)
+			const pair<int64_t, vector<int> > one_of_the_best_labellings = find_best_labellings(K, k_by_k);
+			const int64_t best_score_so_far = one_of_the_best_labellings.first;
+			{
+				vector<int> verify_relabelling(one_of_the_best_labellings.second);
+				assert(int(verify_relabelling.size()) == K);
+				sort(verify_relabelling.begin(), verify_relabelling.end());
+				for(int k=0; k<K; k++) {
+					assert(verify_relabelling.at(k) == k);
+				}
+			}
+			PP(best_score_so_far);
+			{ // print the relabelled form
+				for(int n=0; n<N; n++) {
+					const int z_i = kz->second.at(n);
+					const int rel_z_i = one_of_the_best_labellings.second.at(z_i);
+					cout << ' ' << rel_z_i;
+				}
+				cout << endl;
+			}
+			assert(best_score_so_far == 0);
+			For(x, one_of_the_best_labellings.second)
 				relabelling.push_back(*x);
 		}
 
