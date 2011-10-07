@@ -22,7 +22,7 @@ struct hash_pair {
 	}
 };
 
-void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vector<bool> &already_taken, const int score_so_far, int & best_score_so_far) {
+void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vector<int> &already_taken, const int score_so_far, int & best_score_so_far, vector< vector<int> > & best_relabellings_so_far) {
 	if(score_so_far < best_score_so_far) {
 		// it can only get worse! return
 		return;
@@ -31,28 +31,45 @@ void recurse(const int K, const vector< vector<int> > &k_by_k, const int k, vect
 		PP(score_so_far);
 		if(score_so_far > best_score_so_far) {
 			best_score_so_far = score_so_far;
+			best_relabellings_so_far.clear();
+		}
+		if(score_so_far == best_score_so_far) {
+			vector<int> inverse(K, -1);
+			for (int j=0; j<K; j++) {
+				const int x = already_taken.at(j);
+				PP(x);
+				inverse.at(x) = j;
+			}
+			For(rel, inverse) {
+				PP(*rel);
+			}
+			best_relabellings_so_far.push_back(already_taken);
 		}
 		return;
 	}
 	assert(k<K);
 	// what should cluster k be relabelled to?
 	for(int new_k=0; new_k<K; ++new_k) {
-		if(!already_taken.at(new_k)) {
-			already_taken.at(new_k) = true;
+		if(already_taken.at(new_k) == -1) {
+			already_taken.at(new_k) = k;
 			assert(k_by_k.at(k).at(new_k) <= 0);
 			const int new_score_so_far = score_so_far + k_by_k.at(k).at(new_k);
 			PP3(k,new_k, new_score_so_far);
-			recurse(K, k_by_k, k+1, already_taken, new_score_so_far, best_score_so_far);
-			already_taken.at(new_k) = false;
+			recurse(K, k_by_k, k+1, already_taken, new_score_so_far, best_score_so_far, best_relabellings_so_far);
+			already_taken.at(new_k) = -1;
 		}
 	}
 }
 
-void find_best_labellings(const int K, const vector< vector<int> > &k_by_k) {
+const vector<int> find_best_labellings(const int K, const vector< vector<int> > &k_by_k) {
 	int best_score_so_far = numeric_limits<int>::min();
 	assert(K == int(k_by_k.size()));
-	vector<bool> already_taken(K, false);
-	recurse(K, k_by_k, 0, already_taken, 0, best_score_so_far);
+	vector<int> already_taken(K, -1);
+	vector< vector<int> > best_relabellings_so_far;
+	recurse(K, k_by_k, 0, already_taken, 0, best_score_so_far, best_relabellings_so_far);
+	PP(best_relabellings_so_far.size());
+	assert(1==best_relabellings_so_far.size());
+	return best_relabellings_so_far.at(0);
 }
 
 int main() {
@@ -94,7 +111,8 @@ int main() {
 		//
 		vector<int> relabelling;
 		if(kz == kzs.begin()) { // just leave the first one as is
-			for(int k=K-1; k>=0; k--) {
+			// for(int k=K-1; k>=0; k--) {
+			for(int k=0; k<K; k++) {
 				relabelling.push_back(k);
 			}
 		} else {
@@ -119,7 +137,9 @@ int main() {
 					*y -= max_in_this_row;
 				}
 			}
-			find_best_labellings(K, k_by_k);
+			const vector<int> one_of_the_best_labellings = find_best_labellings(K, k_by_k);
+			For(x, one_of_the_best_labellings)
+				relabelling.push_back(*x);
 		}
 
 		assert(int(relabelling.size()) == K);
@@ -131,7 +151,6 @@ int main() {
 			const int relabelled_z_i = relabelled_z.at(n);
 			node_k_counts[make_pair(n,relabelled_z_i)] ++;
 		}
-		if(kz != kzs.begin())
-			exit(1);
+		// if(kz != kzs.begin()) exit(1);
 	}
 }
