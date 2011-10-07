@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
 		cout << "args_info.GT_vector_arg:<undefined>";
 	PP(args_info.model_scf_flag);
 	PP(args_info.assume_N_nodes_arg);
+	PP(args_info.save_z_arg);
 
 
 	if(args_info.model_scf_flag) {
@@ -1382,6 +1383,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	pair< pair<int, vector<int> >, int> best_pmp_so_far(make_pair(0, vector<int>()), 0);
 	int64_t num_states_checked_for_pmp = 0;
 
+	ofstream * save_z_fstream = NULL;
+	if(args_info.save_z_arg[0]) {
+		save_z_fstream = new ofstream(args_info.save_z_arg);
+	}
 	for(int i=1; i<=iterations; i++) {
 		cout
 			<< "Iteration:\t" << i
@@ -1484,7 +1489,19 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
 		}
+		if(i*2 >= iterations && args_info.save_z_arg[0]) {
+			PP(i);
+			*save_z_fstream << s._k << ':';
+			for(int n=0; n<s._N; n++) {
+				*save_z_fstream << s.labelling.cluster_id.at(n);
+				if(n+1 < s._N)
+					*save_z_fstream << ',';
+			}
+			*save_z_fstream << endl;
+		}
 	}
+	if(save_z_fstream)
+	       save_z_fstream->close();
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 }

@@ -55,6 +55,7 @@ const char *gengetopt_args_info_help[] = {
   "      --printEveryNIters=INT  How often to print an update  (default=`10')",
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
   "  -a, --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
+  "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
     0
 };
 
@@ -104,6 +105,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->printEveryNIters_given = 0 ;
   args_info->assume_N_nodes_given = 0 ;
   args_info->alpha_given = 0 ;
+  args_info->save_z_given = 0 ;
 }
 
 static
@@ -143,6 +145,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->assume_N_nodes_orig = NULL;
   args_info->alpha_arg = 1;
   args_info->alpha_orig = NULL;
+  args_info->save_z_arg = gengetopt_strdup ("");
+  args_info->save_z_orig = NULL;
   
 }
 
@@ -174,6 +178,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->printEveryNIters_help = gengetopt_args_info_help[20] ;
   args_info->assume_N_nodes_help = gengetopt_args_info_help[21] ;
   args_info->alpha_help = gengetopt_args_info_help[22] ;
+  args_info->save_z_help = gengetopt_args_info_help[23] ;
   
 }
 
@@ -270,6 +275,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->printEveryNIters_orig));
   free_string_field (&(args_info->assume_N_nodes_orig));
   free_string_field (&(args_info->alpha_orig));
+  free_string_field (&(args_info->save_z_arg));
+  free_string_field (&(args_info->save_z_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -351,6 +358,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "assume_N_nodes", args_info->assume_N_nodes_orig, 0);
   if (args_info->alpha_given)
     write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
+  if (args_info->save_z_given)
+    write_into_file(outfile, "save.z", args_info->save_z_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -632,10 +641,11 @@ cmdline_parser_internal (
         { "printEveryNIters",	1, NULL, 0 },
         { "assume_N_nodes",	1, NULL, 0 },
         { "alpha",	1, NULL, 'a' },
+        { "save.z",	1, NULL, 'z' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:a:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:a:z:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -723,6 +733,18 @@ cmdline_parser_internal (
               &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
               check_ambiguity, override, 0, 0,
               "alpha", 'a',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'z':	/* save burnt-in z to this file.  */
+        
+        
+          if (update_arg( (void *)&(args_info->save_z_arg), 
+               &(args_info->save_z_orig), &(args_info->save_z_given),
+              &(local_args_info.save_z_given), optarg, 0, "", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "save.z", 'z',
               additional_error))
             goto failure;
         

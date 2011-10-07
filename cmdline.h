@@ -93,6 +93,9 @@ struct gengetopt_args_info
   float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='1').  */
   char * alpha_orig;	/**< @brief alpha. How uniform the cluster sizes original value given at command line.  */
   const char *alpha_help; /**< @brief alpha. How uniform the cluster sizes help description.  */
+  char * save_z_arg;	/**< @brief save burnt-in z to this file (default='').  */
+  char * save_z_orig;	/**< @brief save burnt-in z to this file original value given at command line.  */
+  const char *save_z_help; /**< @brief save burnt-in z to this file help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -117,6 +120,7 @@ struct gengetopt_args_info
   unsigned int printEveryNIters_given ;	/**< @brief Whether printEveryNIters was given.  */
   unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
   unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
+  unsigned int save_z_given ;	/**< @brief Whether save.z was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
