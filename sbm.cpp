@@ -1525,6 +1525,19 @@ typedef vector<long double > theta_t;
 typedef vector<vector<long double > > pi_t;
 typedef vector<int> z_t;
 
+static void CEM_update_theta(theta_t &theta, const z_t &z) {
+	const int K = theta.size();
+	const int N = z.size();
+	for(int k=0; k<K; k++)
+		theta.at(k) = 0;
+	for(int n=0; n<N; n++) {
+		const int z_n = z.at(n);
+		theta.at(z_n) += 1.0L / N;
+	}
+	for(int k=0; k<K; k++)
+		PP(theta.at(k));
+}
+
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
 		//, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
@@ -1532,6 +1545,7 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	// - maximize P(z,x|theta,pi,K) wrt theta and pi
 	// - maximize P(z,x|theta,pi,K) wrt z
 	cout << " == Classification EM == " << endl;
+	PP2(g->numNodes(), g->numRels());
 
 	const int N = g->numNodes();
 	const int K = commandLineK;
@@ -1542,13 +1556,16 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	z_t z(N);
 	for(int i=0; i<N; i++)
 		z.at(i) = gsl_ran_flat(r,0,1) * K;
+	theta_t theta(K); // no need to initialize, this'll be overwritten first
+	pi_t pi(K, vector<long double>(K) ); // no need to initialize, this'll be overwritten first
 
 	for(int iter=0; iter<iterations; iter++) {
-		PP(iter);
 		if(groundTruth) {
 			const double nmi = sbm :: State :: NMI(*groundTruth, z);
 			PP(nmi);
 		}
+		PP(iter);
+		CEM_update_theta(theta, z);
 	}
 }
 
