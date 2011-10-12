@@ -1642,6 +1642,87 @@ static void CEM_update_pi(pi_t &pi, const z_t &z, const graph :: NetworkInterfac
 	}
 }
 
+static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const int K
+		, const theta_t &theta, const pi_t &pi, const graph :: NetworkInterfaceConvertedToStringWithWeights *g
+		, const sbm :: ObjectiveFunction * const obj
+		, const long double score
+		) {
+	assert(obj->directed);
+	assert(obj->selfloops);
+	assert(n >= 0 && n <= N);
+	if(n==N) { // we've got a partition
+		PP(z.size());
+		{ // double check the final score
+			vector<int> verify_z_size(K,0);
+			for(int i=0; i<N; i++) {
+				verify_z_size.at(z.at(i)) ++;
+			}
+			for(int k=0; k<K; k++) {
+				assert(z_size.at(k) == verify_z_size.at(k));
+			}
+			PP(score);
+			long double verify_score = 0.0;
+			for(int i = 0; i<N; i++)
+				verify_score += log2l(theta.at(z.at(i)));
+			PP(verify_score);
+			for(int i=0;i<N;i++) {
+				for(int j=0;j<N;j++) {
+					int z_1 = z.at(i);
+					int z_2 = z.at(j);
+					const long double pi_12 = pi.at(z_1).at(z_2);
+					verify_score += log2l(1.0L-pi_12);
+				}
+			}
+			for(int rel = 0; rel<g->numRels(); rel++) {
+				const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
+				int z_1 = z.at(eps.first);
+				int z_2 = z.at(eps.second);
+				if(g->get_edge_weights()->getl2h(rel)>0) { // edge from first to second
+					const long double pi_12 = pi.at(z_1).at(z_2);
+					assert(pi_12 > 0.0L);
+					assert(pi_12 < 1.0L); // TODO: This'll definitely break down sooner or later
+					// verify_score += log2l(pi_12) - log2l(1.0L-pi_12);
+				}
+				if(g->get_edge_weights()->geth2l(rel)>0) { // edge from second to first
+					const long double pi_21 = pi.at(z_2).at(z_1);
+					assert(pi_21 > 0.0L);
+					assert(pi_21 < 1.0L); // TODO: This'll definitely break down sooner or later
+					// verify_score += log2l(pi_21) - log2l(1.0L-pi_21);
+				}
+
+			}
+			// PP(verify_score);
+			// PP(verify_score - score);
+			assert(VERYCLOSE(verify_score , score));
+
+		}
+		// exit(0);
+		return;
+	}
+	for(int k=0; k<K; k++) {
+		z.at(n) = k;
+		long double new_score = score;
+		new_score += log2l(theta.at(k));
+		// consider just the neighbours (and pairs of nodes) at node n
+		for(int l =0; l < K; l++) { // assume it's *disconnected* from every one of the clusters
+			new_score += z_size.at(l) * log2l(1.0L-pi.at(k).at(l));
+			new_score += (z_size.at(l)) * log2l(1.0L-pi.at(l).at(k));
+		}
+		new_score += log2l(1.0L-pi.at(k).at(k)); // this accounts for the self loop
+		z_size.at(k) ++;
+		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score);
+		z_size.at(k) --;
+	}
+}
+static void CEM_update_z(z_t &z, const theta_t &theta, const pi_t &pi, const graph :: NetworkInterfaceConvertedToStringWithWeights *g
+		, const sbm :: ObjectiveFunction * const obj
+		) {
+	const int N = z.size();
+	const int K = pi.size();
+	vector<int> z_size(K, 0);
+	recurse(z, z_size, 0, N, K, theta, pi, g, obj, 0);
+}
+
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
 		, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
@@ -1673,6 +1754,7 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		PP(iter);
 		CEM_update_theta(theta, z);
 		CEM_update_pi(pi, z, g, obj);
+		CEM_update_z(z, theta, pi, g, obj);
 	}
 }
 
