@@ -50,6 +50,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --iterations=INT        How many iterations  (default=`120000')",
   "      --initGT                Initialize to the ground truth  (default=off)",
   "      --model.scf             Stochastic community finding  (default=off)",
+  "      --algo.sbm.cem          Classification EM (CEM) for the SBM  \n                                (default=off)",
   "      --stringIDs             string IDs in the input  (default=off)",
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
   "      --printEveryNIters=INT  How often to print an update  (default=`10')",
@@ -100,6 +101,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
   args_info->model_scf_given = 0 ;
+  args_info->algo_sbm_cem_given = 0 ;
   args_info->stringIDs_given = 0 ;
   args_info->mega_given = 0 ;
   args_info->printEveryNIters_given = 0 ;
@@ -137,6 +139,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
+  args_info->algo_sbm_cem_flag = 0;
   args_info->stringIDs_flag = 0;
   args_info->mega_flag = 0;
   args_info->printEveryNIters_arg = 10;
@@ -173,12 +176,13 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->iterations_help = gengetopt_args_info_help[15] ;
   args_info->initGT_help = gengetopt_args_info_help[16] ;
   args_info->model_scf_help = gengetopt_args_info_help[17] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[18] ;
-  args_info->mega_help = gengetopt_args_info_help[19] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[20] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[21] ;
-  args_info->alpha_help = gengetopt_args_info_help[22] ;
-  args_info->save_z_help = gengetopt_args_info_help[23] ;
+  args_info->algo_sbm_cem_help = gengetopt_args_info_help[18] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[19] ;
+  args_info->mega_help = gengetopt_args_info_help[20] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[21] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[22] ;
+  args_info->alpha_help = gengetopt_args_info_help[23] ;
+  args_info->save_z_help = gengetopt_args_info_help[24] ;
   
 }
 
@@ -348,6 +352,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "initGT", 0, 0 );
   if (args_info->model_scf_given)
     write_into_file(outfile, "model.scf", 0, 0 );
+  if (args_info->algo_sbm_cem_given)
+    write_into_file(outfile, "algo.sbm.cem", 0, 0 );
   if (args_info->stringIDs_given)
     write_into_file(outfile, "stringIDs", 0, 0 );
   if (args_info->mega_given)
@@ -636,6 +642,7 @@ cmdline_parser_internal (
         { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
         { "model.scf",	0, NULL, 0 },
+        { "algo.sbm.cem",	0, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
         { "mega",	0, NULL, 0 },
         { "printEveryNIters",	1, NULL, 0 },
@@ -881,6 +888,18 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->model_scf_flag), 0, &(args_info->model_scf_given),
                 &(local_args_info.model_scf_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "model.scf", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Classification EM (CEM) for the SBM.  */
+          else if (strcmp (long_options[option_index].name, "algo.sbm.cem") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->algo_sbm_cem_flag), 0, &(args_info->algo_sbm_cem_given),
+                &(local_args_info.algo_sbm_cem_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "algo.sbm.cem", '-',
                 additional_error))
               goto failure;
           

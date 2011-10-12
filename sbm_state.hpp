@@ -82,6 +82,7 @@ struct State {
 
 	// internalcheck
 	void internalCheck() const;
+	static double NMI(const std :: vector<int> &left, const std :: vector<int> &top);
 
 	// summaries
 	void shortSummary(const ObjectiveFunction *obj, const std :: vector<int> *groundTruth) const;

@@ -39,6 +39,10 @@ struct UsageMessage {
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) ;
 
+static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
+		//, const sbm :: ObjectiveFunction * const obj
+		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
+
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
 	if (cmdline_parser (argc, argv, &args_info) != 0)
@@ -80,11 +84,18 @@ int main(int argc, char **argv) {
 	PP(args_info.model_scf_flag);
 	PP(args_info.assume_N_nodes_arg);
 	PP(args_info.save_z_arg);
+	PP(args_info.algo_sbm_cem_flag);
 
 
 	if(args_info.model_scf_flag) {
 		unless(args_info.K_arg == 2) {
-			cerr << "Usage error: Currently, the stochastic community finding model (uncollapsed) requires -K 2 as and argument. Exiting." << endl;
+			cerr << "Usage error: Currently, the stochastic community finding model (uncollapsed) requires -K 2 as an argument. Exiting." << endl;
+			exit(1);
+		};
+	}
+	if(args_info.algo_sbm_cem_flag) {
+		unless(args_info.K_arg >= 2) {
+			cerr << "Usage error: To use the CEM algorithm (--algo.sbm.cem), you must specify a number of communities (-K) as an argument. Exiting." << endl;
 			exit(1);
 		};
 	}
@@ -132,7 +143,11 @@ int main(int argc, char **argv) {
 	srand48(args_info.seed_arg);
 	gsl_rng * r = gsl_rng_alloc (gsl_rng_taus);
 	gsl_rng_set(r, args_info.seed_arg);
-	if(args_info.model_scf_flag) {
+	if(args_info.algo_sbm_cem_flag) {
+		runCEM(network.get(), args_info.K_arg
+				//, obj.get()
+				, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info, r);
+	} else if(args_info.model_scf_flag) {
 		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
 		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info, r);
@@ -1505,3 +1520,35 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 }
+
+typedef vector<long double > theta_t;
+typedef vector<vector<long double > > pi_t;
+typedef vector<int> z_t;
+
+static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
+		//, const sbm :: ObjectiveFunction * const obj
+		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
+	// Given K and x, alternate
+	// - maximize P(z,x|theta,pi,K) wrt theta and pi
+	// - maximize P(z,x|theta,pi,K) wrt z
+	cout << " == Classification EM == " << endl;
+
+	const int N = g->numNodes();
+	const int K = commandLineK;
+	
+	assert(!args_info.weighted_flag); // weights aren't allowed with this yet.
+
+	// initialize z randomly
+	z_t z(N);
+	for(int i=0; i<N; i++)
+		z.at(i) = gsl_ran_flat(r,0,1) * K;
+
+	for(int iter=0; iter<iterations; iter++) {
+		PP(iter);
+		if(groundTruth) {
+			const double nmi = sbm :: State :: NMI(*groundTruth, z);
+			PP(nmi);
+		}
+	}
+}
+

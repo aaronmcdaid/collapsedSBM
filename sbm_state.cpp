@@ -348,7 +348,7 @@ namespace sbm {
 
 	}
 
-	static double NMI(const vector<int> &left, const vector<int> &top) {
+	/*static*/ double State :: NMI(const vector<int> &left, const vector<int> &top) {
 		const int N = static_cast<int>(left.size());
 		assert(left.size() == top.size());
 		map< pair<int,int> , int> joint;
