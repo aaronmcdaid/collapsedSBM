@@ -40,7 +40,7 @@ struct UsageMessage {
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) ;
 
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
-		//, const sbm :: ObjectiveFunction * const obj
+		, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
 
 int main(int argc, char **argv) {
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
 	gsl_rng_set(r, args_info.seed_arg);
 	if(args_info.algo_sbm_cem_flag) {
 		runCEM(network.get(), args_info.K_arg
-				//, obj.get()
+				, obj.get()
 				, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info, r);
 	} else if(args_info.model_scf_flag) {
 		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
@@ -1544,8 +1544,106 @@ static void CEM_update_theta(theta_t &theta, const z_t &z) {
 		PP(theta.at(k));
 }
 
+static void CEM_update_pi(pi_t &pi, const z_t &z, const graph :: NetworkInterfaceConvertedToStringWithWeights *g
+		, const sbm :: ObjectiveFunction * const obj
+		) {
+	assert(g->get_edge_weights()->is_weighted() == obj->weighted);
+	assert(g->get_edge_weights()->is_directed() == obj->directed);
+	assert(!g->get_edge_weights()->is_weighted());
+	const graph :: VerySimpleGraphInterface *graph = g->get_plain_graph();
+	const int K = pi.size();
+	const int N = z.size();
+	for(int k=0; k<K; k++) {
+		vector<long double> &pi_k = pi.at(k);
+		assert(int(pi_k.size())==K);
+		for(int l=0; l<K; l++) {
+			pi_k.at(l) = 0.0L;
+		}
+	}
+	PP2(N,g->numNodes());
+	// first, set up pi such that it stores the count of edges in that block.
+	// then, we'll divide all the elements of pi appropriately
+	int total_num_edges = 0;
+	for(int rel = 0; rel < graph->numRels(); rel++) {
+		const std :: pair<int32_t, int32_t> & eps = graph->EndPoints(rel);
+		assert(eps.first <= eps.second);
+		int z_1 = z.at(eps.first);
+		int z_2 = z.at(eps.second);
+		// if undirected, the lower triangle is pi must be empty
+		if(g->get_edge_weights()->is_directed()) {
+			pi.at(z_1).at(z_2) += g->get_edge_weights()->getl2h(rel);
+			pi.at(z_2).at(z_1) += g->get_edge_weights()->geth2l(rel);
+			total_num_edges += g->get_edge_weights()->getl2h(rel);
+			total_num_edges += g->get_edge_weights()->geth2l(rel);
+		} else {
+			if(z_1 > z_2)
+				swap(z_1, z_2);
+			pi.at(z_1).at(z_2) += g->get_edge_weights()->getl2h(rel);
+			assert(1 == g->get_edge_weights()->getl2h(rel));
+			total_num_edges++;
+		}
+		// a self loop is only reported in l2h
+	}
+	PP("checking");
+	if(g->get_edge_weights()->is_directed()) {
+		PP("directed");
+		assert(total_num_edges >= g->numRels());
+		// for(int k=0; k<K; k++) { for(int j=0; j<K; j++) { PP3(k,j,pi.at(k).at(j)); } }
+	} else {
+		PP("undirected");
+		assert(total_num_edges == g->numRels());
+		for(int k=0; k<K; k++) {
+			for(int j=0; j<k; j++) {
+				assert(pi.at(k).at(j)==0);
+			}
+		}
+	}
+
+	vector<int> z_size(K, 0);
+	for(int i=0; i<N; i++)
+		z_size.at(z.at(i))++;
+
+	// for each block, divide pi by the number of pairs of nodes
+	int blocks_considered = 0;
+	for(int k=0; k<K; k++) {
+		for(int j=0; j<K; j++) {
+			if(!g->get_edge_weights()->is_directed() && k>j) {
+				assert(pi.at(k).at(j)==0);
+				continue;
+			}
+			PP2(k,j);
+			++blocks_considered;
+			int pairs = z_size.at(k) * z_size.at(j);
+			// BUT
+			if(k==j) {
+				if(obj->selfloops)
+					pairs = z_size.at(k) * (z_size.at(k)+1) / 2;
+				else
+					pairs = z_size.at(k) * (z_size.at(k)-1) / 2;
+			}
+			assert(pairs >= 0);
+			if(pairs == 0) {
+				assert(pi.at(k).at(j) == 0);
+				pi.at(k).at(j) = 0.5L;
+			} else 
+				pi.at(k).at(j) /= pairs;
+		}
+	}
+	if(g->get_edge_weights()->is_directed()) {
+		assert(blocks_considered == K * K);
+	} else {
+		assert(blocks_considered == K * (K+1) / 2);
+	}
+	
+	for(int k=0; k<K; k++) {
+		for(int j=0; j<K; j++) {
+			PP3(k,j,pi.at(k).at(j));
+		}
+	}
+}
+
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
-		//, const sbm :: ObjectiveFunction * const obj
+		, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
 	// Given K and x, alternate
 	// - maximize P(z,x|theta,pi,K) wrt theta and pi
@@ -1556,7 +1654,9 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	const int N = g->numNodes();
 	const int K = commandLineK;
 	
-	assert(!args_info.weighted_flag); // weights aren't allowed with this yet.
+	{
+		assert(!args_info.weighted_flag); // weights aren't allowed with this yet.
+	}
 
 	// initialize z randomly
 	z_t z(N);
@@ -1572,6 +1672,7 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 		PP(iter);
 		CEM_update_theta(theta, z);
+		CEM_update_pi(pi, z, g, obj);
 	}
 }
 
