@@ -1651,8 +1651,8 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 	assert(obj->selfloops);
 	assert(n >= 0 && n <= N);
 	if(n==N) { // we've got a partition
-		PP(z.size());
 		{ // double check the final score
+			// PP(score);
 			vector<int> verify_z_size(K,0);
 			for(int i=0; i<N; i++) {
 				verify_z_size.at(z.at(i)) ++;
@@ -1660,11 +1660,9 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 			for(int k=0; k<K; k++) {
 				assert(z_size.at(k) == verify_z_size.at(k));
 			}
-			PP(score);
 			long double verify_score = 0.0;
 			for(int i = 0; i<N; i++)
 				verify_score += log2l(theta.at(z.at(i)));
-			PP(verify_score);
 			for(int i=0;i<N;i++) {
 				for(int j=0;j<N;j++) {
 					int z_1 = z.at(i);
@@ -1681,17 +1679,17 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 					const long double pi_12 = pi.at(z_1).at(z_2);
 					assert(pi_12 > 0.0L);
 					assert(pi_12 < 1.0L); // TODO: This'll definitely break down sooner or later
-					// verify_score += log2l(pi_12) - log2l(1.0L-pi_12);
+					verify_score += log2l(pi_12) - log2l(1.0L-pi_12);
 				}
 				if(g->get_edge_weights()->geth2l(rel)>0) { // edge from second to first
 					const long double pi_21 = pi.at(z_2).at(z_1);
 					assert(pi_21 > 0.0L);
 					assert(pi_21 < 1.0L); // TODO: This'll definitely break down sooner or later
-					// verify_score += log2l(pi_21) - log2l(1.0L-pi_21);
+					verify_score += log2l(pi_21) - log2l(1.0L-pi_21);
 				}
 
 			}
-			// PP(verify_score);
+			PP(verify_score);
 			// PP(verify_score - score);
 			assert(VERYCLOSE(verify_score , score));
 
@@ -1703,12 +1701,34 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		z.at(n) = k;
 		long double new_score = score;
 		new_score += log2l(theta.at(k));
+		assert(new_score < score);
 		// consider just the neighbours (and pairs of nodes) at node n
 		for(int l =0; l < K; l++) { // assume it's *disconnected* from every one of the clusters
 			new_score += z_size.at(l) * log2l(1.0L-pi.at(k).at(l));
-			new_score += (z_size.at(l)) * log2l(1.0L-pi.at(l).at(k));
+			new_score += z_size.at(l) * log2l(1.0L-pi.at(l).at(k));
 		}
-		new_score += log2l(1.0L-pi.at(k).at(k)); // this accounts for the self loop
+		new_score += log2l(1.0L-pi.at(k).at(k)); // this accounts for the self loop (assumed missing)
+		assert(new_score < score);
+
+		// now, to correct for the edges that actually are present
+		const vector<int32_t> & neigh_rels = g->get_plain_graph()->neighbouring_rels_in_order(n);
+		For(neigh_rel, neigh_rels) {
+			const std :: pair<int32_t, int32_t> & eps = g->get_plain_graph()->EndPoints(*neigh_rel);
+			if(eps.first <= n && eps.second <=n) {
+				if(g->get_edge_weights()->getl2h(*neigh_rel) > 0) { // link from first to second
+					const int l1 = z.at(eps.first);
+					const int l2 = z.at(eps.second);
+					new_score += log2l(pi.at(l1).at(l2)) - log2l(1.0L-pi.at(l1).at(l2));
+				}
+				if(eps.first != eps.second && g->get_edge_weights()->geth2l(*neigh_rel) > 0) { // link from second to first
+					const int l2 = z.at(eps.first);
+					const int l1 = z.at(eps.second);
+					new_score += log2l(pi.at(l1).at(l2)) - log2l(1.0L-pi.at(l1).at(l2));
+				}
+			}
+		}
+		assert(new_score < score);
+
 		z_size.at(k) ++;
 		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score);
 		z_size.at(k) --;
