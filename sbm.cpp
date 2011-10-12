@@ -117,6 +117,12 @@ int main(int argc, char **argv) {
 	} else {
 		network = graph :: loading :: make_Network_from_edge_list_int64(edgeListFileName, args_info.directed_flag, args_info.weighted_flag, false, args_info.assume_N_nodes_arg);
 	}
+	{ // check for self loops
+		if(network->get_plain_graph()->number_of_self_loops() > 0 && !args_info.selfloop_flag) {
+			cerr << "Usage error: You have some self loops (" << network->get_plain_graph()->number_of_self_loops() << "). You must specify -s if to support the self-loop model. Exiting." << endl;
+			exit(1);
+		}
+	}
 
 	vector<int> groundTruth;
 	if(args_info.GT_vector_given) { //populate groundTruth based on the --GT.vector option
