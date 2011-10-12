@@ -1646,6 +1646,7 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		, const theta_t &theta, const pi_t &pi, const graph :: NetworkInterfaceConvertedToStringWithWeights *g
 		, const sbm :: ObjectiveFunction * const obj
 		, const long double score
+		, long double & best_score_so_far
 		) {
 	assert(obj->directed);
 	assert(obj->selfloops);
@@ -1689,12 +1690,19 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 				}
 
 			}
-			PP(verify_score);
+			PP2(verify_score, best_score_so_far);
 			// PP(verify_score - score);
 			assert(VERYCLOSE(verify_score , score));
 
 		}
+		if(score > best_score_so_far)
+			best_score_so_far = score;
 		// exit(0);
+		return;
+	}
+	if(score < best_score_so_far) {
+		PP3(n, score, best_score_so_far);
+		exit(2);
 		return;
 	}
 	for(int k=0; k<K; k++) {
@@ -1730,7 +1738,7 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		assert(new_score < score);
 
 		z_size.at(k) ++;
-		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score);
+		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score, best_score_so_far);
 		z_size.at(k) --;
 	}
 }
@@ -1740,7 +1748,8 @@ static void CEM_update_z(z_t &z, const theta_t &theta, const pi_t &pi, const gra
 	const int N = z.size();
 	const int K = pi.size();
 	vector<int> z_size(K, 0);
-	recurse(z, z_size, 0, N, K, theta, pi, g, obj, 0);
+	long double best_score_so_far = -DBL_MAX;
+	recurse(z, z_size, 0, N, K, theta, pi, g, obj, 0, best_score_so_far);
 }
 
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
