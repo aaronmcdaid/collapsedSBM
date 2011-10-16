@@ -1611,7 +1611,6 @@ static void CEM_update_pi(pi_t &pi, const z_t &z, const graph :: NetworkInterfac
 				assert(pi.at(k).at(j)==0);
 				continue;
 			}
-			PP2(k,j);
 			++blocks_considered;
 			int pairs = z_size.at(k) * z_size.at(j);
 			// BUT
@@ -1647,13 +1646,18 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		, const sbm :: ObjectiveFunction * const obj
 		, const long double score
 		, long double & best_score_so_far
+		, long double log2_max_theta
+		, long double log2_max_pi
 		) {
 	assert(obj->directed);
 	assert(obj->selfloops);
 	assert(n >= 0 && n <= N);
+	if(n==12)
+		PP2(z.at(n-1), best_score_so_far);
 	if(n==N) { // we've got a partition
 		{ // double check the final score
 			// PP(score);
+#ifdef verify_recurse
 			vector<int> verify_z_size(K,0);
 			for(int i=0; i<N; i++) {
 				verify_z_size.at(z.at(i)) ++;
@@ -1690,9 +1694,10 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 				}
 
 			}
-			PP2(verify_score, best_score_so_far);
+			// PP2(verify_score, best_score_so_far);
 			// PP(verify_score - score);
 			assert(VERYCLOSE(verify_score , score));
+#endif
 
 		}
 		if(score > best_score_so_far)
@@ -1700,9 +1705,14 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		// exit(0);
 		return;
 	}
-	if(score < best_score_so_far) {
-		PP3(n, score, best_score_so_far);
-		exit(2);
+	const int pairs_left = N * N - n * n;
+	// PP3(N,n,pairs_left);
+	if(score
+			+ (N-n)*log2_max_theta + pairs_left * log2_max_pi
+		< best_score_so_far) {
+		// PP2(log2_max_theta, log2_max_pi);
+		// PP3(n, score, best_score_so_far);
+		// exit(2);
 		return;
 	}
 	for(int k=0; k<K; k++) {
@@ -1710,6 +1720,7 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		long double new_score = score;
 		new_score += log2l(theta.at(k));
 		assert(new_score < score);
+		assert(new_score <= score + log2_max_theta);
 		// consider just the neighbours (and pairs of nodes) at node n
 		for(int l =0; l < K; l++) { // assume it's *disconnected* from every one of the clusters
 			new_score += z_size.at(l) * log2l(1.0L-pi.at(k).at(l));
@@ -1738,7 +1749,7 @@ static void recurse(z_t &z, vector<int> &z_size, const int n, const int N, const
 		assert(new_score < score);
 
 		z_size.at(k) ++;
-		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score, best_score_so_far);
+		recurse(z, z_size, n+1, N, K, theta, pi, g, obj, new_score, best_score_so_far, log2_max_theta, log2_max_pi);
 		z_size.at(k) --;
 	}
 }
@@ -1748,8 +1759,20 @@ static void CEM_update_z(z_t &z, const theta_t &theta, const pi_t &pi, const gra
 	const int N = z.size();
 	const int K = pi.size();
 	vector<int> z_size(K, 0);
+
+	// estimate the 'best-case scenario for theta
+	const long double max_theta = *max_element(theta.begin(), theta.end());
+	vector<long double> pis;
+	for(int k=0; k<K;k++) {
+		for(int l=0; l<K;l++) {
+			pis.push_back(pi.at(k).at(l));
+			pis.push_back(1.0L-pi.at(k).at(l));
+		}
+	}
+	assert(int(pis.size()) == 2 * K * K);
+	const long double max_pi = *max_element(pis.begin(), pis.end());
 	long double best_score_so_far = -DBL_MAX;
-	recurse(z, z_size, 0, N, K, theta, pi, g, obj, 0, best_score_so_far);
+	recurse(z, z_size, 0, N, K, theta, pi, g, obj, 0, best_score_so_far, log2l(max_theta), log2l(max_pi));
 }
 
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
