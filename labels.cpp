@@ -94,7 +94,40 @@ int main() {
 		if(N == -1)
 			N = z.size();
 		assert(N == int(z.size()));
-		kzs.push_back(make_pair(K, make_pair(line_no, z)));
+
+		int count_nonempties = 0;
+		{
+			vector<bool> nonempty_ids(K);
+			For(z_iter, z) {
+				if(nonempty_ids.at(*z_iter)==false)
+					count_nonempties++;
+				nonempty_ids.at(*z_iter)=true;
+			}
+			if(count_nonempties != K) { // rename them in order to discard the non-empty ones.
+				assert(count_nonempties < K);
+				// map each used slot >= K to an unused slot < K
+				vector<int> map_from_high_to_low(K, -1); // every element of this map up to count_nonempties will be -1, and the rest will be *distinct* non-negative
+				int j = K;
+				for(int i = 0; i<count_nonempties; i++) {
+					if(nonempty_ids.at(i) == false) {
+						do { // find (from the end) the next full slot
+							j--;
+						} while(nonempty_ids.at(j) == false);
+						assert(map_from_high_to_low.at(j) == -1);
+						map_from_high_to_low.at(j) = i;
+					}
+				}
+
+				For(z_iter, z) {
+					if(*z_iter >= count_nonempties) {
+						*z_iter = map_from_high_to_low.at(*z_iter);
+					}
+				}
+			}
+			assert(count_nonempties <= K);
+
+		}
+		kzs.push_back(make_pair(count_nonempties, make_pair(line_no, z)));
 		++ line_no;
 	}
 	PP2(N, kzs.size());
