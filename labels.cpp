@@ -124,8 +124,9 @@ int main() {
 			// but first, build the K*K table of relabelling scores.
 			vector< vector<int64_t> > k_by_k(K, vector<int64_t>(K,0));
 			// k_by_k is like a summary of node_k_counts, but where the nodes are summed into their clusters.
-			for(int n=0; n<74; n++) {
+			for(int n=0; n<N; n++) {
 				const int z_i = kz->second.second.at(n);
+				assert(z_i >= 0 && z_i < K);
 				for(int k=0; k<K; k++) {
 					k_by_k.at(z_i).at(k) += node_k_counts[make_pair(n,k)];
 					// PP3(z_i, k, k_by_k.at(z_i).at(k));
