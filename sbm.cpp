@@ -1107,11 +1107,12 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			- log2(preK+1) // Poisson(1) prior on K
 			// - 1 // Geometric(0.5) prior on K
 
-			+ LOG2GAMMA(s._alpha) // the change to SumOfLog2Facts
+			// + LOG2GAMMA(s._alpha)  // the change to SumOfLog2Facts
+			// I belatedly noticed that this last line can be cancelled against some expressions in the next line.
 
 			// log2(preK) - log2(s._N+preK)
-			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) - postK*LOG2GAMMA(s._alpha) )
-			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) - preK*LOG2GAMMA(s._alpha) )
+			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) /*- postK*LOG2GAMMA(s._alpha)*/ )
+			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) /*- preK*LOG2GAMMA(s._alpha)*/ )
 			;
 		if(acceptTest(presumed_delta, AR)) {
 			// cout << "k: acc inc" << endl;
