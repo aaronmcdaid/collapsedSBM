@@ -59,6 +59,18 @@ struct Labelling {
 
 struct ObjectiveFunction;
 
+template<int d>
+struct my_array {
+private:
+	double coords[d];
+public:
+	double & at(size_t offset) {
+		assert(offset < d);
+		return coords[offset];
+	}
+	static const int dimensionality = d;
+};
+
 struct State {
 	const GraphType * const _g; // the graph
 	const graph :: VerySimpleGraphInterface * const vsg;
@@ -72,6 +84,9 @@ struct State {
 	Labelling	labelling;
 	// the clustering
 	int _k; // the number of clusters (including empty ones)
+#define DIMENSIONALITY 2
+	typedef my_array<DIMENSIONALITY> point_type;
+	std :: vector< std :: vector<point_type> > cluster_to_points_map; // if non-empty, the LatentSpaceSBM is in effect
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

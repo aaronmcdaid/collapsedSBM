@@ -1397,6 +1397,23 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	}
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
+	if(args_info.latentspace_flag) {
+		assert(s._k == commandLineK);
+		assert(s.cluster_to_points_map.empty());
+		for(int k = 0; k < s._k; ++k) {
+			vector<sbm :: State :: point_type> initial_random_locations(s._N);
+			For(dbl, initial_random_locations) {
+				for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+					dbl->at(d) = gsl_ran_gaussian(r, 1);
+				}
+			}
+			s.cluster_to_points_map.push_back(initial_random_locations);
+		}
+		assert((int)s.cluster_to_points_map.size() == s._k);
+		cout << "assigned initial random positions for the latent space model" << endl;
+	}
+	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	s.internalCheck();
 
 	long double pmf_track = s.pmf(obj);
 	PP(pmf_track);
@@ -1443,7 +1460,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 					}
 				} else
-					assert(commandLineK == s._k); // this'll fail with ejectabsorb!
+					assert(commandLineK == s._k);
 			break; case 1:
 				if(algo_gibbs)
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
