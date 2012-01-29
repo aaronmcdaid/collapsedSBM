@@ -57,6 +57,8 @@ const char *gengetopt_args_info_help[] = {
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
   "  -a, --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
   "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
+  "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
+  "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
     0
 };
 
@@ -108,6 +110,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->assume_N_nodes_given = 0 ;
   args_info->alpha_given = 0 ;
   args_info->save_z_given = 0 ;
+  args_info->gamma_s_given = 0 ;
+  args_info->gamma_phi_given = 0 ;
 }
 
 static
@@ -150,6 +154,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->alpha_orig = NULL;
   args_info->save_z_arg = gengetopt_strdup ("");
   args_info->save_z_orig = NULL;
+  args_info->gamma_s_arg = 1;
+  args_info->gamma_s_orig = NULL;
+  args_info->gamma_phi_arg = 1;
+  args_info->gamma_phi_orig = NULL;
   
 }
 
@@ -183,6 +191,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->assume_N_nodes_help = gengetopt_args_info_help[22] ;
   args_info->alpha_help = gengetopt_args_info_help[23] ;
   args_info->save_z_help = gengetopt_args_info_help[24] ;
+  args_info->gamma_s_help = gengetopt_args_info_help[25] ;
+  args_info->gamma_phi_help = gengetopt_args_info_help[26] ;
   
 }
 
@@ -281,6 +291,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->alpha_orig));
   free_string_field (&(args_info->save_z_arg));
   free_string_field (&(args_info->save_z_orig));
+  free_string_field (&(args_info->gamma_s_orig));
+  free_string_field (&(args_info->gamma_phi_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -366,6 +378,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "alpha", args_info->alpha_orig, 0);
   if (args_info->save_z_given)
     write_into_file(outfile, "save.z", args_info->save_z_orig, 0);
+  if (args_info->gamma_s_given)
+    write_into_file(outfile, "gamma.s", args_info->gamma_s_orig, 0);
+  if (args_info->gamma_phi_given)
+    write_into_file(outfile, "gamma.phi", args_info->gamma_phi_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -649,6 +665,8 @@ cmdline_parser_internal (
         { "assume_N_nodes",	1, NULL, 0 },
         { "alpha",	1, NULL, 'a' },
         { "save.z",	1, NULL, 'z' },
+        { "gamma.s",	1, NULL, 0 },
+        { "gamma.phi",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -952,6 +970,34 @@ cmdline_parser_internal (
                 &(local_args_info.assume_N_nodes_given), optarg, 0, "0", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "assume_N_nodes", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* (for weighted only). Shape of Gamma prior.  */
+          else if (strcmp (long_options[option_index].name, "gamma.s") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->gamma_s_arg), 
+                 &(args_info->gamma_s_orig), &(args_info->gamma_s_given),
+                &(local_args_info.gamma_s_given), optarg, 0, "1", ARG_FLOAT,
+                check_ambiguity, override, 0, 0,
+                "gamma.s", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* (for weighted only). Scale of Gamma prior.  */
+          else if (strcmp (long_options[option_index].name, "gamma.phi") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->gamma_phi_arg), 
+                 &(args_info->gamma_phi_orig), &(args_info->gamma_phi_given),
+                &(local_args_info.gamma_phi_given), optarg, 0, "1", ARG_FLOAT,
+                check_ambiguity, override, 0, 0,
+                "gamma.phi", '-',
                 additional_error))
               goto failure;
           

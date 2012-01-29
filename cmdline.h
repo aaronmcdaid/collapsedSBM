@@ -98,6 +98,12 @@ struct gengetopt_args_info
   char * save_z_arg;	/**< @brief save burnt-in z to this file (default='').  */
   char * save_z_orig;	/**< @brief save burnt-in z to this file original value given at command line.  */
   const char *save_z_help; /**< @brief save burnt-in z to this file help description.  */
+  float gamma_s_arg;	/**< @brief (for weighted only). Shape of Gamma prior (default='1').  */
+  char * gamma_s_orig;	/**< @brief (for weighted only). Shape of Gamma prior original value given at command line.  */
+  const char *gamma_s_help; /**< @brief (for weighted only). Shape of Gamma prior help description.  */
+  float gamma_phi_arg;	/**< @brief (for weighted only). Scale of Gamma prior (default='1').  */
+  char * gamma_phi_orig;	/**< @brief (for weighted only). Scale of Gamma prior original value given at command line.  */
+  const char *gamma_phi_help; /**< @brief (for weighted only). Scale of Gamma prior help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -124,6 +130,8 @@ struct gengetopt_args_info
   unsigned int assume_N_nodes_given ;	/**< @brief Whether assume_N_nodes was given.  */
   unsigned int alpha_given ;	/**< @brief Whether alpha was given.  */
   unsigned int save_z_given ;	/**< @brief Whether save.z was given.  */
+  unsigned int gamma_s_given ;	/**< @brief Whether gamma.s was given.  */
+  unsigned int gamma_phi_given ;	/**< @brief Whether gamma.phi was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
