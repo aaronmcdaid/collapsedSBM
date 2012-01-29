@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <set>
+#include <iostream>
 #include <gsl/gsl_sf.h>
 #include "graph/network.hpp"
 #include <cmath>
@@ -64,12 +65,31 @@ struct my_array {
 private:
 	double coords[d];
 public:
-	double & at(size_t offset) {
+	inline double & at(size_t offset) {
+		assert(offset < d);
+		return coords[offset];
+	}
+	inline double at(size_t offset) const {
 		assert(offset < d);
 		return coords[offset];
 	}
 	static const int dimensionality = d;
+	inline double dist_2(const my_array<d> &other) {
+		double distance_squared = 0;
+		for(size_t i = 0; i<d; ++i) {
+			const double dlta = this->at(i) - other.at(i);
+			distance_squared += dlta * dlta;
+		}
+		return distance_squared;
+	}
 };
+template<int d>
+inline std :: ostream& operator<< (std :: ostream& os, const my_array<d> &a) {
+	for(size_t i=0; i<d; ++i) {
+		os << "," << a.at(i);
+	}
+	return os;
+}
 
 struct State {
 	const GraphType * const _g; // the graph
