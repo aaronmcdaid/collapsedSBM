@@ -737,7 +737,7 @@ namespace sbm {
 					pzero.zero();
 					const double dist_2 = pzero.dist_2(p);
 					PP2(__LINE__, dist_2);
-					const double ln_prior_position = - dist_2 / ls_prior_sigma;
+					const double ln_prior_position = - dist_2 / (2*ls_prior_sigma);
 					const double l2_prior_position = M_LOG2E * ln_prior_position;
 					ls_bits += l2_prior_position;
 				}
