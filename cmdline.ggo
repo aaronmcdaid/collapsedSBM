@@ -26,3 +26,4 @@ option  "alpha"              a "alpha. How uniform the cluster sizes"        flo
 option  "save.z"             z "save burnt-in z to this file"        string        default="" no
 option  "gamma.s"            - "(for weighted only). Shape of Gamma prior"        float        default="1" no
 option  "gamma.phi"          - "(for weighted only). Scale of Gamma prior"        float        default="1" no
+option  "latentspace"        l "Latent space model inside clusters       "     flag       off

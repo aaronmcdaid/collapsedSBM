@@ -85,6 +85,7 @@ int main(int argc, char **argv) {
 	PP(args_info.assume_N_nodes_arg);
 	PP(args_info.save_z_arg);
 	PP(args_info.algo_sbm_cem_flag);
+	PP(args_info.latentspace_flag);
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
@@ -105,6 +106,10 @@ int main(int argc, char **argv) {
 	}
 	if(args_info.assume_N_nodes_arg > 0 && args_info.stringIDs_flag) {
 		cerr << endl << "Usage error: --stringIDs and --assume_N_nodes are not allowed together. Exiting." << endl;
+		exit(1);
+	}
+	if(args_info.latentspace_flag && args_info.K_arg == -1) {
+		cerr << endl << "Usage error: Currently, the latent space model requires the number of clusters (-K) to be specified." << endl;
 		exit(1);
 	}
 	PP(sbm :: ObjectiveFunction_Poisson :: s);

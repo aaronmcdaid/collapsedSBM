@@ -59,6 +59,7 @@ const char *gengetopt_args_info_help[] = {
   "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
   "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
   "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
+  "  -l, --latentspace           Latent space model inside clusters         \n                                (default=off)",
     0
 };
 
@@ -112,6 +113,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->save_z_given = 0 ;
   args_info->gamma_s_given = 0 ;
   args_info->gamma_phi_given = 0 ;
+  args_info->latentspace_given = 0 ;
 }
 
 static
@@ -158,6 +160,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->gamma_s_orig = NULL;
   args_info->gamma_phi_arg = 1;
   args_info->gamma_phi_orig = NULL;
+  args_info->latentspace_flag = 0;
   
 }
 
@@ -193,6 +196,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->save_z_help = gengetopt_args_info_help[24] ;
   args_info->gamma_s_help = gengetopt_args_info_help[25] ;
   args_info->gamma_phi_help = gengetopt_args_info_help[26] ;
+  args_info->latentspace_help = gengetopt_args_info_help[27] ;
   
 }
 
@@ -382,6 +386,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "gamma.s", args_info->gamma_s_orig, 0);
   if (args_info->gamma_phi_given)
     write_into_file(outfile, "gamma.phi", args_info->gamma_phi_orig, 0);
+  if (args_info->latentspace_given)
+    write_into_file(outfile, "latentspace", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -667,10 +673,11 @@ cmdline_parser_internal (
         { "save.z",	1, NULL, 'z' },
         { "gamma.s",	1, NULL, 0 },
         { "gamma.phi",	1, NULL, 0 },
+        { "latentspace",	0, NULL, 'l' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:a:z:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:a:z:l", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -770,6 +777,16 @@ cmdline_parser_internal (
               &(local_args_info.save_z_given), optarg, 0, "", ARG_STRING,
               check_ambiguity, override, 0, 0,
               "save.z", 'z',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'l':	/* Latent space model inside clusters       .  */
+        
+        
+          if (update_arg((void *)&(args_info->latentspace_flag), 0, &(args_info->latentspace_given),
+              &(local_args_info.latentspace_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "latentspace", 'l',
               additional_error))
             goto failure;
         

@@ -104,6 +104,8 @@ struct gengetopt_args_info
   float gamma_phi_arg;	/**< @brief (for weighted only). Scale of Gamma prior (default='1').  */
   char * gamma_phi_orig;	/**< @brief (for weighted only). Scale of Gamma prior original value given at command line.  */
   const char *gamma_phi_help; /**< @brief (for weighted only). Scale of Gamma prior help description.  */
+  int latentspace_flag;	/**< @brief Latent space model inside clusters        (default=off).  */
+  const char *latentspace_help; /**< @brief Latent space model inside clusters        help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -132,6 +134,7 @@ struct gengetopt_args_info
   unsigned int save_z_given ;	/**< @brief Whether save.z was given.  */
   unsigned int gamma_s_given ;	/**< @brief Whether gamma.s was given.  */
   unsigned int gamma_phi_given ;	/**< @brief Whether gamma.phi was given.  */
+  unsigned int latentspace_given ;	/**< @brief Whether latentspace was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
