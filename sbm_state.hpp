@@ -82,6 +82,17 @@ public:
 		}
 		return distance_squared;
 	}
+	void zero() {
+		for(size_t i = 0; i<d; ++i) {
+			this->at(i) = 0;
+		}
+	}
+	my_array & operator += (const my_array &o) {
+		for(size_t i = 0; i<d; ++i) {
+			this->at(i) += o.at(i);
+		}
+		return *this;
+	}
 };
 template<int d>
 inline std :: ostream& operator<< (std :: ostream& os, const my_array<d> &a) {
