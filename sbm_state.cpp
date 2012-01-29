@@ -728,6 +728,20 @@ namespace sbm {
 					}
 				}
 			}
+			{ // prior on the positions
+				const double ls_prior_sigma = 1; // TODO: fixed, or put a prior on it?
+				for(int n=0; n < this->_N; ++n) {
+					const int z_n = this->labelling.cluster_id.at(n);
+					sbm :: State :: point_type p = this->cluster_to_points_map.at(z_n).at(n);
+					sbm :: State :: point_type pzero;
+					pzero.zero();
+					const double dist_2 = pzero.dist_2(p);
+					PP2(__LINE__, dist_2);
+					const double ln_prior_position = - dist_2 / ls_prior_sigma;
+					const double l2_prior_position = M_LOG2E * ln_prior_position;
+					ls_bits += l2_prior_position;
+				}
+			}
 			assert(isfinite(ls_bits));
 			edges_bits += ls_bits;
 		}
