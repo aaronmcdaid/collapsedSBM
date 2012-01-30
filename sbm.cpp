@@ -589,6 +589,12 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 }
 
 long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+	// - take each cluster in turn.
+	//   - take each node in that cluster in turn
+	//     - propose a new position based on it cluster-mate-NEIGHBOURS
+	//     - calculate proposal prob, again based on cluster-mate-NEIGHBOURS
+	//     - calculate the posterior, based on ALL-cluster-mates
+
 	const long double pre = s.pmf(obj);
 	assert(s._k == (int)s.cluster_to_points_map.size());
 	assert(!obj->weighted);

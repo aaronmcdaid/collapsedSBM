@@ -676,20 +676,14 @@ namespace sbm {
 						PP2(n,m);
 						sbm :: State :: point_type pn = this->cluster_to_points_map.at(k).at(n);
 						sbm :: State :: point_type pm = this->cluster_to_points_map.at(k).at(m);
-						const double dist_2 = pn.dist_2(pm);
-						cout << dist_2 << endl;
-						assert(dist_2 == pm.dist_2(pn));
-						const double ls_alpha_k = 1; // TODO: fixed, or put a prior on it? 
 						/*
 						 * P(connect) = exp(ls_alpha_k - dist_2)              / (1 + exp(ls_alpha_k - dist_2));
 						 * P(disc   ) = (1 + exp(ls_alpha_k - dist_2))/(1 + exp(ls_alpha_k - dist_2)) - exp(ls_alpha_k - dist_2)              / (1 + exp(ls_alpha_k - dist_2));
 						 * P(disc   ) = (1+exp() - exp(ls_alpha_k - dist_2))  / (1 + exp(ls_alpha_k - dist_2));
 						 * P(disc   ) =  1                                    / (1 + exp(ls_alpha_k - dist_2));
 						 */
-						const double ln_p_DISconnecting = - log(1 + exp(ls_alpha_k - dist_2));
-						const double l2_p_DISconnecting = M_LOG2E * ln_p_DISconnecting;
-						assert(l2_p_DISconnecting);
-						PP2(ln_p_DISconnecting, l2_p_DISconnecting);
+						const double l2_p_DISconnecting = l2_likelihood( pn, pm, false);
+						assert(isfinite(l2_p_DISconnecting));
 						ls_bits += l2_p_DISconnecting;
 					}
 				}
@@ -709,12 +703,8 @@ namespace sbm {
 
 					sbm :: State :: point_type pn = this->cluster_to_points_map.at(k).at(n);
 					sbm :: State :: point_type pm = this->cluster_to_points_map.at(k).at(m);
-					const double dist_2 = pn.dist_2(pm);
-					const double ls_alpha_k = 1; // TODO: fixed, or put a prior on it? 
-					const double ln_p_DISconnecting = ls_alpha_k - dist_2 - log(1 + exp(ls_alpha_k - dist_2));
-					const double ln_p_connecting    =                     - log(1 + exp(ls_alpha_k - dist_2));
-					const double l2_p_DISconnecting = M_LOG2E * ln_p_DISconnecting;
-					const double l2_p_connecting    = M_LOG2E * ln_p_connecting;
+					const double l2_p_DISconnecting = l2_likelihood( pn, pm, false);
+					const double l2_p_connecting    = l2_likelihood( pn, pm, true);
 
 					// for each edge, we must undo the l2_p_DISconnecting and replace it with a l2_p_connecting
 					if(this->_edge_details->getl2h(relId)) {
@@ -871,4 +861,19 @@ namespace sbm {
 		// assertNonPositiveFinite(log2p); // this needn't hold after all. We've ignored \prod x_i, hence this might be positive sometimes.
 		return log2p;
 	}
+
+double l2_likelihood( sbm :: State :: point_type near, sbm :: State :: point_type far, bool connected) {
+	const double dist_2 = near.dist_2(far);
+	const double ln_p_connecting       =                            - log(1 + exp( dist_2 - sbm :: ls_alpha_k ));
+	const double ln_p_DISconnecting    =                            - log(1 + exp( sbm :: ls_alpha_k - dist_2 ));
+	assert(VERYCLOSE(exp(ln_p_connecting) + exp(ln_p_DISconnecting) , 1.0));
+	if(connected) {
+		const double l2_p_connecting       = M_LOG2E * ln_p_connecting;
+		return l2_p_connecting;
+	} else {
+		//const double ln_p_DISconnecting    = sbm :: ls_alpha_k - dist_2 - log(1 + exp(sbm :: ls_alpha_k - dist_2));
+		const double l2_p_DISconnecting    = M_LOG2E * ln_p_DISconnecting;
+		return l2_p_DISconnecting;
+	}
+}
 } // namespace sbm

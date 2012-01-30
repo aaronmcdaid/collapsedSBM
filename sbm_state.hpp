@@ -199,6 +199,10 @@ struct ObjectiveFunction_Poisson : public ObjectiveFunction {
 };
 	long double assertNonPositiveFinite_line(const long double x, const int lineno);
 
+// Some stuff for the latentspace SBM model
+const double ls_alpha_k = 1; // TODO: fixed, or put a prior on it? 
+double l2_likelihood( sbm :: State :: point_type near, sbm :: State :: point_type far, bool connected);
+
 } // namespace sbm
 
 #endif
