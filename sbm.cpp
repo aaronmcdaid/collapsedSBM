@@ -588,6 +588,87 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		;
 }
 
+long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+	const long double pre = s.pmf(obj);
+	assert(s._k == (int)s.cluster_to_points_map.size());
+	assert(!obj->weighted);
+	assert(!obj->selfloops); // I think I'll never like this!
+
+	// find the relationships that are in each cluster
+	vector< vector<int> > rels_in_each_cluster(s._k);
+	for(int relId = 0; relId<s._g->numRels(); ++relId) {
+		pair<int32_t, int32_t> eps = s.vsg->EndPoints(relId);
+		assert(eps.first <= eps.second);
+		if(eps.first == eps.second) {
+			assert(obj->selfloops);
+		}
+		const int n = eps.first;
+		const int m = eps.second;
+		const int k  = s.labelling.cluster_id.at(n);
+		const int km = s.labelling.cluster_id.at(m);
+		if(k==km) {
+			rels_in_each_cluster.at(k).push_back(relId);
+		}
+	}
+
+
+	// update each node in turn, move it towards the cluster-mates it's connected to, and away from those it's not connected to
+	for(int k = 0; k<s._k; ++k) {
+		const sbm :: Cluster *CL = s.labelling.clusters.at(k);
+		const std :: list<int> & mem = CL->get_members();
+		For(ni, mem) {
+			const int n = *ni;
+			sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
+			sbm :: State :: point_type average_of_neighbours;
+			average_of_neighbours.zero();
+			const vector<int32_t> & neigh_rels = s.vsg->neighbouring_rels_in_order(n);
+			int num_neighbours_in_same_cluster = 0;
+			For(neigh_rel, neigh_rels) {
+				pair<int32_t, int32_t> eps = s.vsg->EndPoints(*neigh_rel);
+				if(eps.first == n)
+					swap(eps.first, eps.second);
+				if(eps.first == n)
+					assert(obj->selfloops);
+				PP2(eps.first, eps.second);
+				// eps.first is the neighbour. Is it in the same cluster?
+				// PP2(k, s.labelling.cluster_id.at(eps.first));
+				if(k == s.labelling.cluster_id.at(eps.first)) {
+					sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(eps.first);
+					average_of_neighbours += neighbours_position;
+					++ num_neighbours_in_same_cluster;
+				}
+			}
+			assert(num_neighbours_in_same_cluster < CL->order());
+			assert(num_neighbours_in_same_cluster > 0);
+
+			// now, we incorporate the prior into our proposal, by dividing by ( 1+ num_neighbours_in_same_cluster)
+			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+				average_of_neighbours.at(d) /= (1+num_neighbours_in_same_cluster);
+			}
+			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+				assert(isfinite(average_of_neighbours.at(d)));
+			}
+			// now, propose a new position
+			// draw randomly from mean=average_of_neighbours and variance = 1/(1+num_neighbours_in_same_cluster)
+			const double variance_in_proposal = 1.0 / (1.0+num_neighbours_in_same_cluster);
+			sbm :: State :: point_type proposed_new_location;
+			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+				proposed_new_location.at(d) = gsl_ran_gaussian(r, sqrt(variance_in_proposal));
+				proposed_new_location.at(d) += average_of_neighbours.at(d);
+			}
+			// need to calculate the proposal probabilities at both locations
+			// and the posterior densities
+			//
+			//
+			// I should do the posterior densities first. This means checking this node against every other node in this cluster
+
+		}
+	}
+
+	const long double post = s.pmf(obj);
+	return post-pre;
+}
+
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
 		// moving 1 isolated node into one cluster will affect some blocks.
 		// We're only interested in the blocks of clusters whose id is < pre_k
@@ -1425,6 +1506,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3little("M3lConservative");
 	AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
+	AcceptanceRate AR_lspos  ("LSSBM positions");
 
 	// some variables to check the PMP, i.e. the single most-visited state
 	map< pair<int, vector<int> >, int> pmp_table;
@@ -1453,7 +1535,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			}
 		}
-		switch( static_cast<int>(drand48() * 5) ) {
+		switch( static_cast<int>(drand48() * 6) ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
@@ -1475,6 +1557,11 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			break; case 4:
 				if(args_info.algo_1node_arg)
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
+			break; case 5:
+				if(!s.cluster_to_points_map.empty()) {
+					assert(commandLineK == s._k);
+					update_ls_positions(s, obj, &AR_lspos, r);
+				}
 		}
 		if(i > 30000) {
 			if(count_shared_cluster)
@@ -1527,6 +1614,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_metro1Node.dump();
 			AR_gibbs.dump();
 			AR_ea.dump();
+			AR_lspos.dump();
 			AR_M3.dump();
 			AR_M3little.dump();
 			AR_M3very.dump();
