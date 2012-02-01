@@ -588,6 +588,24 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		;
 }
 
+#if 0
+// for a given node, go through all the *other* nodes in that cluster, and check whether they are connected or not
+vector<int> cluster_mates(sbm :: State &s, const int n) {
+	const int z_n = s.labelling.cluster_id.at(n);
+	const sbm :: Cluster *CL = s.labelling.clusters.at(z_n);
+	const std :: list<int> * mem = &CL->get_members();
+	std :: vector<int> in_this_cluster;
+	For(m, (*mem)) {
+		if(n!= *m)
+			in_this_cluster.push_back(*m);
+	}
+	sort(in_this_cluster.begin(), in_this_cluster.end());
+	assert((int)in_this_cluster.size() == CL->order() - 1);
+	return in_this_cluster; // I hope it does RVO (return value optimization) with this!
+}
+#endif
+
+
 long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
 	// - take each cluster in turn.
 	//   - take each node in that cluster in turn
