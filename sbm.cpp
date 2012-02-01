@@ -605,92 +605,139 @@ vector<int> cluster_mates(sbm :: State &s, const int n) {
 }
 #endif
 
+struct ANormalDistribution {
+	sbm :: State :: point_type mean;
+	long double variance;
+	sbm :: State :: point_type draw(gsl_rng *r) const {
+		sbm :: State :: point_type proposed_new_location;
+		for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+			proposed_new_location.at(d) = gsl_ran_gaussian(r, sqrt(variance));
+			proposed_new_location.at(d) += mean.at(d);
+		}
+		return proposed_new_location;
+	}
+   ANormalDistribution(const int n, const sbm :: State &s, const sbm :: ObjectiveFunction *obj) {
+	// In theory, this can be pretty arbitrary. We just need something we can draw from, and be able to
+	// ask it for the density at various points
+	assert(!obj->weighted);
+	assert(!obj->selfloops);
+	this->mean.zero();
+	long double sum_weight_in_this_cluster = 0.0L;
+	const int k = s.labelling.cluster_id.at(n);
+	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
+	for(auto m : CL->get_members()) {
+		if(n!=m) {
+			assert(s.labelling.cluster_id.at(m) == k);
+			const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
+			sum_weight_in_this_cluster += sum_weight_on_this_rel;
+			sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
+			assert(sbm :: is_integer(sum_weight_on_this_rel));
+			switch((int)sum_weight_on_this_rel) {
+				case 2: assert(obj->directed); this->mean += neighbours_position;
+				case 1: this->mean += neighbours_position;
+				case 0: break;
+				assert(1==2); // shouldn't get here!  assert(sum_weight_on_this_rel == 0 || sum_weight_on_this_rel == 1 || sum_weight_on_this_rel == 2);
+			}
+		}
+	}
+	// now, we incorporate something like the prior into our proposal, by dividing by ( 1+ num_neighbours_in_same_cluster)
+	for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+		this->mean.at(d) /= (1+sum_weight_in_this_cluster);
+	}
+	for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+		assert(isfinite(this->mean.at(d)));
+	}
 
-long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+	this->variance = 1.0 /(1.0 + sum_weight_in_this_cluster);
+    }
+};
+
+
+long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj) {
+	// given this one node, what is the likelihood of the edges/non-edges in its cluster?
+	const int k = s.labelling.cluster_id.at(n);
+	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
+	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
+	double l2_bits = 0.0L;
+	for(auto m : CL->get_members()) {
+		if(n==m)
+			continue;
+		sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
+		const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
+		assert(sbm :: is_integer(sum_weight_on_this_rel));
+		switch(obj->directed) {
+			break; case true:
+				switch((int)sum_weight_on_this_rel) {
+					break; case 0: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, false);
+					break; case 1: l2_bits += l2_likelihood( current_position, neighbours_position, false) + l2_likelihood( current_position, neighbours_position, true);
+					break; case 2: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, false);
+					break; default: assert(1==2);
+				}
+			break; case false:
+				switch((int)sum_weight_on_this_rel) {
+					break; case 0: l2_bits += l2_likelihood( current_position, neighbours_position, false);
+					break; case 1: l2_bits += l2_likelihood( current_position, neighbours_position, true);
+					break; default: assert(1==2);
+				}
+		}
+	}
+	assert(isfinite(l2_bits));
+	return l2_bits;
+}
+long double update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+	const int k = s.labelling.cluster_id.at(n);
+
+	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
+
+	ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n
+
+	sbm :: State :: point_type proposed_new_location = normpdf.draw(r);
+	// need to calculate the proposal probabilities at both locations
+	// and the posterior densities
+	//
+	//
+	// I should do the posterior densities first. This means checking this node against every other node in this cluster
+	const long double current_likelihood = my_likelihood(n, s , obj);
+	s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
+	const long double     new_likelihood = my_likelihood(n, s , obj);
+	s.cluster_to_points_map.at(k).at(n) = current_position;
+	if(new_likelihood > current_likelihood) {
+		s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
+		//PP( new_likelihood - current_likelihood);
+		return new_likelihood - current_likelihood;
+	} else {
+		return 0;
+	}
+
+
+}
+
+long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *ar, gsl_rng * r) {
 	// - take each cluster in turn.
 	//   - take each node in that cluster in turn
 	//     - propose a new position based on it cluster-mate-NEIGHBOURS
 	//     - calculate proposal prob, again based on cluster-mate-NEIGHBOURS
 	//     - calculate the posterior, based on ALL-cluster-mates
 
-	const long double pre = s.pmf(obj);
+	// const long double pre = s.pmf(obj);
 	assert(s._k == (int)s.cluster_to_points_map.size());
 	assert(!obj->weighted);
 	assert(!obj->selfloops); // I think I'll never like this!
 
-	// find the relationships that are in each cluster
-	vector< vector<int> > rels_in_each_cluster(s._k);
-	for(int relId = 0; relId<s._g->numRels(); ++relId) {
-		pair<int32_t, int32_t> eps = s.vsg->EndPoints(relId);
-		assert(eps.first <= eps.second);
-		if(eps.first == eps.second) {
-			assert(obj->selfloops);
-		}
-		const int n = eps.first;
-		const int m = eps.second;
-		const int k  = s.labelling.cluster_id.at(n);
-		const int km = s.labelling.cluster_id.at(m);
-		if(k==km) {
-			rels_in_each_cluster.at(k).push_back(relId);
-		}
-	}
-
-
 	// update each node in turn, move it towards the cluster-mates it's connected to, and away from those it's not connected to
+	long double l2_delta_bits = 0.0;
 	for(int k = 0; k<s._k; ++k) {
 		const sbm :: Cluster *CL = s.labelling.clusters.at(k);
 		const std :: list<int> & mem = CL->get_members();
-		For(ni, mem) {
-			const int n = *ni;
-			sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
-			sbm :: State :: point_type average_of_neighbours;
-			average_of_neighbours.zero();
-			const vector<int32_t> & neigh_rels = s.vsg->neighbouring_rels_in_order(n);
-			int num_neighbours_in_same_cluster = 0;
-			For(neigh_rel, neigh_rels) {
-				pair<int32_t, int32_t> eps = s.vsg->EndPoints(*neigh_rel);
-				if(eps.first == n)
-					swap(eps.first, eps.second);
-				if(eps.first == n)
-					assert(obj->selfloops);
-				PP2(eps.first, eps.second);
-				// eps.first is the neighbour. Is it in the same cluster?
-				// PP2(k, s.labelling.cluster_id.at(eps.first));
-				if(k == s.labelling.cluster_id.at(eps.first)) {
-					sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(eps.first);
-					average_of_neighbours += neighbours_position;
-					++ num_neighbours_in_same_cluster;
-				}
-			}
-			assert(num_neighbours_in_same_cluster < CL->order());
-			assert(num_neighbours_in_same_cluster > 0);
-
-			// now, we incorporate the prior into our proposal, by dividing by ( 1+ num_neighbours_in_same_cluster)
-			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
-				average_of_neighbours.at(d) /= (1+num_neighbours_in_same_cluster);
-			}
-			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
-				assert(isfinite(average_of_neighbours.at(d)));
-			}
-			// now, propose a new position
-			// draw randomly from mean=average_of_neighbours and variance = 1/(1+num_neighbours_in_same_cluster)
-			const double variance_in_proposal = 1.0 / (1.0+num_neighbours_in_same_cluster);
-			sbm :: State :: point_type proposed_new_location;
-			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
-				proposed_new_location.at(d) = gsl_ran_gaussian(r, sqrt(variance_in_proposal));
-				proposed_new_location.at(d) += average_of_neighbours.at(d);
-			}
-			// need to calculate the proposal probabilities at both locations
-			// and the posterior densities
-			//
-			//
-			// I should do the posterior densities first. This means checking this node against every other node in this cluster
-
+		for(auto n : mem) {
+			l2_delta_bits += update_one_nodes_position(n, s, obj, ar, r);
 		}
 	}
 
-	const long double post = s.pmf(obj);
-	return post-pre;
+	// const long double post = s.pmf(obj);
+	// PP2(post - pre , l2_delta_bits);
+	// assert(VERYCLOSE(post - pre , l2_delta_bits));
+	return l2_delta_bits;
 }
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {

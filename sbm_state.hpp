@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <iostream>
 #include <gsl/gsl_sf.h>
 #include "graph/network.hpp"
@@ -20,6 +21,21 @@ static inline double LOG2GAMMA(const long double x) {
 static inline double LOG2FACT(const int x) {
 	assert(x>0);
 	return M_LOG2E * gsl_sf_lnfact(x);
+}
+
+namespace std {
+	template<typename a, typename b>
+	struct hash< std::pair<a, b> > {
+		private:
+			const hash<a> ah;
+			const hash<b> bh;
+		public:
+			hash() : ah(), bh() {}
+			size_t operator()(const std::pair<a, b> &p) const {
+				return ah(-p.first) ^ bh(1+p.second);
+			}
+	};
+	template struct std :: hash<int32_t>;
 }
 
 namespace sbm {
@@ -102,6 +118,8 @@ inline std :: ostream& operator<< (std :: ostream& os, const my_array<d> &a) {
 	return os;
 }
 
+
+
 struct State {
 	const GraphType * const _g; // the graph
 	const graph :: VerySimpleGraphInterface * const vsg;
@@ -110,6 +128,10 @@ struct State {
 	const int _N; // the number of nodes in the graph
 	const long double _alpha; // the parameter to the Dirichlet prior on z
 	const bool _mega; // if this is true, the print less
+	mutable std :: unordered_map< std :: pair<int32_t, int32_t> , long double> sum_weights_BOTH_directions__; // for a given pair of node ids, what's the sum of the weights between them?
+	long double sum_weights_BOTH_directions(int32_t n, int32_t m) const {
+		return this->sum_weights_BOTH_directions__[std :: make_pair(n,m)];
+	}
 	explicit State(const GraphType * const g, const bool mega = false, const double alpha = 1.0);
 
 	Labelling	labelling;
@@ -202,6 +224,10 @@ struct ObjectiveFunction_Poisson : public ObjectiveFunction {
 // Some stuff for the latentspace SBM model
 const double ls_alpha_k = 1; // TODO: fixed, or put a prior on it? 
 double l2_likelihood( sbm :: State :: point_type near, sbm :: State :: point_type far, bool connected);
+
+inline bool is_integer(double d) {
+	return d == floor(d);
+}
 
 } // namespace sbm
 

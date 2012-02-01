@@ -59,6 +59,19 @@ namespace sbm {
 			this->total_edge_weight += this->_edge_details->getl2h(relId) + this->_edge_details->geth2l(relId);
 		}
 
+		assert(this->sum_weights_BOTH_directions__.empty());
+		long double w_verify = 0.0L;
+		for(int r = 0; r<this->vsg->numRels(); ++r) {
+			pair<int32_t,int32_t> eps = this->vsg->EndPoints(r);
+			const long double w = this->_edge_details->getl2h(r) + this->_edge_details->geth2l(r);
+			this->sum_weights_BOTH_directions__[ eps ] += w;
+			w_verify += w;
+			if(eps.first<eps.second) {
+				swap(eps.first, eps.second);
+				this->sum_weights_BOTH_directions__[ eps ] += w;
+			}
+		}
+		assert(w_verify == this->total_edge_weight);
 	}
 	Cluster :: Cluster() : _order(0) {
 	}
@@ -673,7 +686,7 @@ namespace sbm {
 							break;
 						if(!obj->directed)
 							assert(n<=m);
-						PP2(n,m);
+						// PP2(__LINE__, n,m);
 						sbm :: State :: point_type pn = this->cluster_to_points_map.at(k).at(n);
 						sbm :: State :: point_type pm = this->cluster_to_points_map.at(k).at(m);
 						/*
@@ -718,7 +731,7 @@ namespace sbm {
 					}
 				}
 			}
-			{ // prior on the positions
+			if(0){ // prior on the positions
 				const double ls_prior_sigma = 1; // TODO: fixed, or put a prior on it?
 				for(int n=0; n < this->_N; ++n) {
 					const int z_n = this->labelling.cluster_id.at(n);
@@ -726,7 +739,7 @@ namespace sbm {
 					sbm :: State :: point_type pzero;
 					pzero.zero();
 					const double dist_2 = pzero.dist_2(p);
-					PP2(__LINE__, dist_2);
+					// PP2(__LINE__, dist_2);
 					const double ln_prior_position = - dist_2 / (2*ls_prior_sigma);
 					const double l2_prior_position = M_LOG2E * ln_prior_position;
 					ls_bits += l2_prior_position;
