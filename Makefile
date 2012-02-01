@@ -24,10 +24,12 @@ CXXFLAGS=       \
           -Wnon-virtual-dtor            \
           -Wall -Wformat -Werror -Wextra #-Wconversion # scf.cpp doesn't like -Wconversion
 
+CXX=/home/aaronmcdaid/bin/g++-4.6
+CC=/home/aaronmcdaid/bin/g++-4.6
 #CXXFLAGS= ${BITS}     -g
-LDFLAGS+= -lstdc++ -lrt
+LDFLAGS+= -lrt
 LDFLAGS+= -lgsl -lgslcblas
-CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} # -DNDEBUG
+CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} -std=gnu++0x # -DNDEBUG
 #CXXFLAGS+= -p -pg
 #CXXFLAGS=              -O2                 
 
