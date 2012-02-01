@@ -1455,7 +1455,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
-#define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } assert(_track == _actual); } while(0)
+#define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) {
 	PP2(g->numNodes(), g->numRels());
@@ -1584,7 +1584,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			break; case 5:
 				if(!s.cluster_to_points_map.empty()) {
 					assert(commandLineK == s._k);
-					update_ls_positions(s, obj, &AR_lspos, r);
+					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
 				}
 		}
 		if(i > 30000) {
