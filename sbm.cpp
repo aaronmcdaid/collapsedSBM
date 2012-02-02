@@ -682,7 +682,7 @@ long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFu
 				switch((int)sum_weight_on_this_rel) {
 					break; case 0: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, false);
 					break; case 1: l2_bits += l2_likelihood( current_position, neighbours_position, false) + l2_likelihood( current_position, neighbours_position, true);
-					break; case 2: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, false);
+					break; case 2: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, true);
 					break; default: assert(1==2);
 				}
 			break; case false:
