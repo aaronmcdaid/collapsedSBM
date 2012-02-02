@@ -616,6 +616,10 @@ struct ANormalDistribution {
 		}
 		return proposed_new_location;
 	}
+	long double pdf( sbm :: State :: point_type x ) {
+		const long double dist_2 = x.dist_2(this->mean);
+		return M_LOG2E *  ( - dist_2 / ( 2 * sbm :: ls_prior_sigma ));
+	}
    ANormalDistribution(const int n, const sbm :: State &s, const sbm :: ObjectiveFunction *obj) {
 	// In theory, this can be pretty arbitrary. We just need something we can draw from, and be able to
 	// ask it for the density at various points
@@ -709,7 +713,14 @@ long double update_one_nodes_position(const int n, sbm :: State &s, const sbm ::
 	s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
 	const long double     new_likelihood = my_likelihood(n, s , obj);
 	s.cluster_to_points_map.at(k).at(n) = current_position;
-	if(new_likelihood > current_likelihood) {
+
+	const long double new_proposal_prob = normpdf.pdf(proposed_new_location);
+	const long double old_proposal_prob = normpdf.pdf(current_position);
+
+	const long double acceptance_prob = new_likelihood - current_likelihood - new_proposal_prob + old_proposal_prob;
+	assert(isfinite(acceptance_prob));
+
+	if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
 		s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
 		//PP( new_likelihood - current_likelihood);
 		return new_likelihood - current_likelihood;
