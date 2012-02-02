@@ -731,8 +731,7 @@ namespace sbm {
 					}
 				}
 			}
-			if(0){ // prior on the positions
-				const double ls_prior_sigma = 1; // TODO: fixed, or put a prior on it?
+			if(1){ // prior on the positions
 				for(int n=0; n < this->_N; ++n) {
 					const int z_n = this->labelling.cluster_id.at(n);
 					sbm :: State :: point_type p = this->cluster_to_points_map.at(z_n).at(n);

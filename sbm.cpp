@@ -659,6 +659,14 @@ long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFu
 	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
 	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
 	double l2_bits = 0.0L;
+	{ // P( position | sigma) - the prior on the positions
+		sbm :: State :: point_type pzero;
+		pzero.zero();
+		const double dist_2 = pzero.dist_2(current_position);
+		const double ln_prior_position = - dist_2 / (2* sbm :: ls_prior_sigma);
+		const double l2_prior_position = M_LOG2E * ln_prior_position;
+		l2_bits += l2_prior_position;
+	}
 	for(auto m : CL->get_members()) {
 		if(n==m)
 			continue;
