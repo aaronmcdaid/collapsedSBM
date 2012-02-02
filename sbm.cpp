@@ -663,7 +663,7 @@ long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFu
 	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
 	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
 	double l2_bits = 0.0L;
-	{ // P( position | sigma) - the prior on the positions
+	if(1){ // P( position | sigma) - the prior on the positions
 		sbm :: State :: point_type pzero;
 		pzero.zero();
 		const double dist_2 = pzero.dist_2(current_position);
@@ -722,7 +722,6 @@ long double update_one_nodes_position(const int n, sbm :: State &s, const sbm ::
 
 	if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
 		s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
-		//PP( new_likelihood - current_likelihood);
 		return new_likelihood - current_likelihood;
 	} else {
 		return 0;
@@ -1622,6 +1621,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				const int cl2 = static_cast<int>(s._k * drand48());
 				if(cl1 != cl2) {
 					s.swapClusters(cl1,cl2);
+					if(!s.cluster_to_points_map.empty()) {
+						swap (s.cluster_to_points_map.at(cl1),s.cluster_to_points_map.at(cl2));
+					}
 				}
 			}
 		}
