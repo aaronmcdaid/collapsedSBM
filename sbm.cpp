@@ -1629,26 +1629,36 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 		switch( static_cast<int>(drand48() * 6) ) {
 			break; case 0:
+				if(s.cluster_to_points_map.empty()) {
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 					}
 				} else
 					assert(commandLineK == s._k);
+				}
 			break; case 1:
+				if(s.cluster_to_points_map.empty()) {
 				if(algo_gibbs)
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+				}
 			break; case 2:
+				if(s.cluster_to_points_map.empty()) {
 				if(algo_m3)
 					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+				}
 			break; case 3:
+				if(s.cluster_to_points_map.empty()) {
 				if(commandLineK == -1) {
 					if(args_info.algo_ejectabsorb_arg)
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
 				}
+				}
 			break; case 4:
+				if(s.cluster_to_points_map.empty()) {
 				if(args_info.algo_1node_arg)
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
+				}
 			break; case 5:
 				if(!s.cluster_to_points_map.empty()) {
 					assert(commandLineK == s._k);
