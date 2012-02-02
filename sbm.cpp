@@ -618,7 +618,7 @@ struct ANormalDistribution {
 	}
 	long double pdf( sbm :: State :: point_type x ) {
 		const long double dist_2 = x.dist_2(this->mean);
-		return M_LOG2E *  ( - dist_2 / ( 2 * sbm :: ls_prior_sigma ));
+		return M_LOG2E *  ( - dist_2 / ( 2 * variance ));
 	}
    ANormalDistribution(const int n, const sbm :: State &s, const sbm :: ObjectiveFunction *obj) {
 	// In theory, this can be pretty arbitrary. We just need something we can draw from, and be able to
