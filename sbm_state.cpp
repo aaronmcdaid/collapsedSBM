@@ -684,17 +684,13 @@ namespace sbm {
 			// first, assume every pairs of nodes inside a cluster is *disconnected*, then correct that later.
 			long double ls_bits = 0.0L;
 			for(int k=0; k < this->_k; ++k) {
-				PP(k);
 				const Cluster *I = this->labelling.clusters.at(k);
-				const std :: list<int> & mem = I->get_members();
-				For(ni, mem) {
-					const int n = *ni;
-					For(mi, mem) {
-						const int m = *mi;
+				for(auto n : I->get_members()) {
+					for(auto m : I->get_members()) {
 						if(n==m && !obj->selfloops)
 							continue;
 						if(!obj->directed && n>m)
-							break;
+							continue;
 						if(!obj->directed)
 							assert(n<=m);
 						// PP2(__LINE__, n,m);
@@ -711,7 +707,8 @@ namespace sbm {
 						ls_bits += l2_p_DISconnecting;
 					}
 				}
-				for(int relId = 0; relId<this->_g->numRels(); ++relId) {
+			}
+			for(int relId = 0; relId<this->_g->numRels(); ++relId) {
 					pair<int32_t, int32_t> eps = this->vsg->EndPoints(relId);
 					assert(eps.first <= eps.second);
 					if(eps.first == eps.second) {
@@ -740,7 +737,6 @@ namespace sbm {
 						ls_bits -= l2_p_DISconnecting;
 						ls_bits += l2_p_connecting;
 					}
-				}
 			}
 			if(1){ // prior on the positions
 				for(int n=0; n < this->_N; ++n) {
