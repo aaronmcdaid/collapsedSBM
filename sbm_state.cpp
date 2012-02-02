@@ -425,6 +425,16 @@ namespace sbm {
 			cout << '<' << cluster_id << '>';
 		return oss.str();
 	}
+	static void print_positions(const State *s) {
+		if(s->cluster_to_points_map.empty())
+			return;
+		for(int k=0; k <s->_k ; ++k) {
+			for(int n=0; n < s->_N; n++) {
+				sbm :: State :: point_type current_position = s->cluster_to_points_map.at(k).at(n);
+				cout << "\"" << s->_g->node_name_as_string(n) << "\"," << k << current_position << endl;
+			}
+		}
+	}
 	void State :: shortSummary(const ObjectiveFunction *obj, const vector<int> *groundTruth) const {
 		cout << endl << " == Summary: ==" << endl;
 		PP(this->_k);
@@ -459,6 +469,7 @@ namespace sbm {
 				<< endl;
 		}
 		this->KandClusterSizes();
+		print_positions(this);
 	}
 	void State :: KandClusterSizes() const {
 		vector<int> cluster_sizes;
