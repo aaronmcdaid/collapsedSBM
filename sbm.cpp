@@ -42,6 +42,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK
 		, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
+static long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, int k = -1);
 
 int main(int argc, char **argv) {
 	gengetopt_args_info args_info;
@@ -583,8 +584,25 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 
 	s.deleteClusterFromTheEnd();
 	AR->notify(newCluster != origClusterID);
+
+	vector<long double> bits_latent_space_for_each_cluster;
+	if(!s.cluster_to_points_map.empty()) {
+		for(int k = 0; k < pre_k; ++k) {
+			bits_latent_space_for_each_cluster.push_back(my_likelihood(n , s, obj, k));
+		}
+		assert(bits_latent_space_for_each_cluster.size() == s.cluster_to_points_map.size());
+		assert((int)bits_latent_space_for_each_cluster.size() == pre_k);
+	}
+	{
+		PP2(delta_P_x_z_IfIMoveIntoClusterT.at(newCluster), delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID));
+		PP2(delta_P_z_K_IfIMoveIntoClusterT.at(newCluster), delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID));
+		PP(bits_latent_space_for_each_cluster.at(newCluster));
+		PP(bits_latent_space_for_each_cluster.at(origClusterID));
+		PP(bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID));
+	}
 	return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
 	       - delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID) - delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID)
+	       + ( s.cluster_to_points_map.empty() ? 0 : (bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID) )  )
 		;
 }
 
@@ -657,9 +675,10 @@ struct ANormalDistribution {
 };
 
 
-long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj) {
+static long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, int k /* = -1 */) {
 	// given this one node, what is the likelihood of the edges/non-edges in its cluster?
-	const int k = s.labelling.cluster_id.at(n);
+	if(k==-1)
+		k = s.labelling.cluster_id.at(n);
 	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
 	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
 	double l2_bits = 0.0L;
@@ -1629,19 +1648,20 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 		switch( static_cast<int>(drand48() * 6) ) {
 			break; case 0:
-				if(s.cluster_to_points_map.empty()) {
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
 					}
 				} else
 					assert(commandLineK == s._k);
-				}
 			break; case 1:
-				if(s.cluster_to_points_map.empty()) {
-				if(algo_gibbs)
+				//if(s.cluster_to_points_map.empty()) {
+				if(algo_gibbs) {
+					CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+					CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 				}
+				//}
 			break; case 2:
 				if(s.cluster_to_points_map.empty()) {
 				if(algo_m3)
