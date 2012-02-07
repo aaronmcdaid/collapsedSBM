@@ -593,13 +593,16 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		assert(bits_latent_space_for_each_cluster.size() == s.cluster_to_points_map.size());
 		assert((int)bits_latent_space_for_each_cluster.size() == pre_k);
 	}
+#if 0
 	{
+		cout << endl << "estimated changes:" << endl;
 		PP2(delta_P_x_z_IfIMoveIntoClusterT.at(newCluster), delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID));
 		PP2(delta_P_z_K_IfIMoveIntoClusterT.at(newCluster), delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID));
 		PP(bits_latent_space_for_each_cluster.at(newCluster));
 		PP(bits_latent_space_for_each_cluster.at(origClusterID));
 		PP(bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID));
 	}
+#endif
 	return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
 	       - delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID) - delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID)
 	       + ( s.cluster_to_points_map.empty() ? 0 : (bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID) )  )
@@ -794,6 +797,9 @@ static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm ::
 
 		// The easiest thing to consider first is the block for the inside of t, block t<>t.
 		// The edges to and from isolatedClusterId will become internal edges of t
+
+		// NOTE: We ignore this on-diagonal data when using the latentspace model
+		if(s.cluster_to_points_map.empty())
 		{
 			const long double old_weight = obj->relevantWeight(t,t, &s._edgeCounts);
 			const long double new_weight = old_weight + s._edgeCounts.read(isolatedClusterId, t)
@@ -1655,13 +1661,20 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				} else
 					assert(commandLineK == s._k);
 			break; case 1:
-				//if(s.cluster_to_points_map.empty()) {
 				if(algo_gibbs) {
 					CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
+					cout << " == before Gibbs == " << endl;
+					PP(s.P_edges_given_z_slow(obj)); // also includes *all* the latent space stuff
+					PP(s.P_z_slow());
+					PP(pmf_track);
+					cout << " == about to Gibbs == " << endl;
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+					cout << " == done Gibbs == " << endl;
+					PP(s.P_edges_given_z_slow(obj)); // also includes *all* the latent space stuff
+					PP(s.P_z_slow());
+					PP2(pmf_track, s.pmf(obj));
 					CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 				}
-				//}
 			break; case 2:
 				if(s.cluster_to_points_map.empty()) {
 				if(algo_m3)
