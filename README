@@ -4,3 +4,10 @@
 
 This is an MCMC algorithm to cluster the nodes of a network according
 to the Stochastic Blockmodel of Nowicki & Snijders 2001.
+
+Copyright: Aaron McDaid. aaronmcdaid@gmail.com
+
+
+   == Licence ==
+
+GNU General Public License 3.0 (see gpl.txt included in this package.)
