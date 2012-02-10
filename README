@@ -1,0 +1,6 @@
+
+
+   == collapsed Stochastic Block Modelling ==
+
+This is an MCMC algorithm to cluster the nodes of a network according
+to the Stochastic Blockmodel of Nowicki & Snijders 2001.
