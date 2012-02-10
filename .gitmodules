@@ -1,3 +1,3 @@
 [submodule "graph"]
 	path = graph
-	url = ssh://erdos.ucd.ie/~aaronmcdaid/Code/MyCode/MyLibraries/graph
+	url = git://github.com/aaronmcdaid/lib_graph.git
