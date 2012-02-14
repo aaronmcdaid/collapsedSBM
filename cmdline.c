@@ -40,7 +40,7 @@ const char *gengetopt_args_info_help[] = {
   "  -d, --directed              directed  (default=off)",
   "  -w, --weighted              weighted  (default=off)",
   "  -s, --selfloop              selfloops allowed  (default=off)",
-  "      --seed=INT              seed to drand48()  (default=`0')",
+  "      --seed=INT              seed to drand48() and gsl_rng_set  (default=`0')",
   "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
   "      --algo.metroK=INT       Use the simple Metropolis move on K  \n                                (default=`1')",
   "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`1')",
@@ -55,11 +55,12 @@ const char *gengetopt_args_info_help[] = {
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
   "      --printEveryNIters=INT  How often to print an update  (default=`10')",
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
-  "  -a, --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
+  "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
   "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
   "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
   "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
   "  -l, --latentspace           Latent space model inside clusters         \n                                (default=off)",
+  "      --lsalpha=FLOAT         Latestspace alpha ('density')  (default=`0')",
     0
 };
 
@@ -114,6 +115,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->gamma_s_given = 0 ;
   args_info->gamma_phi_given = 0 ;
   args_info->latentspace_given = 0 ;
+  args_info->lsalpha_given = 0 ;
 }
 
 static
@@ -161,6 +163,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->gamma_phi_arg = 1;
   args_info->gamma_phi_orig = NULL;
   args_info->latentspace_flag = 0;
+  args_info->lsalpha_arg = 0;
+  args_info->lsalpha_orig = NULL;
   
 }
 
@@ -197,6 +201,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->gamma_s_help = gengetopt_args_info_help[25] ;
   args_info->gamma_phi_help = gengetopt_args_info_help[26] ;
   args_info->latentspace_help = gengetopt_args_info_help[27] ;
+  args_info->lsalpha_help = gengetopt_args_info_help[28] ;
   
 }
 
@@ -297,6 +302,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->save_z_orig));
   free_string_field (&(args_info->gamma_s_orig));
   free_string_field (&(args_info->gamma_phi_orig));
+  free_string_field (&(args_info->lsalpha_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -388,6 +394,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "gamma.phi", args_info->gamma_phi_orig, 0);
   if (args_info->latentspace_given)
     write_into_file(outfile, "latentspace", 0, 0 );
+  if (args_info->lsalpha_given)
+    write_into_file(outfile, "lsalpha", args_info->lsalpha_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -669,15 +677,16 @@ cmdline_parser_internal (
         { "mega",	0, NULL, 0 },
         { "printEveryNIters",	1, NULL, 0 },
         { "assume_N_nodes",	1, NULL, 0 },
-        { "alpha",	1, NULL, 'a' },
+        { "alpha",	1, NULL, 0 },
         { "save.z",	1, NULL, 'z' },
         { "gamma.s",	1, NULL, 0 },
         { "gamma.phi",	1, NULL, 0 },
         { "latentspace",	0, NULL, 'l' },
+        { "lsalpha",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:a:z:l", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:z:l", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -757,18 +766,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'a':	/* alpha. How uniform the cluster sizes.  */
-        
-        
-          if (update_arg( (void *)&(args_info->alpha_arg), 
-               &(args_info->alpha_orig), &(args_info->alpha_given),
-              &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
-              check_ambiguity, override, 0, 0,
-              "alpha", 'a',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'z':	/* save burnt-in z to this file.  */
         
         
@@ -805,7 +802,7 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* seed to drand48().  */
+          /* seed to drand48() and gsl_rng_set.  */
           else if (strcmp (long_options[option_index].name, "seed") == 0)
           {
           
@@ -991,6 +988,20 @@ cmdline_parser_internal (
               goto failure;
           
           }
+          /* alpha. How uniform the cluster sizes.  */
+          else if (strcmp (long_options[option_index].name, "alpha") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->alpha_arg), 
+                 &(args_info->alpha_orig), &(args_info->alpha_given),
+                &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
+                check_ambiguity, override, 0, 0,
+                "alpha", '-',
+                additional_error))
+              goto failure;
+          
+          }
           /* (for weighted only). Shape of Gamma prior.  */
           else if (strcmp (long_options[option_index].name, "gamma.s") == 0)
           {
@@ -1015,6 +1026,20 @@ cmdline_parser_internal (
                 &(local_args_info.gamma_phi_given), optarg, 0, "1", ARG_FLOAT,
                 check_ambiguity, override, 0, 0,
                 "gamma.phi", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Latestspace alpha ('density').  */
+          else if (strcmp (long_options[option_index].name, "lsalpha") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->lsalpha_arg), 
+                 &(args_info->lsalpha_orig), &(args_info->lsalpha_given),
+                &(local_args_info.lsalpha_given), optarg, 0, "0", ARG_FLOAT,
+                check_ambiguity, override, 0, 0,
+                "lsalpha", '-',
                 additional_error))
               goto failure;
           

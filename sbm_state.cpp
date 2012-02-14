@@ -894,4 +894,5 @@ double l2_likelihood( sbm :: State :: point_type near, sbm :: State :: point_typ
 		return l2_p_DISconnecting;
 	}
 }
+double ls_alpha_k = 0; // TODO: fixed, or put a prior on it? 
 } // namespace sbm

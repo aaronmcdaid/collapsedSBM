@@ -52,9 +52,9 @@ struct gengetopt_args_info
   const char *weighted_help; /**< @brief weighted help description.  */
   int selfloop_flag;	/**< @brief selfloops allowed (default=off).  */
   const char *selfloop_help; /**< @brief selfloops allowed help description.  */
-  int seed_arg;	/**< @brief seed to drand48() (default='0').  */
-  char * seed_orig;	/**< @brief seed to drand48() original value given at command line.  */
-  const char *seed_help; /**< @brief seed to drand48() help description.  */
+  int seed_arg;	/**< @brief seed to drand48() and gsl_rng_set (default='0').  */
+  char * seed_orig;	/**< @brief seed to drand48() and gsl_rng_set original value given at command line.  */
+  const char *seed_help; /**< @brief seed to drand48() and gsl_rng_set help description.  */
   char * GT_vector_arg;	/**< @brief The ground truth. a file with N lines. Starts from ZERO..  */
   char * GT_vector_orig;	/**< @brief The ground truth. a file with N lines. Starts from ZERO. original value given at command line.  */
   const char *GT_vector_help; /**< @brief The ground truth. a file with N lines. Starts from ZERO. help description.  */
@@ -106,6 +106,9 @@ struct gengetopt_args_info
   const char *gamma_phi_help; /**< @brief (for weighted only). Scale of Gamma prior help description.  */
   int latentspace_flag;	/**< @brief Latent space model inside clusters        (default=off).  */
   const char *latentspace_help; /**< @brief Latent space model inside clusters        help description.  */
+  float lsalpha_arg;	/**< @brief Latestspace alpha ('density') (default='0').  */
+  char * lsalpha_orig;	/**< @brief Latestspace alpha ('density') original value given at command line.  */
+  const char *lsalpha_help; /**< @brief Latestspace alpha ('density') help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -135,6 +138,7 @@ struct gengetopt_args_info
   unsigned int gamma_s_given ;	/**< @brief Whether gamma.s was given.  */
   unsigned int gamma_phi_given ;	/**< @brief Whether gamma.phi was given.  */
   unsigned int latentspace_given ;	/**< @brief Whether latentspace was given.  */
+  unsigned int lsalpha_given ;	/**< @brief Whether lsalpha was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

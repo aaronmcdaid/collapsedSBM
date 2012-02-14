@@ -87,10 +87,12 @@ int main(int argc, char **argv) {
 	PP(args_info.save_z_arg);
 	PP(args_info.algo_sbm_cem_flag);
 	PP(args_info.latentspace_flag);
+	PP(args_info.lsalpha_arg);
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
 	sbm :: ObjectiveFunction_Poisson :: theta = args_info.gamma_phi_arg;
+	sbm :: ls_alpha_k = args_info.lsalpha_arg;
 
 
 	if(args_info.model_scf_flag) {
