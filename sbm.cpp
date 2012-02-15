@@ -1666,6 +1666,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					assert(commandLineK == s._k);
 			break; case 1:
 				if(algo_gibbs) {
+#if 0
 					{
 						CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 						cout << " == before Gibbs == " << endl;
@@ -1674,8 +1675,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						PP(pmf_track);
 						cout << " == about to Gibbs == " << endl;
 					}
+#endif
 
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+#if 0
 
 					{
 						cout << " == done Gibbs == " << endl;
@@ -1684,6 +1687,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						PP2(pmf_track, s.pmf(obj));
 						CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 					}
+#endif
 				}
 			break; case 2:
 				if(s.cluster_to_points_map.empty()) {
