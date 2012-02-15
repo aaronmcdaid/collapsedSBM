@@ -662,10 +662,10 @@ struct ANormalDistribution {
 			sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
 			assert(sbm :: is_integer(sum_weight_on_this_rel));
 			switch((int)sum_weight_on_this_rel) {
-				case 2: assert(obj->directed); this->mean += neighbours_position;
-				case 1: this->mean += neighbours_position;
-				case 0: break;
-				assert(1==2); // shouldn't get here!  assert(sum_weight_on_this_rel == 0 || sum_weight_on_this_rel == 1 || sum_weight_on_this_rel == 2);
+				break; case 2: assert(obj->directed); this->mean += neighbours_position; this->mean += neighbours_position;
+				break; case 1: this->mean += neighbours_position;
+				break; case 0:
+				break; default: assert(1==2); // shouldn't get here!  assert(sum_weight_on_this_rel == 0 || sum_weight_on_this_rel == 1 || sum_weight_on_this_rel == 2);
 			}
 		}
 	}
