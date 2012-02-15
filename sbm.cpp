@@ -748,8 +748,10 @@ long double update_one_nodes_position(const int n, sbm :: State &s, const sbm ::
 
 	if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
 		s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
+		AR->notify(true);
 		return new_likelihood - current_likelihood;
 	} else {
+		AR->notify(false);
 		return 0;
 	}
 
