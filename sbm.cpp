@@ -678,6 +678,7 @@ struct ANormalDistribution {
 	}
 
 	this->variance = 1.0 /(  1.0/sbm :: ls_prior_sigma_2 + 2.0*sum_weight_in_this_cluster);
+	assert(isfinite(this->variance));
     }
 };
 
@@ -765,7 +766,7 @@ long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const 
 	const int k = s.labelling.cluster_id.at(n);
 	const long double current_likelihood = my_likelihood(n, s , obj, k);
 
-	ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n
+	ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n, and incorporates the prior
 	// for(int d = 0; d<DIMENSIONALITY; ++d) { PP(normpdf.mean.at(d)); }
 	int count_attempts = 0;
 	// cout << "start the attempts to find a new position" << endl;
@@ -827,6 +828,157 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 	// PP2(post - pre , l2_delta_bits);
 	// assert(VERYCLOSE(post - pre , l2_delta_bits));
 	return l2_delta_bits;
+}
+pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int n, const int left, const int right) {
+	assert(!obj->weighted && !obj->selfloops && !obj->directed);
+	assert((int)s.cluster_to_points_map.size() == s._k);
+
+	// given a node, and the two candidate communities:
+	//    place it at the mean of its neighbours
+	//    evaluate the overall pmf() for both options
+	//    normalize the pmfs
+	//
+	const int temp_cluster_id = s._k-1;
+	assert(s.labelling.cluster_id.at(n) == temp_cluster_id);
+	s.moveNodeAndInformOfEdges(n, left);
+	ANormalDistribution normpdf_left(n, s, obj); // density will be near the neighbours of n, and it incorporates the prior sigma
+	s.cluster_to_points_map.at(left).at(n) = normpdf_left.mean;
+	long double pmf_left = s.pmf(obj);
+
+	s.moveNodeAndInformOfEdges(n, temp_cluster_id);
+
+	assert(s.labelling.cluster_id.at(n) == temp_cluster_id);
+	s.moveNodeAndInformOfEdges(n, right);
+	ANormalDistribution normpdf_right(n, s, obj); // density will be near the neighbours of n, and it incorporates the prior sigma
+	s.cluster_to_points_map.at(right).at(n) = normpdf_right.mean;
+	long double pmf_right = s.pmf(obj);
+
+	s.moveNodeAndInformOfEdges(n, temp_cluster_id);
+
+	PP2(pmf_left, pmf_right);
+	const long double max_pmf = max(pmf_left, pmf_right);
+	pmf_left -= max_pmf;
+	pmf_right -= max_pmf;
+	PP2(pmf_left, pmf_right);
+	assert(isfinite(pmf_left) && isfinite(pmf_right));
+	assert(pmf_left <= 0);
+	assert(pmf_right <= 0);
+
+	const long double denominator = exp2l(pmf_left) + exp2l(pmf_right);
+	return make_pair (exp2l(pmf_left) / denominator, exp2l(pmf_right) / denominator);
+}
+long double M3_LS(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
+	if(s._k < 2)
+		return 0.0;
+	assert(!obj->weighted);
+	assert(!obj->selfloops);
+	assert(!obj->directed);
+	assert(!s.cluster_to_points_map.empty());
+tryagain:
+	const int left  = s._k * gsl_ran_flat(r,0,1);
+	const int right = s._k * gsl_ran_flat(r,0,1);
+	if(left==right) goto tryagain;
+
+	const long double pre = s.pmf(obj);
+
+	// store the old states
+	const std :: vector< int > old_cluster_ids = s.labelling.cluster_id;
+	const std :: vector< std :: vector<sbm :: State :: point_type> > old_cluster_to_points_map = s.cluster_to_points_map;
+
+	// move into the temporary cluster
+	vector<int> both_sets_of_nodes;
+	const int temp_cluster_id = s._k;
+	s.appendEmptyCluster();
+	sbm :: State :: point_type pzero; pzero.zero();
+	s.cluster_to_points_map.push_back( vector<sbm :: State :: point_type> (s._N, pzero) ) ; // give them a pretend location at the origin
+	for(int i = 0; i<s._N; i++) {
+		if(s.labelling.cluster_id.at(i) == left || s.labelling.cluster_id.at(i) == right) {
+			s.moveNodeAndInformOfEdges(i, temp_cluster_id);
+			both_sets_of_nodes.push_back(i);
+		}
+	}
+	assert(s.labelling.clusters.at(left)->order()==0);
+	assert(s.labelling.clusters.at(right)->order()==0);
+	std :: random_shuffle(both_sets_of_nodes.begin(), both_sets_of_nodes.end());
+
+	long double l2_reverse_prop = 0.0L;
+	for(auto one_node : both_sets_of_nodes) {
+		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, one_node, left, right);
+		assert(VERYCLOSE(two_options.first + two_options.second, 1.0));
+		const int orig_cluster_id = old_cluster_ids.at(one_node);
+		if(orig_cluster_id == left) {
+			l2_reverse_prop += log2l(two_options.first);
+		} else {
+			assert(orig_cluster_id == right);
+			l2_reverse_prop += log2l(two_options.second);
+		}
+		s.moveNodeAndInformOfEdges(one_node, orig_cluster_id);
+	}
+	PP(l2_reverse_prop);
+
+	{ // revert for verification, and then put things back
+		s.deleteClusterFromTheEnd();
+		s.cluster_to_points_map.pop_back();
+		assert(s.cluster_to_points_map.size() == old_cluster_to_points_map.size());
+		s.cluster_to_points_map = old_cluster_to_points_map;
+		const long double verify_pre = s.pmf(obj);
+		assert(VERYCLOSE(pre, verify_pre));
+		s.cluster_to_points_map.push_back( vector<sbm :: State :: point_type> (s._N, pzero) ) ; // give them a pretend location at the origin
+		s.appendEmptyCluster();
+	}
+
+	// we must move them out again, in order to do our random proposal
+	for(auto one_node : both_sets_of_nodes) {
+		s.moveNodeAndInformOfEdges(one_node, temp_cluster_id);
+	}
+
+	// finally, doing the random proposal
+	long double l2_random_prop = 0.0L;
+	cout << "random proposal" << endl;
+	for(auto one_node : both_sets_of_nodes) {
+		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, one_node, left, right);
+		assert(VERYCLOSE(two_options.first + two_options.second, 1.0));
+		if(gsl_ran_flat(r,0,1) < two_options.first) {
+			l2_random_prop += log2l(two_options.first);
+			s.moveNodeAndInformOfEdges(one_node, left);
+		} else {
+			l2_random_prop += log2l(two_options.second);
+			s.moveNodeAndInformOfEdges(one_node, right);
+		}
+		PP2(__LINE__, l2_random_prop);
+	}
+	PP2(__LINE__, l2_random_prop);
+	PP2( s.labelling.clusters.at(left)->order(), s.labelling.clusters.at(right)->order());
+
+	// delete the temporary community, we don't need it any more
+	s.deleteClusterFromTheEnd();
+	s.cluster_to_points_map.pop_back();
+	assert(s.cluster_to_points_map.size() == old_cluster_to_points_map.size());
+	s.cluster_to_points_map = old_cluster_to_points_map;
+
+	// now to decide whether to keep this (accept) or to revert (reject)
+	const long double pmf_random = s.pmf(obj);
+	PP2(pre, pmf_random);
+	const long double l2_acceptance_probability = pmf_random - pre + l2_reverse_prop - l2_random_prop;
+	PP(l2_acceptance_probability);
+
+	if( log2l(gsl_ran_flat(r,0,1)) < l2_acceptance_probability ) {
+		// keep it
+		AR->notify(true);
+		return pmf_random - pre;
+	} else {
+		// restore everything
+		for(auto i : both_sets_of_nodes) {
+			const int orig_cluster_id = old_cluster_ids.at(i);
+			if(s.labelling.cluster_id.at(i) != orig_cluster_id) {
+				s.moveNodeAndInformOfEdges(i, orig_cluster_id);
+			}
+		}
+		const long double post = s.pmf(obj);
+		assert(VERYCLOSE(pre,post));
+		AR->notify(false);
+		return 0.0;
+	}
 }
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop) {
@@ -1670,6 +1822,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
 	AcceptanceRate AR_lspos  ("LSSBM positions");
+	AcceptanceRate AR_M3lspos  ("LSSBM M3");
 
 	// some variables to check the PMP, i.e. the single most-visited state
 	map< pair<int, vector<int> >, int> pmp_table;
@@ -1701,7 +1854,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			}
 		}
-		switch( static_cast<int>(drand48() * 6) ) {
+		switch( static_cast<int>(drand48() * 7) ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
@@ -1756,6 +1909,11 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
 				}
+			break; case 6:
+				if(!s.cluster_to_points_map.empty()) {
+					assert(commandLineK == s._k);
+					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
+				}
 		}
 		if(i > 30000) {
 			if(count_shared_cluster)
@@ -1809,6 +1967,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_gibbs.dump();
 			AR_ea.dump();
 			AR_lspos.dump();
+			AR_M3lspos.dump();
 			AR_M3.dump();
 			AR_M3little.dump();
 			AR_M3very.dump();

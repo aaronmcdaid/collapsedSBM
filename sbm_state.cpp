@@ -679,6 +679,7 @@ namespace sbm {
 			}
 		}
 		if(!this->cluster_to_points_map.empty()) { // latentspace on the diagonal,
+			assert((int)this->cluster_to_points_map.size() == this->_k);
 			assert(!obj->weighted);
 			// first, assume every pairs of nodes inside a cluster is *disconnected*, then correct that later.
 			long double ls_bits = 0.0L;
