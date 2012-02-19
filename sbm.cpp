@@ -959,6 +959,7 @@ tryagain:
 	// now to decide whether to keep this (accept) or to revert (reject)
 	const long double pmf_random = s.pmf(obj);
 	PP2(pre, pmf_random);
+	PP2(l2_reverse_prop, l2_random_prop);
 	const long double l2_acceptance_probability = pmf_random - pre + l2_reverse_prop - l2_random_prop;
 	PP(l2_acceptance_probability);
 
@@ -1854,7 +1855,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			}
 		}
-		switch( static_cast<int>(drand48() * 7) ) {
+
+		const int random_move = static_cast<int>(drand48() * 7);
+		switch( random_move ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
