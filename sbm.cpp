@@ -855,11 +855,11 @@ pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, cons
 
 	s.moveNodeAndInformOfEdges(n, temp_cluster_id);
 
-	PP2(pmf_left, pmf_right);
+	// PP2(pmf_left, pmf_right);
 	const long double max_pmf = max(pmf_left, pmf_right);
 	pmf_left -= max_pmf;
 	pmf_right -= max_pmf;
-	PP2(pmf_left, pmf_right);
+	// PP2(pmf_left, pmf_right);
 	assert(isfinite(pmf_left) && isfinite(pmf_right));
 	assert(pmf_left <= 0);
 	assert(pmf_right <= 0);
@@ -875,8 +875,8 @@ long double M3_LS(sbm :: State &s, const sbm :: ObjectiveFunction *obj, Acceptan
 	assert(!obj->directed);
 	assert(!s.cluster_to_points_map.empty());
 tryagain:
-	const int left  = s._k * gsl_ran_flat(r,0,1);
-	const int right = s._k * gsl_ran_flat(r,0,1);
+	const int left  = 0; //s._k * gsl_ran_flat(r,0,1);
+	const int right = 1; //s._k * gsl_ran_flat(r,0,1);
 	if(left==right) goto tryagain;
 
 	const long double pre = s.pmf(obj);
@@ -913,8 +913,10 @@ tryagain:
 			l2_reverse_prop += log2l(two_options.second);
 		}
 		s.moveNodeAndInformOfEdges(one_node, orig_cluster_id);
+		ANormalDistribution normpdf_selected(one_node, s, obj);
+		l2_reverse_prop += normpdf_selected.pdf_prop(s.cluster_to_points_map.at(orig_cluster_id).at(one_node));
 	}
-	PP(l2_reverse_prop);
+	// PP(l2_reverse_prop);
 
 	{ // revert for verification, and then put things back
 		s.deleteClusterFromTheEnd();
@@ -931,43 +933,50 @@ tryagain:
 	for(auto one_node : both_sets_of_nodes) {
 		s.moveNodeAndInformOfEdges(one_node, temp_cluster_id);
 	}
+	// at this stage, the positions are as before, except with the extra dummy positions for the temp cluster
 
 	// finally, doing the random proposal
 	long double l2_random_prop = 0.0L;
-	cout << "random proposal" << endl;
 	for(auto one_node : both_sets_of_nodes) {
 		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, one_node, left, right);
 		assert(VERYCLOSE(two_options.first + two_options.second, 1.0));
 		if(gsl_ran_flat(r,0,1) < two_options.first) {
 			l2_random_prop += log2l(two_options.first);
 			s.moveNodeAndInformOfEdges(one_node, left);
+			assert(left == s.labelling.cluster_id.at(one_node));
 		} else {
 			l2_random_prop += log2l(two_options.second);
 			s.moveNodeAndInformOfEdges(one_node, right);
+			assert(right == s.labelling.cluster_id.at(one_node));
 		}
-		PP2(__LINE__, l2_random_prop);
+		ANormalDistribution normpdf_selected(one_node, s, obj);
+		sbm :: State :: point_type new_position = normpdf_selected.draw(r);
+		l2_random_prop += normpdf_selected.pdf_prop(new_position);
+		s.cluster_to_points_map.at(s.labelling.cluster_id.at(one_node)).at(one_node) = new_position;
+		// PP2(__LINE__, l2_random_prop);
 	}
-	PP2(__LINE__, l2_random_prop);
-	PP2( s.labelling.clusters.at(left)->order(), s.labelling.clusters.at(right)->order());
+	// PP2(__LINE__, l2_random_prop);
+	// PP2( s.labelling.clusters.at(left)->order(), s.labelling.clusters.at(right)->order());
 
 	// delete the temporary community, we don't need it any more
 	s.deleteClusterFromTheEnd();
 	s.cluster_to_points_map.pop_back();
 	assert(s.cluster_to_points_map.size() == old_cluster_to_points_map.size());
-	s.cluster_to_points_map = old_cluster_to_points_map;
 
 	// now to decide whether to keep this (accept) or to revert (reject)
 	const long double pmf_random = s.pmf(obj);
-	PP2(pre, pmf_random);
-	PP2(l2_reverse_prop, l2_random_prop);
+	// PP2(pre, pmf_random);
+	// PP2(l2_reverse_prop, l2_random_prop);
 	const long double l2_acceptance_probability = pmf_random - pre + l2_reverse_prop - l2_random_prop;
-	PP(l2_acceptance_probability);
+	// PP(l2_acceptance_probability);
 
 	if( log2l(gsl_ran_flat(r,0,1)) < l2_acceptance_probability ) {
 		// keep it
+		// cout << "ACCEPTED M3_LS" << endl;
 		AR->notify(true);
 		return pmf_random - pre;
 	} else {
+		s.cluster_to_points_map = old_cluster_to_points_map;
 		// restore everything
 		for(auto i : both_sets_of_nodes) {
 			const int orig_cluster_id = old_cluster_ids.at(i);
@@ -1842,7 +1851,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			<< "\t"
 			;
 		s.KandClusterSizes();
-		if(1) { /// more swapping
+		if(0) { /// more swapping
 			if(s._k > 1) // && drand48() < 0.01)
 			{
 				const int cl1 = static_cast<int>(s._k * drand48());
