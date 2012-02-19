@@ -641,7 +641,7 @@ struct ANormalDistribution {
 		}
 		return proposed_new_location;
 	}
-	long double pdf_maybe_wrong( sbm :: State :: point_type x ) { // This function might be wrong, and its redundant anyway.
+	long double pdf_prop( sbm :: State :: point_type x ) {
 		const long double dist_2 = x.dist_2(this->mean);
 		return M_LOG2E *  ( - dist_2 / ( 2 * variance ));
 	}
