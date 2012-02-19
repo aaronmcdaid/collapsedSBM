@@ -723,6 +723,47 @@ static long double my_likelihood(const int n, sbm :: State &s, const sbm :: Obje
 	return l2_bits;
 }
 long double update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
+	cout << "gibbs_update_one_nodes_position" << endl;
+	PP(n);
+	const int k = s.labelling.cluster_id.at(n);
+	const long double current_likelihood = my_likelihood(n, s , obj, k, false);
+
+	ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n
+	for(int d = 0; d<DIMENSIONALITY; ++d) {
+		PP(normpdf.mean.at(d));
+	}
+	long double     new_likelihood;
+	int count_attempts = 0;
+	cout << "start the attempts to find a new position" << endl;
+	while(1) {
+		++count_attempts;
+		PP(count_attempts);
+		sbm :: State :: point_type proposed_new_location = normpdf.draw(r);
+
+		s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
+		cout << "proposed_new_location: " << proposed_new_location << endl;
+		new_likelihood = my_likelihood(n, s , obj, k, false);
+		PP(new_likelihood);
+
+		const long double new_proposal_prob = normpdf.pdf(proposed_new_location);
+
+		const long double acceptance_prob = new_likelihood - new_proposal_prob;
+		assert(isfinite(acceptance_prob));
+		assert(acceptance_prob <= 0.0);
+		// if(count_attempts % 100000 == 0) {
+			// PP(my_likelihood(n, s , obj, k, false));
+			// PP2(new_likelihood, count_attempts);
+		// }
+
+		if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
+			break;
+		}
+	}
+	PP2(new_likelihood, current_likelihood);
+	PP(count_attempts);
+	return new_likelihood - current_likelihood;
+}
 	const int k = s.labelling.cluster_id.at(n);
 
 	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
