@@ -90,7 +90,7 @@ public:
 		return coords[offset];
 	}
 	static const int dimensionality = d;
-	inline double dist_2(const my_array<d> &other) {
+	inline double dist_2(const my_array<d> &other) const {
 		double distance_squared = 0;
 		for(size_t i = 0; i<d; ++i) {
 			const double dlta = this->at(i) - other.at(i);
