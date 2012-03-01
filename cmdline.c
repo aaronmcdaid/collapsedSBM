@@ -61,6 +61,8 @@ const char *gengetopt_args_info_help[] = {
   "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
   "  -l, --latentspace           Latent space model inside clusters         \n                                (default=off)",
   "      --lsalpha=FLOAT         Latestspace alpha ('density')  (default=`0')",
+  "      --algo.lspos=INT        Algo: LSSBM positions  (default=`0')",
+  "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
     0
 };
 
@@ -116,6 +118,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->gamma_phi_given = 0 ;
   args_info->latentspace_given = 0 ;
   args_info->lsalpha_given = 0 ;
+  args_info->algo_lspos_given = 0 ;
+  args_info->algo_lsm3_given = 0 ;
 }
 
 static
@@ -165,6 +169,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->latentspace_flag = 0;
   args_info->lsalpha_arg = 0;
   args_info->lsalpha_orig = NULL;
+  args_info->algo_lspos_arg = 0;
+  args_info->algo_lspos_orig = NULL;
+  args_info->algo_lsm3_arg = 0;
+  args_info->algo_lsm3_orig = NULL;
   
 }
 
@@ -202,6 +210,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->gamma_phi_help = gengetopt_args_info_help[26] ;
   args_info->latentspace_help = gengetopt_args_info_help[27] ;
   args_info->lsalpha_help = gengetopt_args_info_help[28] ;
+  args_info->algo_lspos_help = gengetopt_args_info_help[29] ;
+  args_info->algo_lsm3_help = gengetopt_args_info_help[30] ;
   
 }
 
@@ -303,6 +313,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->gamma_s_orig));
   free_string_field (&(args_info->gamma_phi_orig));
   free_string_field (&(args_info->lsalpha_orig));
+  free_string_field (&(args_info->algo_lspos_orig));
+  free_string_field (&(args_info->algo_lsm3_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -396,6 +408,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "latentspace", 0, 0 );
   if (args_info->lsalpha_given)
     write_into_file(outfile, "lsalpha", args_info->lsalpha_orig, 0);
+  if (args_info->algo_lspos_given)
+    write_into_file(outfile, "algo.lspos", args_info->algo_lspos_orig, 0);
+  if (args_info->algo_lsm3_given)
+    write_into_file(outfile, "algo.lsm3", args_info->algo_lsm3_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -683,6 +699,8 @@ cmdline_parser_internal (
         { "gamma.phi",	1, NULL, 0 },
         { "latentspace",	0, NULL, 'l' },
         { "lsalpha",	1, NULL, 0 },
+        { "algo.lspos",	1, NULL, 0 },
+        { "algo.lsm3",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -1040,6 +1058,34 @@ cmdline_parser_internal (
                 &(local_args_info.lsalpha_given), optarg, 0, "0", ARG_FLOAT,
                 check_ambiguity, override, 0, 0,
                 "lsalpha", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Algo: LSSBM positions.  */
+          else if (strcmp (long_options[option_index].name, "algo.lspos") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_lspos_arg), 
+                 &(args_info->algo_lspos_orig), &(args_info->algo_lspos_given),
+                &(local_args_info.algo_lspos_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.lspos", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Algo: LSSBM MS-like.  */
+          else if (strcmp (long_options[option_index].name, "algo.lsm3") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_lsm3_arg), 
+                 &(args_info->algo_lsm3_orig), &(args_info->algo_lsm3_given),
+                &(local_args_info.algo_lsm3_given), optarg, 0, "0", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.lsm3", '-',
                 additional_error))
               goto failure;
           

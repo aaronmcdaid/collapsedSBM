@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_sbm_cem_flag);
 	PP(args_info.latentspace_flag);
 	PP(args_info.lsalpha_arg);
+	PP(args_info.algo_lspos_arg);
+	PP(args_info.algo_lsm3_arg);
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
@@ -1865,7 +1867,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			}
 		}
 
-		const int random_move = static_cast<int>(drand48() * 7);
+		int random_move = static_cast<int>(drand48() * 7);
 		switch( random_move ) {
 			break; case 0:
 				if(commandLineK == -1) {
@@ -1917,12 +1919,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
 				}
 			break; case 5:
-				if(!s.cluster_to_points_map.empty()) {
+				if(args_info.algo_lspos_arg) {
+					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
 				}
 			break; case 6:
-				if(!s.cluster_to_points_map.empty()) {
+				if(args_info.algo_lsm3_arg) {
+					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
 				}

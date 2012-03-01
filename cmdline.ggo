@@ -28,3 +28,5 @@ option  "gamma.s"            - "(for weighted only). Shape of Gamma prior"      
 option  "gamma.phi"          - "(for weighted only). Scale of Gamma prior"        float        default="1" no
 option  "latentspace"        l "Latent space model inside clusters       "     flag       off
 option  "lsalpha"            - "Latestspace alpha ('density')"      float        default="0" no
+option  "algo.lspos"        - "Algo: LSSBM positions"                    int       default="0" no
+option  "algo.lsm3"         - "Algo: LSSBM MS-like"                      int       default="0" no

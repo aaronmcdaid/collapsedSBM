@@ -109,6 +109,12 @@ struct gengetopt_args_info
   float lsalpha_arg;	/**< @brief Latestspace alpha ('density') (default='0').  */
   char * lsalpha_orig;	/**< @brief Latestspace alpha ('density') original value given at command line.  */
   const char *lsalpha_help; /**< @brief Latestspace alpha ('density') help description.  */
+  int algo_lspos_arg;	/**< @brief Algo: LSSBM positions (default='0').  */
+  char * algo_lspos_orig;	/**< @brief Algo: LSSBM positions original value given at command line.  */
+  const char *algo_lspos_help; /**< @brief Algo: LSSBM positions help description.  */
+  int algo_lsm3_arg;	/**< @brief Algo: LSSBM MS-like (default='0').  */
+  char * algo_lsm3_orig;	/**< @brief Algo: LSSBM MS-like original value given at command line.  */
+  const char *algo_lsm3_help; /**< @brief Algo: LSSBM MS-like help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -139,6 +145,8 @@ struct gengetopt_args_info
   unsigned int gamma_phi_given ;	/**< @brief Whether gamma.phi was given.  */
   unsigned int latentspace_given ;	/**< @brief Whether latentspace was given.  */
   unsigned int lsalpha_given ;	/**< @brief Whether lsalpha was given.  */
+  unsigned int algo_lspos_given ;	/**< @brief Whether algo.lspos was given.  */
+  unsigned int algo_lsm3_given ;	/**< @brief Whether algo.lsm3 was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
