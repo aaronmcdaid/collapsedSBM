@@ -127,7 +127,9 @@ int main(int argc, char **argv) {
 	std :: auto_ptr<const graph :: NetworkInterfaceConvertedToStringWithWeights > network;
 	// Try the new graph loader
 	if(args_info.stringIDs_flag) {
-		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag, false);
+		network = graph :: loading :: make_Network_from_edge_list_string(edgeListFileName, args_info.directed_flag, args_info.weighted_flag, false,
+				0 // "../../../survey_74_names_participants.txt"
+				);
 	} else {
 		network = graph :: loading :: make_Network_from_edge_list_int64(edgeListFileName, args_info.directed_flag, args_info.weighted_flag, false, args_info.assume_N_nodes_arg);
 	}
