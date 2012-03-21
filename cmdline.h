@@ -115,6 +115,8 @@ struct gengetopt_args_info
   int algo_lsm3_arg;	/**< @brief Algo: LSSBM MS-like (default='0').  */
   char * algo_lsm3_orig;	/**< @brief Algo: LSSBM MS-like original value given at command line.  */
   const char *algo_lsm3_help; /**< @brief Algo: LSSBM MS-like help description.  */
+  int uniformK_flag;	/**< @brief Use a Uniform prior for K (default=off).  */
+  const char *uniformK_help; /**< @brief Use a Uniform prior for K help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -147,6 +149,7 @@ struct gengetopt_args_info
   unsigned int lsalpha_given ;	/**< @brief Whether lsalpha was given.  */
   unsigned int algo_lspos_given ;	/**< @brief Whether algo.lspos was given.  */
   unsigned int algo_lsm3_given ;	/**< @brief Whether algo.lsm3 was given.  */
+  unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

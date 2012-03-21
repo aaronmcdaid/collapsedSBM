@@ -30,3 +30,4 @@ option  "latentspace"        l "Latent space model inside clusters       "     f
 option  "lsalpha"            - "Latestspace alpha ('density')"      float        default="0" no
 option  "algo.lspos"        - "Algo: LSSBM positions"                    int       default="0" no
 option  "algo.lsm3"         - "Algo: LSSBM MS-like"                      int       default="0" no
+option  "uniformK"           u "Use a Uniform prior for K"               flag       off

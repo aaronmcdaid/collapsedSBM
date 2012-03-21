@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include "args_info.hpp"
 
 using namespace std;
 #define printfstring(...) ({ char str[1000]; sprintf(str, __VA_ARGS__) ; (std :: string (str)); })
@@ -598,7 +599,7 @@ namespace sbm {
 
 	long double State :: P_z_K() const { // 1 and 2
 		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K
-		const long double priorOnK = -LOG2FACT(this->_k); // Poisson(1) prior on K
+		const long double priorOnK = args_info.uniformK_flag ? 0 : -LOG2FACT(this->_k); // Poisson(1) prior on K
 		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State :: P_z_orders() const { // given our current this->_k, what's P(z | k)

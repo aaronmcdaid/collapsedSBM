@@ -28,6 +28,7 @@ const char gitstatus[] =
 #include "gitstatus.txt"
 ;
 #include "cmdline.h"
+#include "args_info.hpp"
 
 
 template<typename T,typename V> T up_cast(V x) { return x; }
@@ -44,8 +45,9 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
 static long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, int k = -1);
 
+gengetopt_args_info args_info;
+
 int main(int argc, char **argv) {
-	gengetopt_args_info args_info;
 	if (cmdline_parser (argc, argv, &args_info) != 0)
 		exit(1) ;
 	if(args_info.git_version_flag) {
@@ -90,6 +92,7 @@ int main(int argc, char **argv) {
 	PP(args_info.lsalpha_arg);
 	PP(args_info.algo_lspos_arg);
 	PP(args_info.algo_lsm3_arg);
+	PP(args_info.uniformK_flag);
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
@@ -1523,8 +1526,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 		const int postK = preK + 1;
 		assert(s._k == postK);
 		const long double presumed_delta =
-			- log2(preK+1) // Poisson(1) prior on K
-			// - 1 // Geometric(0.5) prior on K
+			( args_info.uniformK_flag ? 0 : - log2(preK+1) )
 
 			// + LOG2GAMMA(s._alpha)  // the change to SumOfLog2Facts
 			// I belatedly noticed that this last line can be cancelled against some expressions in the next line.
@@ -1573,8 +1575,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 		{
 			const int postK = preK-1;
 			const long double presumed_delta =
-				+ log2(preK) // Poisson(1) prior on K
-				// + 1 // Geometric(0.5) prior on K
+				( args_info.uniformK_flag ? 0 : + log2(preK) )
 
 				- LOG2GAMMA(s._alpha) // the change to SumOfLog2Facts
 

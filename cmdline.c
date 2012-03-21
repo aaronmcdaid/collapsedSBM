@@ -63,6 +63,7 @@ const char *gengetopt_args_info_help[] = {
   "      --lsalpha=FLOAT         Latestspace alpha ('density')  (default=`0')",
   "      --algo.lspos=INT        Algo: LSSBM positions  (default=`0')",
   "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
+  "  -u, --uniformK              Use a Uniform prior for K  (default=off)",
     0
 };
 
@@ -120,6 +121,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->lsalpha_given = 0 ;
   args_info->algo_lspos_given = 0 ;
   args_info->algo_lsm3_given = 0 ;
+  args_info->uniformK_given = 0 ;
 }
 
 static
@@ -173,6 +175,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_lspos_orig = NULL;
   args_info->algo_lsm3_arg = 0;
   args_info->algo_lsm3_orig = NULL;
+  args_info->uniformK_flag = 0;
   
 }
 
@@ -212,6 +215,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->lsalpha_help = gengetopt_args_info_help[28] ;
   args_info->algo_lspos_help = gengetopt_args_info_help[29] ;
   args_info->algo_lsm3_help = gengetopt_args_info_help[30] ;
+  args_info->uniformK_help = gengetopt_args_info_help[31] ;
   
 }
 
@@ -412,6 +416,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.lspos", args_info->algo_lspos_orig, 0);
   if (args_info->algo_lsm3_given)
     write_into_file(outfile, "algo.lsm3", args_info->algo_lsm3_orig, 0);
+  if (args_info->uniformK_given)
+    write_into_file(outfile, "uniformK", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -701,10 +707,11 @@ cmdline_parser_internal (
         { "lsalpha",	1, NULL, 0 },
         { "algo.lspos",	1, NULL, 0 },
         { "algo.lsm3",	1, NULL, 0 },
+        { "uniformK",	0, NULL, 'u' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:z:l", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:z:lu", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -802,6 +809,16 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->latentspace_flag), 0, &(args_info->latentspace_given),
               &(local_args_info.latentspace_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "latentspace", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'u':	/* Use a Uniform prior for K.  */
+        
+        
+          if (update_arg((void *)&(args_info->uniformK_flag), 0, &(args_info->uniformK_given),
+              &(local_args_info.uniformK_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "uniformK", 'u',
               additional_error))
             goto failure;
         
