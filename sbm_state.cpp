@@ -443,6 +443,7 @@ namespace sbm {
 				nonEmptyK++;
 		}
 		PP(nonEmptyK);
+		PP(ELAPSED()); /// ELAPSED in stdout.txt
 		PP(this->pmf(obj));
 		if (!this->_mega) {
 			for (int n=0; n < this->_N; n++) {
