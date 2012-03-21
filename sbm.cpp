@@ -1773,12 +1773,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 
-	CountSharedCluster *count_shared_cluster;
-	if(args_info.mega_flag) // the network is probably too big, don't try to CountSharedCluster
-		count_shared_cluster	= 0;
-	else
-		count_shared_cluster	= new CountSharedCluster(g->numNodes());
-
 	/*
 	s.isolateNode(0);
 	s.isolateNode(1); // to bring us up to three clusters
@@ -1934,10 +1928,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 		}
 		if(i > 30000) {
-			if(count_shared_cluster)
-				count_shared_cluster->consume(s.labelling.cluster_id);
-		}
-		if(i > 30000) {
 			vector<int> clustering_copy( s.labelling.cluster_id );
 			// let's put them in order before checking for PMP. this is a cheap form of label-switching
 			int neg_id = -1;
@@ -1990,8 +1980,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_M3little.dump();
 			AR_M3very.dump();
 			s.blockDetail(obj);
-			if(count_shared_cluster)
-				count_shared_cluster->dump(s);
 			cout << " end of check at i==" << i << ". (" << double(clock()) / CLOCKS_PER_SEC << " seconds)" << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
