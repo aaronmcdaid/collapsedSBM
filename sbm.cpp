@@ -1834,9 +1834,11 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_M3lspos  ("LSSBM M3");
 
 	// some variables to check the PMP, i.e. the single most-visited state
+/*
 	map< pair<int, vector<int> >, int> pmp_table;
 	pair< pair<int, vector<int> >, int> best_pmp_so_far(make_pair(0, vector<int>()), 0);
 	int64_t num_states_checked_for_pmp = 0;
+*/
 
 	ofstream * save_z_fstream = NULL;
 	if(args_info.save_z_arg[0]) {
@@ -1864,15 +1866,19 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			}
 		}
 
+try_again:
 		int random_move = static_cast<int>(drand48() * 7);
 		switch( random_move ) {
 			break; case 0:
 				if(commandLineK == -1) {
 					if(args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
-					}
-				} else
+					} else
+						goto try_again;
+				} else {
 					assert(commandLineK == s._k);
+					goto try_again;
+				}
 			break; case 1:
 				if(algo_gibbs) {
 #if 0
@@ -1928,6 +1934,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
 				}
 		}
+#if 0
 		if(i > 30000) {
 			vector<int> clustering_copy( s.labelling.cluster_id );
 			// let's put them in order before checking for PMP. this is a cheap form of label-switching
@@ -1952,6 +1959,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					++num_states_checked_for_pmp;
 			}
 		}
+#endif
 
 		// PP(i);
 		// const long double pre = s.pmf(obj);
@@ -1969,7 +1977,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);
-			PP4(num_states_checked_for_pmp, best_pmp_so_far.second, 100.0*best_pmp_so_far.second/num_states_checked_for_pmp , best_pmp_so_far.first.first);
+			// PP4(num_states_checked_for_pmp, best_pmp_so_far.second, 100.0*best_pmp_so_far.second/num_states_checked_for_pmp , best_pmp_so_far.first.first);
 			// s.summarizeEdgeCounts();
 			AR_metroK.dump();
 			AR_metro1Node.dump();
