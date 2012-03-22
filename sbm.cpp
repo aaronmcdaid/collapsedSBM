@@ -1846,6 +1846,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	}
 	for(int i=1; i<=iterations; i++) {
 		cout
+			<< "iteration\t" << i
+			<< "\telapsed\t" << ELAPSED()
+			<< endl;
+		cout
 			<< "Iteration:\t" << i
 			<< "\tk0\t" << s._k
 			<< "\tk1\t" << s.labelling.NonEmptyClusters
