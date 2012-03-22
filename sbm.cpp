@@ -1872,15 +1872,11 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 
 try_again:
 		int random_move = static_cast<int>(drand48() * 7);
-		switch( random_move ) {
+		switch( random_move ) { /// use try_again if move not attempted
 			break; case 0:
-				if(commandLineK == -1) {
-					if(args_info.algo_metroK_arg) {
+				if(commandLineK == -1 && args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
-					} else
-						goto try_again;
 				} else {
-					assert(commandLineK == s._k);
 					goto try_again;
 				}
 			break; case 1:
@@ -1909,34 +1905,34 @@ try_again:
 #endif
 				}
 			break; case 2:
-				if(s.cluster_to_points_map.empty()) {
-				if(algo_m3)
-					pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
-				}
+				if(s.cluster_to_points_map.empty() && algo_m3) {
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+				} else
+					goto try_again;
 			break; case 3:
-				if(s.cluster_to_points_map.empty()) {
-				if(commandLineK == -1) {
-					if(args_info.algo_ejectabsorb_arg)
+				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
-				}
-				}
+				} else
+					goto try_again;
 			break; case 4:
-				if(s.cluster_to_points_map.empty()) {
-				if(args_info.algo_1node_arg)
+				if(s.cluster_to_points_map.empty() && args_info.algo_1node_arg) {
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
-				}
+				} else
+					goto try_again;
 			break; case 5:
 				if(args_info.algo_lspos_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
-				}
+				} else
+					goto try_again;
 			break; case 6:
 				if(args_info.algo_lsm3_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
-				}
+				} else
+					goto try_again;
 		}
 #if 0
 		if(i > 30000) {
