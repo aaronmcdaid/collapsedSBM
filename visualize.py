@@ -34,7 +34,7 @@ def process_z_unswitched():
 	#print counts[67]
 	#print map(len, counts)
 	all_data = [( n,key_with_max_entry_in_dict(counts[n]),average_key_in_dict(counts[n]),counts[n] ) for n in range(N)]
-	return all_data
+	return sorted(all_data, key=lambda a: a[1:3])
 
 def main():
 	all_data = process_z_unswitched()
