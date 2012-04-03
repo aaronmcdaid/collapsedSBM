@@ -45,9 +45,14 @@ def main():
 		print a
 
 def plot(all_data):
-	G=nx.read_edgelist('../../edge_list.txt', nodetype=int, delimiter='\t', create_using=nx.DiGraph())
+	G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.DiGraph())
 	N=G.order()
-	mat=nx.convert.to_numpy_matrix(G, nodelist=[a[0] for a in all_data])
+	node_set = sorted(G.nodes())
+	print node_set
+	assert N == len(node_set)
+	print "N=",N
+	assert node_set == sorted([node_set[a[0]] for a in all_data])
+	mat=nx.convert.to_numpy_matrix(G, nodelist=[node_set[a[0]] for a in all_data])
 	#mat=[[random.randint(0,1) for i in range(N)] for j in range(N)]
 	pylab.cla(); pylab.imshow(pylab.asarray(1-mat), cmap=pylab.cm.gray, interpolation='nearest')
 
