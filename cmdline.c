@@ -50,6 +50,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --iterations=INT        How many iterations  (default=`120000')",
   "      --initGT                Initialize to the ground truth  (default=off)",
   "      --model.scf             Stochastic community finding  (default=off)",
+  "      --scf                   Collapsed SCF  (default=off)",
   "      --algo.sbm.cem          Classification EM (CEM) for the SBM  \n                                (default=off)",
   "      --stringIDs             string IDs in the input  (default=off)",
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
@@ -108,6 +109,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
   args_info->model_scf_given = 0 ;
+  args_info->scf_given = 0 ;
   args_info->algo_sbm_cem_given = 0 ;
   args_info->stringIDs_given = 0 ;
   args_info->mega_given = 0 ;
@@ -153,6 +155,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
+  args_info->scf_flag = 0;
   args_info->algo_sbm_cem_flag = 0;
   args_info->stringIDs_flag = 0;
   args_info->mega_flag = 0;
@@ -202,20 +205,21 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->iterations_help = gengetopt_args_info_help[15] ;
   args_info->initGT_help = gengetopt_args_info_help[16] ;
   args_info->model_scf_help = gengetopt_args_info_help[17] ;
-  args_info->algo_sbm_cem_help = gengetopt_args_info_help[18] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[19] ;
-  args_info->mega_help = gengetopt_args_info_help[20] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[21] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[22] ;
-  args_info->alpha_help = gengetopt_args_info_help[23] ;
-  args_info->save_z_help = gengetopt_args_info_help[24] ;
-  args_info->gamma_s_help = gengetopt_args_info_help[25] ;
-  args_info->gamma_phi_help = gengetopt_args_info_help[26] ;
-  args_info->latentspace_help = gengetopt_args_info_help[27] ;
-  args_info->lsalpha_help = gengetopt_args_info_help[28] ;
-  args_info->algo_lspos_help = gengetopt_args_info_help[29] ;
-  args_info->algo_lsm3_help = gengetopt_args_info_help[30] ;
-  args_info->uniformK_help = gengetopt_args_info_help[31] ;
+  args_info->scf_help = gengetopt_args_info_help[18] ;
+  args_info->algo_sbm_cem_help = gengetopt_args_info_help[19] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[20] ;
+  args_info->mega_help = gengetopt_args_info_help[21] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[22] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[23] ;
+  args_info->alpha_help = gengetopt_args_info_help[24] ;
+  args_info->save_z_help = gengetopt_args_info_help[25] ;
+  args_info->gamma_s_help = gengetopt_args_info_help[26] ;
+  args_info->gamma_phi_help = gengetopt_args_info_help[27] ;
+  args_info->latentspace_help = gengetopt_args_info_help[28] ;
+  args_info->lsalpha_help = gengetopt_args_info_help[29] ;
+  args_info->algo_lspos_help = gengetopt_args_info_help[30] ;
+  args_info->algo_lsm3_help = gengetopt_args_info_help[31] ;
+  args_info->uniformK_help = gengetopt_args_info_help[32] ;
   
 }
 
@@ -390,6 +394,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "initGT", 0, 0 );
   if (args_info->model_scf_given)
     write_into_file(outfile, "model.scf", 0, 0 );
+  if (args_info->scf_given)
+    write_into_file(outfile, "scf", 0, 0 );
   if (args_info->algo_sbm_cem_given)
     write_into_file(outfile, "algo.sbm.cem", 0, 0 );
   if (args_info->stringIDs_given)
@@ -694,6 +700,7 @@ cmdline_parser_internal (
         { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
         { "model.scf",	0, NULL, 0 },
+        { "scf",	0, NULL, 0 },
         { "algo.sbm.cem",	0, NULL, 0 },
         { "stringIDs",	0, NULL, 0 },
         { "mega",	0, NULL, 0 },
@@ -955,6 +962,18 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->model_scf_flag), 0, &(args_info->model_scf_given),
                 &(local_args_info.model_scf_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "model.scf", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Collapsed SCF.  */
+          else if (strcmp (long_options[option_index].name, "scf") == 0)
+          {
+          
+          
+            if (update_arg((void *)&(args_info->scf_flag), 0, &(args_info->scf_given),
+                &(local_args_info.scf_given), optarg, 0, 0, ARG_FLAG,
+                check_ambiguity, override, 1, 0, "scf", '-',
                 additional_error))
               goto failure;
           

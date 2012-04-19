@@ -85,6 +85,7 @@ int main(int argc, char **argv) {
 	else
 		cout << "args_info.GT_vector_arg:<undefined>";
 	PP(args_info.model_scf_flag);
+	PP(args_info.scf_flag);
 	PP(args_info.assume_N_nodes_arg);
 	PP(args_info.save_z_arg);
 	PP(args_info.algo_sbm_cem_flag);
@@ -1511,6 +1512,7 @@ void M3_old(sbm :: State &s) {
 }
 #endif
 static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj __attribute__((unused)), AcceptanceRate *AR) {
+	assert(args_info.scf_flag == 0);
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;

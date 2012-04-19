@@ -80,6 +80,8 @@ struct gengetopt_args_info
   const char *initGT_help; /**< @brief Initialize to the ground truth help description.  */
   int model_scf_flag;	/**< @brief Stochastic community finding (default=off).  */
   const char *model_scf_help; /**< @brief Stochastic community finding help description.  */
+  int scf_flag;	/**< @brief Collapsed SCF (default=off).  */
+  const char *scf_help; /**< @brief Collapsed SCF help description.  */
   int algo_sbm_cem_flag;	/**< @brief Classification EM (CEM) for the SBM (default=off).  */
   const char *algo_sbm_cem_help; /**< @brief Classification EM (CEM) for the SBM help description.  */
   int stringIDs_flag;	/**< @brief string IDs in the input (default=off).  */
@@ -136,6 +138,7 @@ struct gengetopt_args_info
   unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
   unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
   unsigned int model_scf_given ;	/**< @brief Whether model.scf was given.  */
+  unsigned int scf_given ;	/**< @brief Whether scf was given.  */
   unsigned int algo_sbm_cem_given ;	/**< @brief Whether algo.sbm.cem was given.  */
   unsigned int stringIDs_given ;	/**< @brief Whether stringIDs was given.  */
   unsigned int mega_given ;	/**< @brief Whether mega was given.  */
