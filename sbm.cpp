@@ -495,6 +495,8 @@ long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 
 static
 bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r) {
+	if(s._k == 1)
+		return true;
 	// for now, only support unweighted networks.
 	// but I should try to support directed/undirected, and self/no-self
 	assert(!obj->weighted);
@@ -507,8 +509,23 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 		const long double pi_kk = beta_draw(p_kk, y_kk, r);
 		min_on_diagonal = min(min_on_diagonal, pi_kk);
 	}
-	PP(min_on_diagonal);
-	return true;
+	long double max_off_diagonal = -1.0;
+	for(int k=0; k<s._k; ++k) {
+		for(int l=0; l<s._k; ++l) {
+			if(k==l)
+				continue;
+			if(l>k && !obj->directed)
+				break;
+			const long int y_kl = obj->relevantWeight      (k, l, &s._edgeCounts);
+			const long int p_kl = obj->numberOfPairsInBlock(k, l, &s.labelling);
+			const long double pi_kl = beta_draw(p_kl, y_kl, r);
+			PP3(p_kl, y_kl, pi_kl);
+			max_off_diagonal = max(max_off_diagonal, pi_kl);
+		}
+	}
+	// PP2(min_on_diagonal, max_off_diagonal);
+	// assert(min_on_diagonal <= max_off_diagonal);
+	return min_on_diagonal > max_off_diagonal;
 }
 
 // static
