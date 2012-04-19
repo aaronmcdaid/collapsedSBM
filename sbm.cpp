@@ -662,7 +662,8 @@ struct ANormalDistribution {
 	long double sum_weight_in_this_cluster = 0.0L;
 	const int k = s.labelling.cluster_id.at(n);
 	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
-	for(auto m : CL->get_members()) {
+	For(mp, CL->get_members()) {
+		const int32_t m = *mp;
 		if(n!=m) {
 			assert(s.labelling.cluster_id.at(m) == k);
 			const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
@@ -706,7 +707,8 @@ static long double my_likelihood(const int n, sbm :: State &s, const sbm :: Obje
 		const double l2_prior_position = M_LOG2E * ln_prior_position;
 		l2_bits += l2_prior_position;
 	}
-	for(auto m : CL->get_members()) {
+	For(mp, CL->get_members()) {
+		const int32_t m = *mp;
 		if(n==m)
 			continue;
 		sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
@@ -788,7 +790,8 @@ long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const 
 		assert(acceptance_prob <= 0.0);
 
 		const sbm :: Cluster *CL = s.labelling.clusters.at(k);
-		for(auto m : CL->get_members()) {
+		For(mp, CL->get_members()) {
+			const int32_t m = *mp;
 			if(n==m)
 				continue;
 			const sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
@@ -826,9 +829,9 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 	for(int k = 0; k<s._k; ++k) {
 		const sbm :: Cluster *CL = s.labelling.clusters.at(k);
 		const std :: list<int> & mem = CL->get_members();
-		for(auto n : mem) {
+		For(n, mem) {
 			//l2_delta_bits += update_one_nodes_position(n, s, obj, ar, r);
-			l2_delta_bits += gibbs_update_one_nodes_position(n, s, obj, ar, r);
+			l2_delta_bits += gibbs_update_one_nodes_position(*n, s, obj, ar, r);
 		}
 	}
 
@@ -910,19 +913,19 @@ tryagain:
 	std :: random_shuffle(both_sets_of_nodes.begin(), both_sets_of_nodes.end());
 
 	long double l2_reverse_prop = 0.0L;
-	for(auto one_node : both_sets_of_nodes) {
-		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, one_node, left, right);
+	For(one_node, both_sets_of_nodes) {
+		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, *one_node, left, right);
 		assert(VERYCLOSE(two_options.first + two_options.second, 1.0));
-		const int orig_cluster_id = old_cluster_ids.at(one_node);
+		const int orig_cluster_id = old_cluster_ids.at(*one_node);
 		if(orig_cluster_id == left) {
 			l2_reverse_prop += log2l(two_options.first);
 		} else {
 			assert(orig_cluster_id == right);
 			l2_reverse_prop += log2l(two_options.second);
 		}
-		s.moveNodeAndInformOfEdges(one_node, orig_cluster_id);
-		ANormalDistribution normpdf_selected(one_node, s, obj);
-		l2_reverse_prop += normpdf_selected.pdf_prop(s.cluster_to_points_map.at(orig_cluster_id).at(one_node));
+		s.moveNodeAndInformOfEdges(*one_node, orig_cluster_id);
+		ANormalDistribution normpdf_selected(*one_node, s, obj);
+		l2_reverse_prop += normpdf_selected.pdf_prop(s.cluster_to_points_map.at(orig_cluster_id).at(*one_node));
 	}
 	// PP(l2_reverse_prop);
 
@@ -938,29 +941,29 @@ tryagain:
 	}
 
 	// we must move them out again, in order to do our random proposal
-	for(auto one_node : both_sets_of_nodes) {
-		s.moveNodeAndInformOfEdges(one_node, temp_cluster_id);
+	For(one_node, both_sets_of_nodes) {
+		s.moveNodeAndInformOfEdges(*one_node, temp_cluster_id);
 	}
 	// at this stage, the positions are as before, except with the extra dummy positions for the temp cluster
 
 	// finally, doing the random proposal
 	long double l2_random_prop = 0.0L;
-	for(auto one_node : both_sets_of_nodes) {
-		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, one_node, left, right);
+	For(one_node, both_sets_of_nodes) {
+		pair<long double, long double> two_options = prepare_two_M3_ls_proposals(s, obj, *one_node, left, right);
 		assert(VERYCLOSE(two_options.first + two_options.second, 1.0));
 		if(gsl_ran_flat(r,0,1) < two_options.first) {
 			l2_random_prop += log2l(two_options.first);
-			s.moveNodeAndInformOfEdges(one_node, left);
-			assert(left == s.labelling.cluster_id.at(one_node));
+			s.moveNodeAndInformOfEdges(*one_node, left);
+			assert(left == s.labelling.cluster_id.at(*one_node));
 		} else {
 			l2_random_prop += log2l(two_options.second);
-			s.moveNodeAndInformOfEdges(one_node, right);
-			assert(right == s.labelling.cluster_id.at(one_node));
+			s.moveNodeAndInformOfEdges(*one_node, right);
+			assert(right == s.labelling.cluster_id.at(*one_node));
 		}
-		ANormalDistribution normpdf_selected(one_node, s, obj);
+		ANormalDistribution normpdf_selected(*one_node, s, obj);
 		sbm :: State :: point_type new_position = normpdf_selected.draw(r);
 		l2_random_prop += normpdf_selected.pdf_prop(new_position);
-		s.cluster_to_points_map.at(s.labelling.cluster_id.at(one_node)).at(one_node) = new_position;
+		s.cluster_to_points_map.at(s.labelling.cluster_id.at(*one_node)).at(*one_node) = new_position;
 		// PP2(__LINE__, l2_random_prop);
 	}
 	// PP2(__LINE__, l2_random_prop);
@@ -986,10 +989,10 @@ tryagain:
 	} else {
 		s.cluster_to_points_map = old_cluster_to_points_map;
 		// restore everything
-		for(auto i : both_sets_of_nodes) {
-			const int orig_cluster_id = old_cluster_ids.at(i);
-			if(s.labelling.cluster_id.at(i) != orig_cluster_id) {
-				s.moveNodeAndInformOfEdges(i, orig_cluster_id);
+		For(i, both_sets_of_nodes) {
+			const int orig_cluster_id = old_cluster_ids.at(*i);
+			if(s.labelling.cluster_id.at(*i) != orig_cluster_id) {
+				s.moveNodeAndInformOfEdges(*i, orig_cluster_id);
 			}
 		}
 		const long double post = s.pmf(obj);

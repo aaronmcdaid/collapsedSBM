@@ -687,8 +687,10 @@ namespace sbm {
 			long double ls_bits = 0.0L;
 			for(int k=0; k < this->_k; ++k) {
 				const Cluster *I = this->labelling.clusters.at(k);
-				for(auto n : I->get_members()) {
-					for(auto m : I->get_members()) {
+				For(np, I->get_members()) {
+					For(mp, I->get_members()) {
+						const int32_t n = *np;
+						const int32_t m = *mp;
 						if(n==m && !obj->selfloops)
 							continue;
 						if(!obj->directed && n>m)
