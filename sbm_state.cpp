@@ -844,12 +844,12 @@ namespace sbm {
 		return pairs;
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const { // virtual
+	const long double beta_1 = 1.0L; // prior
+	const long double beta_2 = 1.0L; // prior
+	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const long int pairs, bool ) const { // virtual
 		if(pairs==0)
 			return 0.0L;
 		assert(pairs > 0);
-		const long double beta_1 = isDiagonal ? 1.0L : 1.0L; // prior
-		const long double beta_2 = isDiagonal ? 1.0L : 1.0L; // prior. number of NON-edges in the urn. A large number here for !isDiagonal will give sparse offDiagonal (i.e. community finding)
 		assert(isfinite(edge_total));
 		assert(edge_total == floor(edge_total));
 		assert(edge_total >= 0);

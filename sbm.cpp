@@ -484,14 +484,40 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	}
 }
 
+long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
+	const int successes = y_kl;
+	assert(successes >= 0);
+	const int failures = p_kl - y_kl;
+	assert(failures >= 0);
+	const long double draw = gsl_ran_beta(r, successes + sbm :: beta_1, failures + sbm :: beta_2) ;
+	return draw;
+}
+
+static
+bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r) {
+	// for now, only support unweighted networks.
+	// but I should try to support directed/undirected, and self/no-self
+	assert(!obj->weighted);
+
+	// draw for each of the diagonal entries
+	long double min_on_diagonal = 2.0;
+	for(int k=0; k<s._k; ++k) {
+		const long int y_kk = obj->relevantWeight      (k, k, &s._edgeCounts);
+		const long int p_kk = obj->numberOfPairsInBlock(k, k, &s.labelling);
+		const long double pi_kk = beta_draw(p_kk, y_kk, r);
+		min_on_diagonal = min(min_on_diagonal, pi_kk);
+	}
+	PP(min_on_diagonal);
+	return true;
+}
+
 // static
-long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
+long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
 	if(args_info.scf_flag) {
 		assert(!args_info.latentspace_flag);
 		assert(s.cluster_to_points_map.empty());
 	}
 
-	assert(args_info.scf_flag == 0);
 	if(s._k == 1) {
 		AR->notify(false);
 		return 0.0L;
@@ -610,22 +636,29 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 	s.moveNodeAndInformOfEdges(n, newCluster);
 
 	s.deleteClusterFromTheEnd();
-	AR->notify(newCluster != origClusterID);
 
-#if 0
-	{
-		cout << endl << "estimated changes:" << endl;
-		PP2(delta_P_x_z_IfIMoveIntoClusterT.at(newCluster), delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID));
-		PP2(delta_P_z_K_IfIMoveIntoClusterT.at(newCluster), delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID));
-		PP(bits_latent_space_for_each_cluster.at(newCluster));
-		PP(bits_latent_space_for_each_cluster.at(origClusterID));
-		PP(bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID));
+	bool has_moved_to_new_cluster = newCluster != origClusterID;
+
+// Now for the Stochastic Community Finding support.
+// - draw from the posterior of \pi, and if it doesn't satisfy the constraint,
+//   then we reject and revert the node to the origClusterID
+	if(has_moved_to_new_cluster && args_info.scf_flag) {
+		const bool SCF_posterior_test = drawPiAndTest(s, obj, r);
+		if(!SCF_posterior_test) {
+			has_moved_to_new_cluster = false;
+			s.moveNodeAndInformOfEdges(n, origClusterID);
+		}
 	}
-#endif
-	return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
+
+	AR->notify(has_moved_to_new_cluster);
+
+	if (has_moved_to_new_cluster) {
+		return + delta_P_x_z_IfIMoveIntoClusterT.at(newCluster) + delta_P_z_K_IfIMoveIntoClusterT.at(newCluster)
 	       - delta_P_x_z_IfIMoveIntoClusterT.at(origClusterID) - delta_P_z_K_IfIMoveIntoClusterT.at(origClusterID)
 	       + ( s.cluster_to_points_map.empty() ? 0 : (bits_latent_space_for_each_cluster.at(newCluster)-bits_latent_space_for_each_cluster.at(origClusterID) )  )
 		;
+	} else
+		return 0;
 }
 
 #if 0
@@ -1908,7 +1941,7 @@ try_again:
 					}
 #endif
 
-					pmf_track += gibbsOneNode(s, obj, &AR_gibbs);
+					pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
 #if 0
 
 					{
