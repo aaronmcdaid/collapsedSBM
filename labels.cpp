@@ -134,6 +134,8 @@ int main() {
 
 	stable_sort(kzs.begin(), kzs.end(), sort_on_pair_first());
 
+	cerr << "sorted on K'. " << ELAPSED() << "s." << endl;
+
 	typedef tr1 :: unordered_map< pair<int,int> , int, hash_pair> node_k_counts_t; // each node,cluster pair and how often it was assigned
 
 	node_k_counts_t node_k_counts;

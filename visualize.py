@@ -45,6 +45,8 @@ def main():
 		print a
 
 def plot(all_data):
+	#G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.DiGraph())
+	#G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter='\t', create_using=nx.DiGraph())
 	G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.DiGraph())
 	N=G.order()
 	node_set = sorted(G.nodes())
