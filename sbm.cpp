@@ -260,6 +260,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
 long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative) {
+	assert(args_info.scf_flag == 0);
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
@@ -485,6 +486,12 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 
 // static
 long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
+	if(args_info.scf_flag) {
+		assert(!args_info.latentspace_flag);
+		assert(s.cluster_to_points_map.empty());
+	}
+
+	assert(args_info.scf_flag == 0);
 	if(s._k == 1) {
 		AR->notify(false);
 		return 0.0L;
@@ -813,6 +820,7 @@ long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const 
 }
 
 long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *ar, gsl_rng * r) {
+	assert(args_info.scf_flag == 0);
 	// - take each cluster in turn.
 	//   - take each node in that cluster in turn
 	//     - propose a new position based on it cluster-mate-NEIGHBOURS
@@ -879,6 +887,7 @@ pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, cons
 	return make_pair (exp2l(pmf_left) / denominator, exp2l(pmf_right) / denominator);
 }
 long double M3_LS(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
+	assert(args_info.scf_flag == 0);
 	if(s._k < 2)
 		return 0.0;
 	assert(!obj->weighted);
@@ -1078,6 +1087,7 @@ static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm ::
 
 static
 long double MoneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR) {
+	assert(args_info.scf_flag == 0);
 	if(s._k == 1)
 	       return 0.0L;	// can't move a node unless there exist other clusters
 	assert(s._k > 1); // can't move a node unless there exist other clusters
@@ -1632,6 +1642,7 @@ static long double EjectAbsorb_prop_prob_merge(const int small_k) {
 	;
 }
 static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
+	assert(args_info.scf_flag == 0);
 	assert(obj);
 	// cout << "EjectAbsorb" << endl;
 	// we propose either to split, or to merge, two communities.
