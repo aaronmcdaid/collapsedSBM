@@ -485,6 +485,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 }
 
 long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
+	assert(args_info.scf_flag);
 	const int successes = y_kl;
 	assert(successes >= 0);
 	const int failures = p_kl - y_kl;
@@ -495,6 +496,7 @@ long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 
 static
 bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r) {
+	assert(args_info.scf_flag);
 	if(s._k == 1)
 		return true;
 	// for now, only support unweighted networks.
@@ -1574,8 +1576,7 @@ void M3_old(sbm :: State &s) {
 	if(verbose) cout << "     ========== ~M3 =========" << endl;
 }
 #endif
-static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj __attribute__((unused)), AcceptanceRate *AR) {
-	assert(args_info.scf_flag == 0);
+static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj __attribute__((unused)), gsl_rng* r, AcceptanceRate *AR) {
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
@@ -1600,7 +1601,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) /*- postK*LOG2GAMMA(s._alpha)*/ )
 			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) /*- preK*LOG2GAMMA(s._alpha)*/ )
 			;
-		if(acceptTest(presumed_delta, AR)) {
+		if(acceptTest(presumed_delta)) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
 			// PP(s.pmf(obj) - prePMF);
@@ -1609,7 +1610,18 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			// PP( presumed_delta );
 			// PP(postPMF12 - prePMF12);
 			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
-			return presumed_delta;
+
+			// --scf support
+			const bool SCF_posterior_test = (!args_info.scf_flag) || drawPiAndTest(s, obj, r);
+			if(!SCF_posterior_test) {
+				s.deleteClusterFromTheEnd();
+				assert(s._k==preK);
+				AR->notify(false);
+				return 0;
+			} else {
+				AR->notify(true);
+				return presumed_delta;
+			}
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
@@ -1655,11 +1667,23 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			// assert(VERYCLOSE(s.pmf(obj), postPMF));
 			// assert(postPMF > prePMF);
 			/// PP2(postPMF12 - prePMF12, presumed_delta);
-			if(acceptTest(presumed_delta, AR)) {
+			if(acceptTest(presumed_delta)) {
 				// cout << "k: acc dec" << endl;
 				assert(s._k<preK);
 				// assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
-				return presumed_delta;
+
+				// --scf support
+				const bool SCF_posterior_test = (!args_info.scf_flag) || drawPiAndTest(s, obj, r);
+				if(!SCF_posterior_test) {
+					assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
+					s.appendEmptyCluster();
+					assert(s._k==preK);
+					AR->notify(false);
+					return 0;
+				} else {
+					AR->notify(true);
+					return presumed_delta;
+				}
 			} else {
 				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
 				// cout << "k: rej dec" << endl;
@@ -1667,6 +1691,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 				// assert(s.pmf(obj)==postPMF);
 				// assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
+				AR->notify(false);
 				return 0.0L;
 			}
 		}
@@ -1941,7 +1966,7 @@ try_again:
 		switch( random_move ) { /// use try_again if move not attempted
 			break; case 0:
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
-						pmf_track += MetropolisOnK(s, obj, &AR_metroK);
+						pmf_track += MetropolisOnK(s, obj, r, &AR_metroK);
 				} else {
 					goto try_again;
 				}
