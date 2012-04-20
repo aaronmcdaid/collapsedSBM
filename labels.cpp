@@ -129,8 +129,12 @@ int main() {
 		}
 		kzs.push_back(make_pair(count_nonempties, make_pair(line_no, z)));
 		++ line_no;
+		assert(line_no == (int)kzs.size());
+		// if(line_no % 10000 == 0) PP(line_no);
 	}
 	PP2(N, kzs.size());
+
+	cerr << "loaded. about to sort. " << ELAPSED() << "s." << endl;
 
 	stable_sort(kzs.begin(), kzs.end(), sort_on_pair_first());
 
