@@ -210,6 +210,8 @@ struct ObjectiveFunction {
 	virtual ~ ObjectiveFunction() {}
 };
 struct ObjectiveFunction_Bernoulli : public ObjectiveFunction {
+	static long double beta_1; // = 1.0L; // prior
+	static long double beta_2; // = 1.0L; // prior
 	ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w);
 	virtual long double log2OneBlock(const long double edge_total, const long int pairs, bool isDiagonal) const;
 };
@@ -223,8 +225,6 @@ struct ObjectiveFunction_Poisson : public ObjectiveFunction {
 
 // Some stuff for the latentspace SBM model
 extern double ls_alpha_k;
-extern 		const long double beta_1; // = 1.0L; // prior
-extern 		const long double beta_2; // = 1.0L; // prior
 const double ls_prior_sigma_2 = 1; // TODO: fixed, or put a prior on it?
 double l2_likelihood( sbm :: State :: point_type near, sbm :: State :: point_type far, bool connected);
 

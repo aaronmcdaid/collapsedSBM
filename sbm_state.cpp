@@ -844,8 +844,6 @@ namespace sbm {
 		return pairs;
 	}
 	ObjectiveFunction_Bernoulli :: ObjectiveFunction_Bernoulli(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
-	const long double beta_1 = 1.0L; // prior
-	const long double beta_2 = 1.0L; // prior
 	long double ObjectiveFunction_Bernoulli :: log2OneBlock(const long double edge_total, const long int pairs, bool ) const { // virtual
 		if(pairs==0)
 			return 0.0L;
@@ -866,6 +864,8 @@ namespace sbm {
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	/*static*/ long double ObjectiveFunction_Poisson :: s = 1.0L;
 	/*static*/ long double ObjectiveFunction_Poisson :: theta = 1.0L;
+	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_1 = 1.0L; // prior
+	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_2 = 1.0L; // prior
 	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const long int p_b, bool /*isDiagonal*/) const { // virtual
 		if(p_b==0)
 			return 0.0L;

@@ -490,7 +490,7 @@ long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 	assert(successes >= 0);
 	const int failures = p_kl - y_kl;
 	assert(failures >= 0);
-	const long double draw = gsl_ran_beta(r, successes + sbm :: beta_1, failures + sbm :: beta_2) ;
+	const long double draw = gsl_ran_beta(r, successes + sbm :: ObjectiveFunction_Bernoulli :: beta_1, failures + sbm :: ObjectiveFunction_Bernoulli :: beta_2) ;
 	return draw;
 }
 
