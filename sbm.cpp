@@ -493,22 +493,26 @@ long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 	const long double draw = gsl_ran_beta(r, successes + sbm :: ObjectiveFunction_Bernoulli :: beta_1, failures + sbm :: ObjectiveFunction_Bernoulli :: beta_2) ;
 	return draw;
 }
+long double gamma_draw(const int p_kl, const int y_kl, gsl_rng *r) {
+	const long double s_post = sbm :: ObjectiveFunction_Poisson :: s + y_kl;
+	const long double phi_post = 1.0L / (1.0L/sbm :: ObjectiveFunction_Poisson :: theta + p_kl);
+	const long double draw = gsl_ran_gamma(r, s_post, phi_post);
+	return draw;
+}
 
 static
 bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r) {
 	assert(args_info.scf_flag);
 	if(s._k == 1)
 		return true;
-	// for now, only support unweighted networks.
-	// but I should try to support directed/undirected, and self/no-self
-	assert(!obj->weighted);
 
 	// draw for each of the diagonal entries
 	long double min_on_diagonal = 2.0;
 	for(int k=0; k<s._k; ++k) {
 		const long int y_kk = obj->relevantWeight      (k, k, &s._edgeCounts);
 		const long int p_kk = obj->numberOfPairsInBlock(k, k, &s.labelling);
-		const long double pi_kk = beta_draw(p_kk, y_kk, r);
+		const long double pi_kk = obj->weighted ? gamma_draw(p_kk, y_kk, r) : beta_draw(p_kk, y_kk, r);
+		PP3(p_kk, y_kk, pi_kk);
 		min_on_diagonal = min(min_on_diagonal, pi_kk);
 	}
 	long double max_off_diagonal = -1.0;
@@ -520,7 +524,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 				break;
 			const long int y_kl = obj->relevantWeight      (k, l, &s._edgeCounts);
 			const long int p_kl = obj->numberOfPairsInBlock(k, l, &s.labelling);
-			const long double pi_kl = beta_draw(p_kl, y_kl, r);
+			const long double pi_kl = obj->weighted ? gamma_draw(p_kl, y_kl, r) : beta_draw(p_kl, y_kl, r);
 			PP3(p_kl, y_kl, pi_kl);
 			max_off_diagonal = max(max_off_diagonal, pi_kl);
 		}
