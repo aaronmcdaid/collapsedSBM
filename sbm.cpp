@@ -249,7 +249,7 @@ format_flag_stack :: FormatFlagStack stack;
 static
 bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 	bool b;
-	if(log2(drand48()) < delta)
+	if(log2l(drand48()) < delta)
 		b = true;
 	else
 		b = false;
@@ -1727,7 +1727,6 @@ static long double EjectAbsorb_prop_prob_merge(const int small_k) {
 	;
 }
 static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
-	assert(args_info.scf_flag == 0);
 	assert(obj);
 	// cout << "EjectAbsorb" << endl;
 	// we propose either to split, or to merge, two communities.
@@ -1759,7 +1758,12 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		const long double reverse_proposal_probability = EjectAbsorb_prop_prob_split(s._k, n_jBoth, n_j1, n_j2);
 
 		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
-		if(log2l(drand48()) < acceptance_probability) { // accept
+
+		bool provisional_accept = acceptTest(acceptance_probability);
+		if(provisional_accept && args_info.scf_flag) {
+			provisional_accept = drawPiAndTest(s, obj, r);
+		}
+		if(provisional_accept) { // accept
 			AR->notify(true);
 			return post-pre;
 		} else { // reject, split 'em again
@@ -1772,8 +1776,7 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 			}
 			return 0.0;
 		}
-
-		return post-pre;
+		assert(1==2); // should never get here
 	} else {
 		// cout << "Eject" << endl;
 		// apply a split
@@ -1805,7 +1808,11 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		// PP3(pre,post, post-pre);
 
 		const long double acceptance_probability = post-pre - full_proposal_probability + reverse_proposal_probability;
-		if(log2l(drand48()) < acceptance_probability) { // accept
+		bool provisional_accept = acceptTest(acceptance_probability);
+		if(provisional_accept && args_info.scf_flag) {
+			provisional_accept = drawPiAndTest(s, obj, r);
+		}
+		if(provisional_accept) { // accept
 			AR->notify(true);
 			return post-pre;
 		} else { // reject
@@ -1818,6 +1825,7 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 			s.deleteClusterFromTheEnd();
 			return 0.0;
 		}
+		assert(1==2); // should never get here
 	}
 }
 
