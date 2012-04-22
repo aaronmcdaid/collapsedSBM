@@ -513,7 +513,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 		return true;
 
 	// draw for each of the diagonal entries
-	long double min_on_diagonal = 2.0;
+	long double min_on_diagonal = 1000000000.0;
 	for(int k=0; k<s._k; ++k) {
 		const long int y_kk = obj->relevantWeight      (k, k, &s._edgeCounts);
 		const long int p_kk = obj->numberOfPairsInBlock(k, k, &s.labelling);
@@ -535,6 +535,8 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 			max_off_diagonal = max(max_off_diagonal, pi_kl);
 		}
 	}
+	assert(max_off_diagonal > 0.0L);
+	assert(min_on_diagonal < 1000000000.0);
 	// PP2(min_on_diagonal, max_off_diagonal);
 	// assert(min_on_diagonal <= max_off_diagonal);
 	return min_on_diagonal > max_off_diagonal;
