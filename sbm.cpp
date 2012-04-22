@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
-		cout << "args_info.GT_vector_arg:<undefined>";
+		cout << "args_info.GT_vector_arg:<undefined>" << endl;
 	PP(args_info.model_scf_flag);
 	PP(args_info.scf_flag);
 	PP(args_info.assume_N_nodes_arg);
