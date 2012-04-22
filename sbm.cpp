@@ -44,6 +44,7 @@ static void runCEM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		, const sbm :: ObjectiveFunction * const obj
 		, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
 static long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, int k = -1);
+static bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r);
 
 gengetopt_args_info args_info;
 
@@ -259,8 +260,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative) {
-	assert(args_info.scf_flag == 0);
+long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative, gsl_rng *r) {
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
@@ -439,7 +439,13 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 		- proposalProbNew_log2 + proposalProbOld_log2
 		;
 
-	if(acceptTest(acceptanceProbability, AR)) {
+	bool provisional_accept = acceptTest(acceptanceProbability);
+	if(provisional_accept && args_info.scf_flag) {
+		const bool SCF_posterior_test = drawPiAndTest(s, obj, r);
+		provisional_accept = SCF_posterior_test;
+	}
+	AR->notify(provisional_accept);
+	if(provisional_accept) {
 		// how many nodes haven't actually moved?
 		int changed = 0;
 		for(int m = 0; m<M; m++) {
@@ -2001,7 +2007,7 @@ try_again:
 				}
 			break; case 2:
 				if(s.cluster_to_points_map.empty() && algo_m3) {
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very);
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
 				} else
 					goto try_again;
 			break; case 3:
