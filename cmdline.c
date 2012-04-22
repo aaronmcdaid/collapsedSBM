@@ -43,7 +43,7 @@ const char *gengetopt_args_info_help[] = {
   "      --seed=INT              seed to drand48() and gsl_rng_set  (default=`0')",
   "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
   "      --algo.metroK=INT       Use the simple Metropolis move on K  \n                                (default=`1')",
-  "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`1')",
+  "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`0')",
   "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
   "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
   "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
@@ -143,7 +143,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->GT_vector_orig = NULL;
   args_info->algo_metroK_arg = 1;
   args_info->algo_metroK_orig = NULL;
-  args_info->algo_1node_arg = 1;
+  args_info->algo_1node_arg = 0;
   args_info->algo_1node_orig = NULL;
   args_info->algo_gibbs_arg = 1;
   args_info->algo_gibbs_orig = NULL;
@@ -893,7 +893,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->algo_1node_arg), 
                  &(args_info->algo_1node_orig), &(args_info->algo_1node_given),
-                &(local_args_info.algo_1node_given), optarg, 0, "1", ARG_INT,
+                &(local_args_info.algo_1node_given), optarg, 0, "0", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.1node", '-',
                 additional_error))

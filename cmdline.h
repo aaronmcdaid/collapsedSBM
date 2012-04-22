@@ -61,7 +61,7 @@ struct gengetopt_args_info
   int algo_metroK_arg;	/**< @brief Use the simple Metropolis move on K (default='1').  */
   char * algo_metroK_orig;	/**< @brief Use the simple Metropolis move on K original value given at command line.  */
   const char *algo_metroK_help; /**< @brief Use the simple Metropolis move on K help description.  */
-  int algo_1node_arg;	/**< @brief Use the simple Metropolis on one node (default='1').  */
+  int algo_1node_arg;	/**< @brief Use the simple Metropolis on one node (default='0').  */
   char * algo_1node_orig;	/**< @brief Use the simple Metropolis on one node original value given at command line.  */
   const char *algo_1node_help; /**< @brief Use the simple Metropolis on one node help description.  */
   int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
