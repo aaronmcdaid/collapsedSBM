@@ -1611,7 +1611,11 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			+(LOG2GAMMA(postK * s._alpha) - LOG2GAMMA(postK * s._alpha + s._N) /*- postK*LOG2GAMMA(s._alpha)*/ )
 			-(LOG2GAMMA(preK * s._alpha) - LOG2GAMMA(preK  * s._alpha + s._N) /*- preK*LOG2GAMMA(s._alpha)*/ )
 			;
-		if(acceptTest(presumed_delta)) {
+		bool provisional_accept = acceptTest(presumed_delta);
+		if(provisional_accept && args_info.scf_flag) {
+			provisional_accept = drawPiAndTest(s, obj, r);
+		}
+		if(provisional_accept) {
 			// cout << "k: acc inc" << endl;
 			assert(s._k>preK);
 			// PP(s.pmf(obj) - prePMF);
@@ -1621,23 +1625,15 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			// PP(postPMF12 - prePMF12);
 			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
 
-			// --scf support
-			const bool SCF_posterior_test = (!args_info.scf_flag) || drawPiAndTest(s, obj, r);
-			if(!SCF_posterior_test) {
-				s.deleteClusterFromTheEnd();
-				assert(s._k==preK);
-				AR->notify(false);
-				return 0;
-			} else {
-				AR->notify(true);
-				return presumed_delta;
-			}
+			AR->notify(true);
+			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
 			s.deleteClusterFromTheEnd();
 			// assert(s.pmf(obj)==prePMF);
 			// assert(s.P_z_K()==prePMF12);
 			assert(s._k==preK);
+			AR->notify(false);
 			return 0.0L;
 		}
 	} else { // propose decrease
@@ -1677,29 +1673,16 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			// assert(VERYCLOSE(s.pmf(obj), postPMF));
 			// assert(postPMF > prePMF);
 			/// PP2(postPMF12 - prePMF12, presumed_delta);
-			if(acceptTest(presumed_delta)) {
-				// cout << "k: acc dec" << endl;
+			bool provisional_accept = acceptTest(presumed_delta);
+			if(provisional_accept && args_info.scf_flag) {
+				provisional_accept = drawPiAndTest(s, obj, r);
+			}
+			if(provisional_accept) {
 				assert(s._k<preK);
-				// assert(VERYCLOSE(s.pmf(obj) - prePMF, presumed_delta));
-
-				// --scf support
-				const bool SCF_posterior_test = (!args_info.scf_flag) || drawPiAndTest(s, obj, r);
-				if(!SCF_posterior_test) {
-					assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
-					s.appendEmptyCluster();
-					assert(s._k==preK);
-					AR->notify(false);
-					return 0;
-				} else {
-					AR->notify(true);
-					return presumed_delta;
-				}
+				AR->notify(true);
+				return presumed_delta;
 			} else {
-				assert(1==2); // it'll always like decreases, except maybe if the prior on K is an increasing function. // i.e. presumed_delta > 0
-				// cout << "k: rej dec" << endl;
 				s.appendEmptyCluster();
-				// assert(s.pmf(obj)==postPMF);
-				// assert(s.P_z_K()==prePMF12);
 				assert(s._k==preK);
 				AR->notify(false);
 				return 0.0L;
