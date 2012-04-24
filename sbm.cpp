@@ -518,7 +518,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 		const long int y_kk = obj->relevantWeight      (k, k, &s._edgeCounts);
 		const long int p_kk = obj->numberOfPairsInBlock(k, k, &s.labelling);
 		const long double pi_kk = obj->weighted ? gamma_draw(p_kk, y_kk, r) : beta_draw(p_kk, y_kk, r);
-		PP3(p_kk, y_kk, pi_kk);
+		//PP3(p_kk, y_kk, pi_kk);
 		min_on_diagonal = min(min_on_diagonal, pi_kk);
 	}
 	long double max_off_diagonal = -1.0;
@@ -531,7 +531,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 			const long int y_kl = obj->relevantWeight      (k, l, &s._edgeCounts);
 			const long int p_kl = obj->numberOfPairsInBlock(k, l, &s.labelling);
 			const long double pi_kl = obj->weighted ? gamma_draw(p_kl, y_kl, r) : beta_draw(p_kl, y_kl, r);
-			PP3(p_kl, y_kl, pi_kl);
+			//PP3(p_kl, y_kl, pi_kl);
 			max_off_diagonal = max(max_off_diagonal, pi_kl);
 		}
 	}
