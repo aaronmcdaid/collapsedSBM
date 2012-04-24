@@ -54,7 +54,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.sbm.cem          Classification EM (CEM) for the SBM  \n                                (default=off)",
   "      --stringIDs             string IDs in the input  (default=off)",
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
-  "      --printEveryNIters=INT  How often to print an update  (default=`10')",
+  "      --printEveryNIters=INT  How often to print an update  (default=`1000')",
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
   "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
   "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
@@ -159,7 +159,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_sbm_cem_flag = 0;
   args_info->stringIDs_flag = 0;
   args_info->mega_flag = 0;
-  args_info->printEveryNIters_arg = 10;
+  args_info->printEveryNIters_arg = 1000;
   args_info->printEveryNIters_orig = NULL;
   args_info->assume_N_nodes_arg = 0;
   args_info->assume_N_nodes_orig = NULL;
@@ -1021,7 +1021,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->printEveryNIters_arg), 
                  &(args_info->printEveryNIters_orig), &(args_info->printEveryNIters_given),
-                &(local_args_info.printEveryNIters_given), optarg, 0, "10", ARG_INT,
+                &(local_args_info.printEveryNIters_given), optarg, 0, "1000", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "printEveryNIters", '-',
                 additional_error))
