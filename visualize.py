@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import collections
 import pylab
+import pickle
 import random
 import networkx as nx
 
@@ -41,10 +42,22 @@ def process_z_unswitched():
 
 def main():
 	all_data = process_z_unswitched()
-	for a in all_data:
-		print a
+	print "loaded"
+	plot(all_data)
+	pylab.savefig('ordered_adjacency.eps', format='eps')
+	print ' made ordered_adjacency.eps'
+	plot_layout_clustered(all_data)
+	pylab.savefig('layout_clustered.eps', format='eps')
+	print ' made layout_clustered.eps'
+
+def plot_layout_clustered(all_data):
+	G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.Graph())
+	mapping=dict([ ( sorted(G.nodes())[n] , cl ) for n, cl, a, b in all_data])
+	pos = pickle.load(open('../../posKarate.pickle'))
+	pylab.cla(); nx.draw(G, pos=pos, node_color=[['yellow','lightgreen','lightblue','pink','red','blue','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey'][mapping[n]] for n in G.nodes()], width=[G.get_edge_data(e1,e2)['weight'] for e1, e2 in G.edges()])
 
 def plot(all_data):
+	all_data = sorted(all_data, key=lambda a: (a[1],a[0]))
 	#G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.DiGraph())
 	#G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter='\t', create_using=nx.DiGraph())
 	#G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.DiGraph())
@@ -56,7 +69,6 @@ def plot(all_data):
 	print "N=",N
 	assert node_set == sorted([node_set[a[0]] for a in all_data])
 	mat=nx.convert.to_numpy_matrix(G, nodelist=[node_set[a[0]] for a in all_data])
-	#mat=[[random.randint(0,1) for i in range(N)] for j in range(N)]
 	pylab.cla(); pylab.imshow(pylab.asarray(1-mat), cmap=pylab.cm.gray, interpolation='nearest')
 
 	current_cluster = all_data[0][1]
