@@ -53,8 +53,22 @@ def main():
 def plot_layout_clustered(all_data):
 	G=nx.read_weighted_edgelist('../../edge_list.txt', nodetype=int, delimiter=' ', create_using=nx.Graph())
 	mapping=dict([ ( sorted(G.nodes())[n] , cl ) for n, cl, a, b in all_data])
-	pos = pickle.load(open('../../posKarate.pickle'))
-	pylab.cla(); nx.draw(G, pos=pos, node_color=[['yellow','lightgreen','lightblue','pink','red','blue','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey'][mapping[n]] for n in G.nodes()], width=[G.get_edge_data(e1,e2)['weight'] for e1, e2 in G.edges()])
+	pos = pickle.load(open('../../pos.pickle'))
+	pylab.cla();
+	#nx.draw_networkx_edges(G, pos=pos, ax=None) #, width=[G.get_edge_data(e1,e2)['weight'] for e1, e2 in G.edges()])
+	nx.draw(G, pos=pos,
+			font_size=10,
+			node_size=1
+			)
+	for node in G.nodes():
+		node_color=['yellow','lightgreen','lightblue','pink','red','blue','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey','grey'][mapping[node]] 
+		node_shape=['s','o','^','>','v','<','d','p','h','8','','','','','','','','','','','','','','','',''][mapping[node]] 
+		nx.draw_networkx_nodes(G, pos=pos,
+				nodelist=[node],
+				node_color = node_color,
+				node_shape = node_shape, # so^>v<dph8
+				node_size=(850 if node_shape=='^' else (400 if node_shape=='o' else 500))
+			)
 
 def plot(all_data):
 	all_data = sorted(all_data, key=lambda a: (a[1],a[0]))
