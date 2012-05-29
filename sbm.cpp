@@ -1584,6 +1584,7 @@ void M3_old(sbm :: State &s) {
 }
 #endif
 static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction *obj __attribute__((unused)), gsl_rng* r, AcceptanceRate *AR) {
+	assert(s.cluster_to_points_map.empty());
 	/// const long double prePMF = s.pmf(obj);
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
@@ -1894,16 +1895,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	if(args_info.latentspace_flag) {
 		assert(s._k == commandLineK);
 		assert(s.cluster_to_points_map.empty());
-		for(int k = 0; k < s._k; ++k) {
-			vector<sbm :: State :: point_type> initial_random_locations(s._N);
-			For(dbl, initial_random_locations) {
-				for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
-					dbl->at(d) = gsl_ran_gaussian(r, 1);
-				}
+		s.cluster_to_points_map.resize(s._N);
+
+		For(dbl, s.cluster_to_points_map) {
+			for(int d = 0; d < sbm :: State :: point_type :: dimensionality; ++d) {
+				dbl->at(d) = gsl_ran_gaussian(r, 1);
 			}
-			s.cluster_to_points_map = initial_random_locations;
 		}
-		assert((int)s.cluster_to_points_map.size() == s._N);
 		cout << "assigned initial random positions for the latent space model" << endl;
 	}
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
@@ -1959,13 +1957,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 try_again:
 		int random_move = static_cast<int>(drand48() * 7);
 		switch( random_move ) { /// use try_again if move not attempted
-			break; case 0:
+			break; case 0: // can NOT handle LSSBM
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, r, &AR_metroK);
 				} else {
 					goto try_again;
 				}
-			break; case 1:
+			break; case 1: // CAN handle LSSBM
 				if(algo_gibbs) {
 #if 0
 					{
@@ -1990,29 +1988,29 @@ try_again:
 					}
 #endif
 				}
-			break; case 2:
+			break; case 2: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && algo_m3) {
 						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
 				} else
 					goto try_again;
-			break; case 3:
+			break; case 3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
 				} else
 					goto try_again;
-			break; case 4:
+			break; case 4: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_1node_arg) {
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
 				} else
 					goto try_again;
-			break; case 5:
+			break; case 5: // CAN handle LSSBM
 				if(args_info.algo_lspos_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
 				} else
 					goto try_again;
-			break; case 6:
+			break; case 6: // CAN handle LSSBM
 				if(args_info.algo_lsm3_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
