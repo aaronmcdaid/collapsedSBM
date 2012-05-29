@@ -431,7 +431,7 @@ namespace sbm {
 			return;
 		for(int n=0; n < s->_N; n++) {
 			const int k = s->labelling.cluster_id.at(n);
-			sbm :: State :: point_type current_position = s->cluster_to_points_map.at(k).at(n);
+			sbm :: State :: point_type current_position = s->cluster_to_points_map.at(n);
 			cout << "\"" << s->_g->node_name_as_string(n) << "\"," << k << current_position << endl;
 		}
 	}
@@ -681,7 +681,7 @@ namespace sbm {
 			}
 		}
 		if(!this->cluster_to_points_map.empty()) { // latentspace on the diagonal,
-			assert((int)this->cluster_to_points_map.size() == this->_k);
+			assert((int)this->cluster_to_points_map.size() == this->_N);
 			assert(!obj->weighted);
 			// first, assume every pairs of nodes inside a cluster is *disconnected*, then correct that later.
 			long double ls_bits = 0.0L;
@@ -698,8 +698,8 @@ namespace sbm {
 						if(!obj->directed)
 							assert(n<=m);
 						// PP2(__LINE__, n,m);
-						sbm :: State :: point_type pn = this->cluster_to_points_map.at(k).at(n);
-						sbm :: State :: point_type pm = this->cluster_to_points_map.at(k).at(m);
+						sbm :: State :: point_type pn = this->cluster_to_points_map.at(n);
+						sbm :: State :: point_type pm = this->cluster_to_points_map.at(m);
 						/*
 						 * P(connect) = exp(ls_alpha_k - dist_2)              / (1 + exp(ls_alpha_k - dist_2));
 						 * P(disc   ) = (1 + exp(ls_alpha_k - dist_2))/(1 + exp(ls_alpha_k - dist_2)) - exp(ls_alpha_k - dist_2)              / (1 + exp(ls_alpha_k - dist_2));
@@ -726,8 +726,8 @@ namespace sbm {
 					if(k !=km)
 						continue;
 
-					sbm :: State :: point_type pn = this->cluster_to_points_map.at(k).at(n);
-					sbm :: State :: point_type pm = this->cluster_to_points_map.at(k).at(m);
+					sbm :: State :: point_type pn = this->cluster_to_points_map.at(n);
+					sbm :: State :: point_type pm = this->cluster_to_points_map.at(m);
 					const double l2_p_DISconnecting = l2_likelihood( pn, pm, false);
 					const double l2_p_connecting    = l2_likelihood( pn, pm, true);
 
@@ -744,8 +744,7 @@ namespace sbm {
 			}
 			if(1){ // prior on the positions
 				for(int n=0; n < this->_N; ++n) {
-					const int z_n = this->labelling.cluster_id.at(n);
-					sbm :: State :: point_type p = this->cluster_to_points_map.at(z_n).at(n);
+					sbm :: State :: point_type p = this->cluster_to_points_map.at(n);
 					sbm :: State :: point_type pzero;
 					pzero.zero();
 					const double dist_2 = pzero.dist_2(p);

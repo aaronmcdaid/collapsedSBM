@@ -139,7 +139,7 @@ struct State {
 	int _k; // the number of clusters (including empty ones)
 #define DIMENSIONALITY 2
 	typedef my_array<DIMENSIONALITY> point_type;
-	std :: vector< std :: vector<point_type> > cluster_to_points_map; // if non-empty, the LatentSpaceSBM is in effect
+	std :: vector<point_type> cluster_to_points_map; // if non-empty, the LatentSpaceSBM is in effect
 
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;

@@ -612,7 +612,6 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		for(int k = 0; k < pre_k; ++k) {
 			bits_latent_space_for_each_cluster.push_back(my_likelihood(n , s, obj, k));
 		}
-		assert(bits_latent_space_for_each_cluster.size() == s.cluster_to_points_map.size());
 		assert((int)bits_latent_space_for_each_cluster.size() == pre_k);
 	}
 
@@ -739,7 +738,7 @@ struct ANormalDistribution {
 			assert(s.labelling.cluster_id.at(m) == k);
 			const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
 			sum_weight_in_this_cluster += sum_weight_on_this_rel;
-			sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
+			sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
 			assert(sbm :: is_integer(sum_weight_on_this_rel));
 			switch((int)sum_weight_on_this_rel) {
 				break; case 2: assert(obj->directed); this->mean += neighbours_position; this->mean += neighbours_position;
@@ -768,7 +767,7 @@ static long double my_likelihood(const int n, sbm :: State &s, const sbm :: Obje
 	if(k==-1)
 		k = s.labelling.cluster_id.at(n);
 	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
-	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(k).at(n);
+	sbm :: State :: point_type current_position = s.cluster_to_points_map.at(n);
 	double l2_bits = 0.0L;
 	if(1){ // P( position | sigma) - the prior on the positions
 		sbm :: State :: point_type pzero;
@@ -782,7 +781,7 @@ static long double my_likelihood(const int n, sbm :: State &s, const sbm :: Obje
 		const int32_t m = *mp;
 		if(n==m)
 			continue;
-		sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
+		sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
 		const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
 		assert(sbm :: is_integer(sum_weight_on_this_rel));
 		switch(obj->directed) {
@@ -865,7 +864,7 @@ long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const 
 			const int32_t m = *mp;
 			if(n==m)
 				continue;
-			const sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(k).at(m);
+			const sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
 			const long double dist_2 = proposed_new_location.dist_2(neighbours_position);
 			const long double this_is_what_is_actually_subtracted = -log2l(1+expl(sbm :: ls_alpha_k - dist_2));
 			acceptance_prob += this_is_what_is_actually_subtracted;
@@ -874,7 +873,7 @@ long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const 
 		assert(acceptance_prob <= 0.0);
 
 		if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
-			s.cluster_to_points_map.at(k).at(n) = proposed_new_location;
+			s.cluster_to_points_map.at(n) = proposed_new_location;
 			break;
 		}
 	}
@@ -892,7 +891,7 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 	//     - calculate the posterior, based on ALL-cluster-mates
 
 	// const long double pre = s.pmf(obj);
-	assert(s._k == (int)s.cluster_to_points_map.size());
+	assert(s._N == (int)s.cluster_to_points_map.size());
 	assert(!obj->weighted);
 	assert(!obj->selfloops); // I think I'll never like this!
 
@@ -914,7 +913,7 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 }
 pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int n, const int left, const int right) {
 	assert(!obj->weighted && !obj->selfloops && !obj->directed);
-	assert((int)s.cluster_to_points_map.size() == s._k);
+	assert((int)s.cluster_to_points_map.size() == s._N);
 
 	// given a node, and the two candidate communities:
 	//    place it at the mean of its neighbours
@@ -925,7 +924,7 @@ pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, cons
 	assert(s.labelling.cluster_id.at(n) == temp_cluster_id);
 	s.moveNodeAndInformOfEdges(n, left);
 	ANormalDistribution normpdf_left(n, s, obj); // density will be near the neighbours of n, and it incorporates the prior sigma
-	s.cluster_to_points_map.at(left).at(n) = normpdf_left.mean;
+	s.cluster_to_points_map.at(n) = normpdf_left.mean;
 	long double pmf_left = s.pmf(obj);
 
 	s.moveNodeAndInformOfEdges(n, temp_cluster_id);
@@ -933,7 +932,7 @@ pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, cons
 	assert(s.labelling.cluster_id.at(n) == temp_cluster_id);
 	s.moveNodeAndInformOfEdges(n, right);
 	ANormalDistribution normpdf_right(n, s, obj); // density will be near the neighbours of n, and it incorporates the prior sigma
-	s.cluster_to_points_map.at(right).at(n) = normpdf_right.mean;
+	s.cluster_to_points_map.at(n) = normpdf_right.mean;
 	long double pmf_right = s.pmf(obj);
 
 	s.moveNodeAndInformOfEdges(n, temp_cluster_id);
@@ -967,14 +966,13 @@ tryagain:
 
 	// store the old states
 	const std :: vector< int > old_cluster_ids = s.labelling.cluster_id;
-	const std :: vector< std :: vector<sbm :: State :: point_type> > old_cluster_to_points_map = s.cluster_to_points_map;
+	const std :: vector<sbm :: State :: point_type> old_cluster_to_points_map = s.cluster_to_points_map;
 
 	// move into the temporary cluster
 	vector<int> both_sets_of_nodes;
 	const int temp_cluster_id = s._k;
 	s.appendEmptyCluster();
 	sbm :: State :: point_type pzero; pzero.zero();
-	s.cluster_to_points_map.push_back( vector<sbm :: State :: point_type> (s._N, pzero) ) ; // give them a pretend location at the origin
 	for(int i = 0; i<s._N; i++) {
 		if(s.labelling.cluster_id.at(i) == left || s.labelling.cluster_id.at(i) == right) {
 			s.moveNodeAndInformOfEdges(i, temp_cluster_id);
@@ -998,18 +996,16 @@ tryagain:
 		}
 		s.moveNodeAndInformOfEdges(*one_node, orig_cluster_id);
 		ANormalDistribution normpdf_selected(*one_node, s, obj);
-		l2_reverse_prop += normpdf_selected.pdf_prop(s.cluster_to_points_map.at(orig_cluster_id).at(*one_node));
+		l2_reverse_prop += normpdf_selected.pdf_prop(s.cluster_to_points_map.at(*one_node));
 	}
 	// PP(l2_reverse_prop);
 
 	{ // revert for verification, and then put things back
 		s.deleteClusterFromTheEnd();
-		s.cluster_to_points_map.pop_back();
 		assert(s.cluster_to_points_map.size() == old_cluster_to_points_map.size());
 		s.cluster_to_points_map = old_cluster_to_points_map;
 		const long double verify_pre = s.pmf(obj);
 		assert(VERYCLOSE(pre, verify_pre));
-		s.cluster_to_points_map.push_back( vector<sbm :: State :: point_type> (s._N, pzero) ) ; // give them a pretend location at the origin
 		s.appendEmptyCluster();
 	}
 
@@ -1036,7 +1032,7 @@ tryagain:
 		ANormalDistribution normpdf_selected(*one_node, s, obj);
 		sbm :: State :: point_type new_position = normpdf_selected.draw(r);
 		l2_random_prop += normpdf_selected.pdf_prop(new_position);
-		s.cluster_to_points_map.at(s.labelling.cluster_id.at(*one_node)).at(*one_node) = new_position;
+		s.cluster_to_points_map.at(*one_node) = new_position;
 		// PP2(__LINE__, l2_random_prop);
 	}
 	// PP2(__LINE__, l2_random_prop);
@@ -1044,7 +1040,6 @@ tryagain:
 
 	// delete the temporary community, we don't need it any more
 	s.deleteClusterFromTheEnd();
-	s.cluster_to_points_map.pop_back();
 	assert(s.cluster_to_points_map.size() == old_cluster_to_points_map.size());
 
 	// now to decide whether to keep this (accept) or to revert (reject)
@@ -1906,9 +1901,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					dbl->at(d) = gsl_ran_gaussian(r, 1);
 				}
 			}
-			s.cluster_to_points_map.push_back(initial_random_locations);
+			s.cluster_to_points_map = initial_random_locations;
 		}
-		assert((int)s.cluster_to_points_map.size() == s._k);
+		assert((int)s.cluster_to_points_map.size() == s._N);
 		cout << "assigned initial random positions for the latent space model" << endl;
 	}
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
@@ -1957,9 +1952,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				const int cl2 = static_cast<int>(s._k * drand48());
 				if(cl1 != cl2) {
 					s.swapClusters(cl1,cl2);
-					if(!s.cluster_to_points_map.empty()) {
-						swap (s.cluster_to_points_map.at(cl1),s.cluster_to_points_map.at(cl2));
-					}
 				}
 			}
 		}
