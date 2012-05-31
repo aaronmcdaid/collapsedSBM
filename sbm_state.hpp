@@ -4,6 +4,7 @@
 #include <list>
 #include <vector>
 #include <set>
+#include <map>
 #include <unordered_map>
 #include <iostream>
 #include <gsl/gsl_sf.h>
@@ -108,6 +109,14 @@ public:
 			this->at(i) += o.at(i);
 		}
 		return *this;
+	}
+	bool operator == (const my_array &o) const {
+		for(size_t i = 0; i<d; ++i) {
+			if(this->at(i) != o.at(i))
+				return false;
+		}
+		return true;
+
 	}
 };
 template<int d>
