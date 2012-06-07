@@ -779,31 +779,38 @@ static long double my_likelihood(const int n, sbm :: State &s, const sbm :: Obje
 		const double ln_prior_position = - dist_2 / (2* sbm :: ls_prior_sigma_2);
 		const double l2_prior_position = M_LOG2E * ln_prior_position;
 		l2_bits += l2_prior_position;
+		// PP2("prior ", l2_bits);
 	}
 	For(mp, CL->get_members()) {
 		const int32_t m = *mp;
-		if(n==m)
+		if(n==m) {
 			continue;
+		}
 		sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
 		const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
+		// PP3(n,m,sum_weight_on_this_rel);
 		assert(sbm :: is_integer(sum_weight_on_this_rel));
+		long double delta_l2_bits;
 		switch(obj->directed) {
 			break; case true:
 				switch((int)sum_weight_on_this_rel) {
-					break; case 0: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, false);
-					break; case 1: l2_bits += l2_likelihood( current_position, neighbours_position, false) + l2_likelihood( current_position, neighbours_position, true);
-					break; case 2: l2_bits += 2.0L * l2_likelihood( current_position, neighbours_position, true);
+					break; case 0: delta_l2_bits = 2.0L * l2_likelihood( current_position, neighbours_position, false);
+					break; case 1: delta_l2_bits = l2_likelihood( current_position, neighbours_position, false) + l2_likelihood( current_position, neighbours_position, true);
+					break; case 2: delta_l2_bits = 2.0L * l2_likelihood( current_position, neighbours_position, true);
 					break; default: assert(1==2);
 				}
 			break; case false:
 				switch((int)sum_weight_on_this_rel) {
-					break; case 0: l2_bits += l2_likelihood( current_position, neighbours_position, false);
-					break; case 1: l2_bits += l2_likelihood( current_position, neighbours_position, true);
+					break; case 0: delta_l2_bits = l2_likelihood( current_position, neighbours_position, false);
+					break; case 1: delta_l2_bits = l2_likelihood( current_position, neighbours_position, true);
 					break; default: assert(1==2);
 				}
 		}
+		// PP(delta_l2_bits);
+		l2_bits += delta_l2_bits;
 	}
 	assert(isfinite(l2_bits));
+	// PP(l2_bits);
 	return l2_bits;
 }
 #if 0
@@ -843,46 +850,81 @@ long double update_one_nodes_position(const int n, sbm :: State &s, const sbm ::
 
 }
 #endif
-long double gibbs_update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *, gsl_rng * r) {
-	// cout << "gibbs_update_one_nodes_position" << endl;
+long double MH_update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
+	// cout << "MH_update_one_nodes_position" << endl;
 	// PP(n);
 	const int k = s.labelling.cluster_id.at(n);
-	const long double current_likelihood = my_likelihood(n, s , obj, k);
 
-	ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n, and incorporates the prior
+	// ANormalDistribution normpdf(n, s, obj); // density will be near the neighbours of n, and incorporates the prior
+	ANormalDistribution prior_only;
+	for(int i = 0; i < DIMENSIONALITY; ++i) {
+		assert(prior_only.mean.at(i) == 0.0);
+	}
+	assert(prior_only.variance == 1.0);
 	// for(int d = 0; d<DIMENSIONALITY; ++d) { PP(normpdf.mean.at(d)); }
-	int count_attempts = 0;
 	// cout << "start the attempts to find a new position" << endl;
-	while(1) {
-		++count_attempts;
-		if(count_attempts > 10)
-			PP(count_attempts);
-		const sbm :: State :: point_type proposed_new_location = normpdf.draw(r);
+	const sbm :: State :: point_type original_location = s.cluster_to_points_map.at(n);
 
-		long double acceptance_prob = 0.0L;
-		assert(acceptance_prob <= 0.0);
+	const sbm :: State :: point_type proposed_new_location = prior_only.draw(r);
+	const long double new_prior_with_edges = prior_only.pdf_prop(proposed_new_location);
+	const long double old_prior_with_edges = prior_only.pdf_prop(original_location);
 
-		const sbm :: Cluster *CL = s.labelling.clusters.at(k);
-		For(mp, CL->get_members()) {
-			const int32_t m = *mp;
-			if(n==m)
-				continue;
-			const sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
-			const long double dist_2 = proposed_new_location.dist_2(neighbours_position);
-			const long double this_is_what_is_actually_subtracted = -log2l(1+expl(sbm :: ls_alpha_k - dist_2));
-			acceptance_prob += this_is_what_is_actually_subtracted;
-			assert(this_is_what_is_actually_subtracted <= 0);
+	long double acceptance_prob = 0.0L;
+	long double sort_of_reverse_acceptance_prob = 0.0L;
+	// assert(acceptance_prob <= 0.0);
+
+	const sbm :: Cluster *CL = s.labelling.clusters.at(k);
+	For(mp, CL->get_members()) {
+		const int32_t m = *mp;
+		if(n==m) {
+			assert(!obj->selfloops);
+			continue;
 		}
-		assert(acceptance_prob <= 0.0);
+		const sbm :: State :: point_type neighbours_position = s.cluster_to_points_map.at(m);
+		const long double old_dist_2 = original_location.dist_2(neighbours_position);
+		const long double dist_2 = proposed_new_location.dist_2(neighbours_position);
+		const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
 
-		if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob ) {
-			s.cluster_to_points_map.at(n) = proposed_new_location;
-			break;
+		// I'll first make the calculations as if there are no edges, then correct for that if necessary
+		const long double disconnected_prob = -log2l(1+expl(sbm :: ls_alpha_k - dist_2));
+		acceptance_prob += disconnected_prob * (obj->directed ? 2 : 1);
+		const long double old_disconnected_prob = -log2l(1+expl(sbm :: ls_alpha_k - old_dist_2));
+		sort_of_reverse_acceptance_prob += old_disconnected_prob * (obj->directed ? 2 : 1);
+
+		if(sum_weight_on_this_rel > 0) {
+			const long double this_is_what_is_actually_subtracted = -log2l(1+expl(dist_2-sbm :: ls_alpha_k)) - disconnected_prob;
+			acceptance_prob += this_is_what_is_actually_subtracted * sum_weight_on_this_rel;
+
+			const long double old_this_is_what_is_actually_subtracted = -log2l(1+expl(old_dist_2-sbm :: ls_alpha_k)) - old_disconnected_prob;
+			sort_of_reverse_acceptance_prob += old_this_is_what_is_actually_subtracted * sum_weight_on_this_rel;
 		}
 	}
-	const long double new_likelihood = my_likelihood(n, s , obj, k);
-	// PP3(new_likelihood, current_likelihood, count_attempts);
-	return new_likelihood - current_likelihood;
+
+	if(1)
+	{ // sanity check
+		assert(s.cluster_to_points_map.at(n) == original_location);
+		const long double current_likelihood = my_likelihood(n, s , obj, k);
+		s.cluster_to_points_map.at(n) = proposed_new_location;
+		const long double new_likelihood = my_likelihood(n, s , obj, k);
+		assert(VERYCLOSE(new_likelihood    , new_prior_with_edges + acceptance_prob));
+		assert(VERYCLOSE(current_likelihood, old_prior_with_edges + sort_of_reverse_acceptance_prob));
+		assert(VERYCLOSE(new_likelihood - current_likelihood, new_prior_with_edges - old_prior_with_edges + acceptance_prob - sort_of_reverse_acceptance_prob));
+		s.cluster_to_points_map.at(n) = original_location;
+	}
+	// PP(acceptance_prob);
+
+	// NOTE on Metropolis-Hastings here.
+	// The proposal probability is the prior, and hence instead of
+	// dividing by the prior, we just ignore it when calculating the posterior density
+	assert(isfinite(acceptance_prob - sort_of_reverse_acceptance_prob));
+	if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob - sort_of_reverse_acceptance_prob ) {
+		s.cluster_to_points_map.at(n) = proposed_new_location;
+		AR->notify(true);
+		return new_prior_with_edges - old_prior_with_edges + acceptance_prob - sort_of_reverse_acceptance_prob;
+	} else {
+		AR->notify(false);
+		return 0.0;
+	}
 }
 
 long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *ar, gsl_rng * r) {
@@ -905,7 +947,7 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 		const std :: list<int> & mem = CL->get_members();
 		For(n, mem) {
 			//l2_delta_bits += update_one_nodes_position(n, s, obj, ar, r);
-			l2_delta_bits += gibbs_update_one_nodes_position(*n, s, obj, ar, r);
+			l2_delta_bits += MH_update_one_nodes_position(*n, s, obj, ar, r);
 		}
 	}
 
