@@ -71,6 +71,7 @@ namespace sbm {
 				swap(eps.first, eps.second);
 				this->sum_weights_BOTH_directions__[ eps ] += w;
 			}
+
 		}
 		assert(w_verify == this->total_edge_weight);
 	}
