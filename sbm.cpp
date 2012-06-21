@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_lspos_arg);
 	PP(args_info.algo_lsm3_arg);
 	PP(args_info.uniformK_flag);
+	PP(args_info.save_lsz_arg);
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
@@ -1973,8 +1974,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 */
 
 	ofstream * save_z_fstream = NULL;
+	ofstream * save_lsz_fstream = NULL;
 	if(args_info.save_z_arg[0]) {
 		save_z_fstream = new ofstream(args_info.save_z_arg);
+	}
+	if(args_info.save_lsz_arg[0]) {
+		save_lsz_fstream = new ofstream(args_info.save_lsz_arg);
+		*save_lsz_fstream << "N:\t" << s._N << "\t\t" << endl;
 	}
 	for(int i=1; i<=iterations; i++) {
 		cout
@@ -2132,9 +2138,30 @@ try_again:
 			}
 			*save_z_fstream << endl;
 		}
+		if(i*2 >= iterations
+				&& save_lsz_fstream
+				&& i % args_info.printEveryNIters_arg == 0
+			) {
+			// print the iteration number and also, for each node,
+			//   its colour and its position.
+			// Note: The first line of this file will record the number of nodes.
+			for(int n=0; n < s._N; n++) {
+				const std :: string node_name = s._g->node_name_as_string(n);
+				*save_lsz_fstream
+					<< '\"' << node_name << '\"'
+					<< '\t' << s.labelling.cluster_id.at(n);
+				sbm :: State :: point_type position = s.cluster_to_points_map.at(n);
+				for(int d = 0; d<DIMENSIONALITY; d++)
+					*save_lsz_fstream << '\t' << position.at(d);
+				*save_lsz_fstream
+					<< endl;
+			}
+		}
 	}
 	if(save_z_fstream)
 	       save_z_fstream->close();
+	if(save_lsz_fstream)
+	       save_lsz_fstream->close();
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 }

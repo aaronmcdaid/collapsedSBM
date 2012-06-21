@@ -119,6 +119,9 @@ struct gengetopt_args_info
   const char *algo_lsm3_help; /**< @brief Algo: LSSBM MS-like help description.  */
   int uniformK_flag;	/**< @brief Use a Uniform prior for K (default=off).  */
   const char *uniformK_help; /**< @brief Use a Uniform prior for K help description.  */
+  char * save_lsz_arg;	/**< @brief save positions and colors (default='').  */
+  char * save_lsz_orig;	/**< @brief save positions and colors original value given at command line.  */
+  const char *save_lsz_help; /**< @brief save positions and colors help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -153,6 +156,7 @@ struct gengetopt_args_info
   unsigned int algo_lspos_given ;	/**< @brief Whether algo.lspos was given.  */
   unsigned int algo_lsm3_given ;	/**< @brief Whether algo.lsm3 was given.  */
   unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
+  unsigned int save_lsz_given ;	/**< @brief Whether save.lsz was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */
