@@ -32,3 +32,4 @@ option  "lsalpha"            - "Latestspace alpha ('density')"      float       
 option  "algo.lspos"        - "Algo: LSSBM positions"                    int       default="0" no
 option  "algo.lsm3"         - "Algo: LSSBM MS-like"                      int       default="0" no
 option  "uniformK"           u "Use a Uniform prior for K"               flag       off
+option  "save.lsz"           - "save positions and colors"          string        default="" no

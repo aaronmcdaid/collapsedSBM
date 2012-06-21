@@ -65,6 +65,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.lspos=INT        Algo: LSSBM positions  (default=`0')",
   "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
   "  -u, --uniformK              Use a Uniform prior for K  (default=off)",
+  "      --save.lsz=STRING       save positions and colors  (default=`')",
     0
 };
 
@@ -124,6 +125,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_lspos_given = 0 ;
   args_info->algo_lsm3_given = 0 ;
   args_info->uniformK_given = 0 ;
+  args_info->save_lsz_given = 0 ;
 }
 
 static
@@ -179,6 +181,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_lsm3_arg = 0;
   args_info->algo_lsm3_orig = NULL;
   args_info->uniformK_flag = 0;
+  args_info->save_lsz_arg = gengetopt_strdup ("");
+  args_info->save_lsz_orig = NULL;
   
 }
 
@@ -220,6 +224,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_lspos_help = gengetopt_args_info_help[30] ;
   args_info->algo_lsm3_help = gengetopt_args_info_help[31] ;
   args_info->uniformK_help = gengetopt_args_info_help[32] ;
+  args_info->save_lsz_help = gengetopt_args_info_help[33] ;
   
 }
 
@@ -323,6 +328,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->lsalpha_orig));
   free_string_field (&(args_info->algo_lspos_orig));
   free_string_field (&(args_info->algo_lsm3_orig));
+  free_string_field (&(args_info->save_lsz_arg));
+  free_string_field (&(args_info->save_lsz_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -424,6 +431,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.lsm3", args_info->algo_lsm3_orig, 0);
   if (args_info->uniformK_given)
     write_into_file(outfile, "uniformK", 0, 0 );
+  if (args_info->save_lsz_given)
+    write_into_file(outfile, "save.lsz", args_info->save_lsz_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -715,6 +724,7 @@ cmdline_parser_internal (
         { "algo.lspos",	1, NULL, 0 },
         { "algo.lsm3",	1, NULL, 0 },
         { "uniformK",	0, NULL, 'u' },
+        { "save.lsz",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -1122,6 +1132,20 @@ cmdline_parser_internal (
                 &(local_args_info.algo_lsm3_given), optarg, 0, "0", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.lsm3", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* save positions and colors.  */
+          else if (strcmp (long_options[option_index].name, "save.lsz") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->save_lsz_arg), 
+                 &(args_info->save_lsz_orig), &(args_info->save_lsz_given),
+                &(local_args_info.save_lsz_given), optarg, 0, "", ARG_STRING,
+                check_ambiguity, override, 0, 0,
+                "save.lsz", '-',
                 additional_error))
               goto failure;
           
