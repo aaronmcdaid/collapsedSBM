@@ -27,6 +27,26 @@ all_data.ts = all_timepoints
 
 all_data.ts[[1]]
 all_data.ts[[timepoints]]
+sum((all_data.ts[[1]] - all_data.ts[[timepoints]])**2)
 
 library(MCMCpack)
-procrustes(all_data.ts[[timepoints]] , all_data.ts[[1]])$X.new
+set.seed(2012)
+
+newone = procrustes(all_data.ts[[timepoints]] , all_data.ts[[1]])$X.new
+
+running_total = all_data.ts[[1]]
+for(firstrun in 2:timepoints) {
+# for(firstrun in 2:10) {
+	print(c('firstrun ', firstrun))
+	source = running_total / (firstrun-1)
+	print(source)
+
+	print(sum((all_data.ts[[firstrun]] - source)**2))
+
+	newversion = procrustes(all_data.ts[[firstrun]] , source)$X.new
+	all_data.ts[[firstrun]] <- newversion
+
+	print(sum((all_data.ts[[firstrun]] - source)**2))
+
+	running_total = running_total + all_data.ts[[firstrun]]
+}
