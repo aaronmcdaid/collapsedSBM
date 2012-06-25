@@ -48,6 +48,8 @@ for(firstrun in 1:timepoints) {
 		# print(sum((all_data.ts[[firstrun]] - source)**2))
 	}
 	transparency=function(colour) { return(paste(colour,'',sep='')); }
+	if(firstrun * 2 > timepoints) {
 	points(all_data.ts[[firstrun]], col=c(transparency('#ff0000'),transparency('#00cc00'),transparency('#0000ff'),transparency('#aaaa00')), pch=8, cex=0.1)
+	}
 	running_total = running_total + all_data.ts[[firstrun]]
 }
