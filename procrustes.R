@@ -32,7 +32,7 @@ sum((all_data.ts[[1]] - all_data.ts[[timepoints]])**2)
 library(MCMCpack)
 set.seed(2012)
 
-newone = procrustes(all_data.ts[[timepoints]] , all_data.ts[[1]])$X.new
+plot(c(),c(), xlim=c(-8,8), ylim=c(-8,8))
 
 running_total = all_data.ts[[1]]
 for(firstrun in 2:timepoints) {
@@ -45,6 +45,7 @@ for(firstrun in 2:timepoints) {
 
 	newversion = procrustes(all_data.ts[[firstrun]] , source)$X.new
 	all_data.ts[[firstrun]] <- newversion
+	points(all_data.ts[[firstrun]], col=c('#ff000050','#00ff0050','#0000ff50','#ffff0050'))
 
 	print(sum((all_data.ts[[firstrun]] - source)**2))
 
