@@ -28,13 +28,14 @@ CXX=g++
 CC=g++
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lrt
-LDFLAGS+= -lgsl -lgslcblas
+LDFLAGS+= `gsl-config --libs`
 CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} -std=gnu++0x # -DNDEBUG
 #CXXFLAGS+= -p -pg
 #CXXFLAGS=              -O2                 
 
 #${MAIN}: CXXFLAGS += -DNDEBUG
-${MAIN}: gitstatus.o Range.o sbm_state.o cmdline.o scf.o graph/weights.o graph/strings.o graph/loading.o graph/network.o graph/saving.o graph/bloom.o format_flag_stack/format_flag_stack.o
+${MAIN}: gitstatus.o Range.o sbm_state.o cmdline.o scf.o graph/weights.o graph/strings.o graph/loading.o graph/network.o graph/saving.o graph/bloom.o format_flag_stack/format_flag_stack.o sbm.o
+	${CXX} -o ${MAIN} $^ ${LDFLAGS}
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 
