@@ -16,6 +16,7 @@ tags:
 
 					#-Wclobbered   -Wempty-body   \ -Wignored-qualifiers  -Woverride-init   \ -Wtype-limits   -Wunused-but-set-parameter 
 CXXFLAGS=       \
+          -std=gnu++0x   \
           -Wmissing-field-initializers   \
           -Wsign-compare   \
           -Wuninitialized   \
