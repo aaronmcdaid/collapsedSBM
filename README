@@ -4,6 +4,7 @@
 
 This is an MCMC algorithm to cluster the nodes of a network according
 to the Stochastic Blockmodel of Nowicki & Snijders 2001.
+As described in our draft on arXiv [1].
 
 Copyright: Aaron McDaid. aaronmcdaid@gmail.com
 
@@ -24,7 +25,7 @@ GNU General Public License 3.0 (see gpl.txt included in this package.)
 
 You can simply run it with
 
-     ./sbm edge_list.txt
+     ./sbm edge_list.txt -z output.txt
 
 where edge_list.txt is your edge list file, made up of one line per edge.
 Each line gives the two nodes that are connected, separated by whitespace.
@@ -33,3 +34,20 @@ By default, the network is treated as unweighted and undirected.
 To use other options, run
 
      ./sbm --help
+
+There will be a lot of debugging output printed to the screen, but the
+important output will be stored in output.txt (or whichever filename
+you specify for '-z').  To apply the label-(un)switching procedure,
+described in section 5.6 of our draft [1], you can then run:
+
+    ./labels < output.txt > output_unswitched.txt
+
+This file, 'output_unswitched.txt' will be the most useful form of
+output - you should now see that most nodes spend the vast majority of
+their time in one cluster, in constrast with the regular relabelling of
+clusters within 'output.txt'.
+
+
+   == References ==
+
+[1] http://arxiv.org/abs/1203.3083
