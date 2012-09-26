@@ -47,9 +47,9 @@ for(firstrun in 1:timepoints) {
 		all_data.ts[[firstrun]] <- newversion
 		# print(sum((all_data.ts[[firstrun]] - source)**2))
 	}
-	transparency=function(colour) { return(paste(colour,'',sep='')); }
+	transparency=function(colour) { return(paste(colour,'10',sep='')); }
 	if(firstrun * 2 > timepoints) {
-	points(all_data.ts[[firstrun]], col=c(transparency('#ff0000'),transparency('#00cc00'),transparency('#0000ff'),transparency('#aaaa00')), pch=8, cex=0.1)
+	points(all_data.ts[[firstrun]], col=c(transparency('#ff0000'),transparency('#00cc00'),transparency('#0000ff'),transparency('#aaaa00'),transparency('#00aaaa')), pch=8, cex=0.5)
 	}
 	running_total = running_total + all_data.ts[[firstrun]]
 }
