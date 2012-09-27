@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
 
 	const char * edgeListFileName   = args_info.inputs[0];
 	// const char * directoryForOutput = args_info.inputs[1];
+	if(args_info.verbose_flag) {
 	PP(edgeListFileName);
 	// PP(directoryForOutput);
 	PP(args_info.K_arg);
@@ -96,6 +97,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_lsm3_arg);
 	PP(args_info.uniformK_flag);
 	PP(args_info.save_lsz_arg);
+	}
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
@@ -123,8 +125,10 @@ int main(int argc, char **argv) {
 		cerr << endl << "Usage error: Currently, the latent space model requires the number of clusters (-K) to be specified." << endl;
 		exit(1);
 	}
+	if(args_info.verbose_flag) {
 	PP(sbm :: ObjectiveFunction_Poisson :: s);
 	PP(sbm :: ObjectiveFunction_Poisson :: theta);
+	}
 
 	std :: auto_ptr<const sbm :: ObjectiveFunction> obj ( args_info.weighted_flag
 		? up_cast<sbm :: ObjectiveFunction*>(new sbm :: ObjectiveFunction_Poisson(args_info.selfloop_flag, args_info.directed_flag, args_info.weighted_flag)    )
