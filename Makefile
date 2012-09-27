@@ -8,7 +8,7 @@ MAIN=sbm
 all: tags ${MAIN}
 
 clean:
-	-rm tags ${MAIN} *.o */*.o
+	-rm tags ${MAIN} labels *.o */*.o
 
 tags:
 	ctags *.[ch]pp
