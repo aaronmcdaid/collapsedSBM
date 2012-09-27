@@ -1904,7 +1904,6 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) {
-	PP2(g->numNodes(), g->numRels());
 	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
 		exit(1);
@@ -1912,6 +1911,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	sbm :: State s(g, args_info.mega_flag, args_info.alpha_arg);
 
 	s.internalCheck();
+	cout
+		<< "nodes: " << g->numNodes()
+		<< "\t\tedges: " << s.total_edge_weight
+		<< endl;
 
 	/*
 	s.isolateNode(0);
