@@ -1907,7 +1907,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	}
 	sbm :: State s(g, args_info.mega_flag, args_info.alpha_arg);
 
-	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
 
 	/*
@@ -1936,7 +1935,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			// assert(s._k == s._N);
 		}
 	}
-	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	if(args_info.verbose_flag) {
+		s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	}
 	s.internalCheck();
 	if(args_info.latentspace_flag) {
 		assert(s._k == commandLineK);
@@ -1950,7 +1951,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 		cout << "assigned initial random positions for the latent space model" << endl;
 	}
-	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	if(args_info.verbose_flag) {
+		s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	}
 	s.internalCheck();
 
 	long double pmf_track = s.pmf(obj);
@@ -2180,7 +2183,9 @@ try_again:
 	       save_z_fstream->close();
 	if(save_lsz_fstream)
 	       save_lsz_fstream->close();
-	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	if(args_info.verbose_flag) {
+		s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
+	}
 	s.internalCheck();
 	{
 		PP2(highest_K_sampled, highest_KnonEmpty_sampled);
