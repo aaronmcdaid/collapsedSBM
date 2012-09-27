@@ -66,6 +66,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
   "  -u, --uniformK              Use a Uniform prior for K  (default=off)",
   "      --save.lsz=STRING       save positions and colors  (default=`')",
+  "      --labels=INT            Do label-unswitching, and a nice summary  \n                                (default=`1')",
     0
 };
 
@@ -126,6 +127,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_lsm3_given = 0 ;
   args_info->uniformK_given = 0 ;
   args_info->save_lsz_given = 0 ;
+  args_info->labels_given = 0 ;
 }
 
 static
@@ -183,6 +185,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->uniformK_flag = 0;
   args_info->save_lsz_arg = gengetopt_strdup ("");
   args_info->save_lsz_orig = NULL;
+  args_info->labels_arg = 1;
+  args_info->labels_orig = NULL;
   
 }
 
@@ -225,6 +229,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_lsm3_help = gengetopt_args_info_help[31] ;
   args_info->uniformK_help = gengetopt_args_info_help[32] ;
   args_info->save_lsz_help = gengetopt_args_info_help[33] ;
+  args_info->labels_help = gengetopt_args_info_help[34] ;
   
 }
 
@@ -330,6 +335,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->algo_lsm3_orig));
   free_string_field (&(args_info->save_lsz_arg));
   free_string_field (&(args_info->save_lsz_orig));
+  free_string_field (&(args_info->labels_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -433,6 +439,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "uniformK", 0, 0 );
   if (args_info->save_lsz_given)
     write_into_file(outfile, "save.lsz", args_info->save_lsz_orig, 0);
+  if (args_info->labels_given)
+    write_into_file(outfile, "labels", args_info->labels_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -725,6 +733,7 @@ cmdline_parser_internal (
         { "algo.lsm3",	1, NULL, 0 },
         { "uniformK",	0, NULL, 'u' },
         { "save.lsz",	1, NULL, 0 },
+        { "labels",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -1146,6 +1155,20 @@ cmdline_parser_internal (
                 &(local_args_info.save_lsz_given), optarg, 0, "", ARG_STRING,
                 check_ambiguity, override, 0, 0,
                 "save.lsz", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Do label-unswitching, and a nice summary.  */
+          else if (strcmp (long_options[option_index].name, "labels") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->labels_arg), 
+                 &(args_info->labels_orig), &(args_info->labels_given),
+                &(local_args_info.labels_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "labels", '-',
                 additional_error))
               goto failure;
           

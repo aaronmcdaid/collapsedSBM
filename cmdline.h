@@ -122,6 +122,9 @@ struct gengetopt_args_info
   char * save_lsz_arg;	/**< @brief save positions and colors (default='').  */
   char * save_lsz_orig;	/**< @brief save positions and colors original value given at command line.  */
   const char *save_lsz_help; /**< @brief save positions and colors help description.  */
+  int labels_arg;	/**< @brief Do label-unswitching, and a nice summary (default='1').  */
+  char * labels_orig;	/**< @brief Do label-unswitching, and a nice summary original value given at command line.  */
+  const char *labels_help; /**< @brief Do label-unswitching, and a nice summary help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -157,6 +160,7 @@ struct gengetopt_args_info
   unsigned int algo_lsm3_given ;	/**< @brief Whether algo.lsm3 was given.  */
   unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
   unsigned int save_lsz_given ;	/**< @brief Whether save.lsz was given.  */
+  unsigned int labels_given ;	/**< @brief Whether labels was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

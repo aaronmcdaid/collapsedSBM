@@ -97,6 +97,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_lsm3_arg);
 	PP(args_info.uniformK_flag);
 	PP(args_info.save_lsz_arg);
+	PP(args_info.labels_arg);
 	}
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
@@ -1996,6 +1997,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int burned_in_iters = 0;
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
+	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (" << ELAPSED() << " seconds)" << endl << endl;
 	for(int i=1; i<=iterations; i++) {
 		/*
@@ -2133,6 +2135,9 @@ try_again:
 			   highest_K_sampled = s._k;
 			if(highest_KnonEmpty_sampled < s.labelling.NonEmptyClusters)
 			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
+			if(args_info.labels_arg) {
+				all_burned_in_z.push_back( make_pair( s.labelling.NonEmptyClusters, s.labelling.cluster_id ) );
+			}
 		}
 		if(args_info.verbose_flag && i % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
@@ -2213,6 +2218,15 @@ try_again:
 		}
 		cout << "modalK=\t"         << max_element(K_freq.begin()        , K_freq.end()        ) - K_freq.begin() << endl;
 		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
+	}
+	if(args_info.labels_arg) {
+		assert(!all_burned_in_z.empty());
+		PP(all_burned_in_z.front().first);
+		PP(all_burned_in_z.back ().first);
+		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
+		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
+		PP(all_burned_in_z.front().first);
+		PP(all_burned_in_z.back ().first);
 	}
 }
 
