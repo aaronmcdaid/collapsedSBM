@@ -1982,6 +1982,11 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		save_lsz_fstream = new ofstream(args_info.save_lsz_arg);
 		*save_lsz_fstream << "N:\t" << s._N << "\t\t" << endl;
 	}
+	vector<int> K_freq(10000); // we're not expecting more than 10000 clusters :-)
+	vector<int> KnonEmpty_freq(10000);
+	int burned_in_iters = 0;
+	int highest_K_sampled = 0;
+	int highest_KnonEmpty_sampled = 0;
 	for(int i=1; i<=iterations; i++) {
 		cout
 			<< "iteration\t" << i
@@ -2108,6 +2113,15 @@ try_again:
 		// cout << endl;
 		// if(i%1000 == 0)
 			// cerr << "i:" << i << endl;
+		if(i*2 >= iterations) {
+			K_freq.at( s._k                        ) ++;
+			KnonEmpty_freq.at( s.labelling.NonEmptyClusters) ++;
+			++ burned_in_iters;
+			if(highest_K_sampled < s._k)
+			   highest_K_sampled = s._k;
+			if(highest_KnonEmpty_sampled < s.labelling.NonEmptyClusters)
+			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
+		}
 		if(i % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
 			PP(i);
@@ -2158,12 +2172,33 @@ try_again:
 			}
 		}
 	}
+	assert(highest_K_sampled > 0);
+	assert(highest_K_sampled >= highest_KnonEmpty_sampled);
 	if(save_z_fstream)
 	       save_z_fstream->close();
 	if(save_lsz_fstream)
 	       save_lsz_fstream->close();
 	s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
 	s.internalCheck();
+	{
+		PP2(highest_K_sampled, highest_KnonEmpty_sampled);
+		for(int k=1; k<=highest_K_sampled; ++k) {
+			cout << "P(K=" << k << ")=\t"
+				<< stack.push << fixed << setw(6) << setprecision(4)
+				<< double(K_freq.at(k)) / burned_in_iters
+				<< stack.pop
+				<< endl;
+		}
+		for(int k=1; k<=highest_K_sampled; ++k) {
+			cout << "P(KnonEmpty=" << k << ")=\t"
+				<< stack.push << fixed << setw(6) << setprecision(4)
+				<< double(KnonEmpty_freq.at(k)) / burned_in_iters
+				<< stack.pop
+				<< endl;
+		}
+		cout << "modalK=\t"         << max_element(K_freq.begin()        , K_freq.end()        ) - K_freq.begin() << endl;
+		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
+	}
 }
 
 typedef vector<long double > theta_t;
