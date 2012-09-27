@@ -1988,6 +1988,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
 	for(int i=1; i<=iterations; i++) {
+		/*
 		cout
 			<< "iteration\t" << i
 			<< "\telapsed\t" << ELAPSED()
@@ -1999,6 +2000,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			<< "\t"
 			;
 		s.KandClusterSizes();
+			*/
 		if(0) { /// more swapping
 			if(s._k > 1) // && drand48() < 0.01)
 			{
@@ -2122,7 +2124,7 @@ try_again:
 			if(highest_KnonEmpty_sampled < s.labelling.NonEmptyClusters)
 			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
 		}
-		if(i % args_info.printEveryNIters_arg == 0) {
+		if(args_info.verbose_flag && i % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
 			PP(i);
 			s.shortSummary(obj, groundTruth);
