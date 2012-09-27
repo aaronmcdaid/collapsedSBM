@@ -192,13 +192,13 @@ void randomize(sbm :: State &s, const int K) { // randomize the partition and ha
 	while(s._k < K) {
 		s.appendEmptyCluster();
 	}
-	cout << "Randomizing.. ";
+	// cout << "Randomizing.. ";
 	for(int n=0; n<s._N; n++) {
 		const int newCluster = static_cast<int>(drand48() * s._k);
 		if(newCluster != s.labelling.cluster_id.at(n))
 			s.moveNodeAndInformOfEdges2(n, newCluster);
 	}
-	PP2(s._k, s.labelling.NonEmptyClusters);
+	// PP2(s._k, s.labelling.NonEmptyClusters);
 	assert(s._k == K);
 	s.internalCheck();
 }
@@ -1961,7 +1961,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	s.internalCheck();
 
 	long double pmf_track = s.pmf(obj);
-	PP(pmf_track);
 
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
@@ -1994,6 +1993,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int burned_in_iters = 0;
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
+	cout << endl << " = Starting MCMC =  (" << ELAPSED() << " seconds)" << endl << endl;
 	for(int i=1; i<=iterations; i++) {
 		/*
 		cout
@@ -2181,6 +2181,7 @@ try_again:
 			}
 		}
 	}
+	cout << endl << " = MCMC complete =  (" << ELAPSED() << " seconds)" << endl << endl;
 	assert(highest_K_sampled > 0);
 	assert(highest_K_sampled >= highest_KnonEmpty_sampled);
 	if(save_z_fstream)
