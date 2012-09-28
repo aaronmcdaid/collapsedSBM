@@ -1902,6 +1902,58 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
+void label_switch(const size_t N, const size_t max_K, vector< pair<int, vector<int> > > & all_burned_in_z) {
+	// Note: max_K includes the empty clusters.  This is necessary as the z_n may be as high as max_K-1
+	assert(N>=1);
+	assert(max_K>=1);
+	assert(!all_burned_in_z.empty());
+	// already sorted by the number of non-empty clusters
+	vector< vector<int> > relab_freq(N, vector<int>(max_K, 0) );
+	For(one_state, all_burned_in_z) {
+		{ // verify the number of non-empty clusters
+			set<int> non_empty_clusters;
+			for(size_t n=0; n<N; ++n) {
+				assert(one_state->second.size() == N);
+				const size_t z_n = one_state->second.at(n);
+				assert(z_n < max_K);
+				non_empty_clusters.insert(z_n);
+			}
+			assert( (int) non_empty_clusters.size() == one_state -> first);
+		}
+		if(one_state == all_burned_in_z.begin()) {
+			// leave the first one as-is
+		} else {
+		}
+		// Now, the 'current' kz has been relabelled.  We must add its details to the counts
+		for(size_t n=0; n<N; ++n) {
+			assert(one_state->second.size() == N);
+			const size_t z_n = one_state->second.at(n);
+			assert(z_n < max_K);
+			++ relab_freq.at(n).at(   z_n  );
+		}
+	}
+	{ // print out the summary output from label-switching
+		for(size_t k=0; k<max_K; ++k) {
+				ostringstream oss;
+				oss << "< " << k << " >";
+				cout
+					<< stack.push << fixed << setw(6)
+					<< oss.str()
+					<< stack.pop;
+		}
+		cout << endl;
+		for(size_t n=0; n<N; ++n) {
+			for(size_t k=0; k<max_K; ++k) {
+				cout
+					<< stack.push << fixed << setw(6)
+					<< relab_freq.at(n).at(k)
+					<< stack.pop;
+			}
+			cout << endl;
+		}
+	}
+}
+
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) {
@@ -2221,12 +2273,11 @@ try_again:
 	}
 	if(args_info.labels_arg) {
 		assert(!all_burned_in_z.empty());
-		PP(all_burned_in_z.front().first);
-		PP(all_burned_in_z.back ().first);
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
+		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
+		cout << " ... label-switching" << endl;
+		label_switch(s._N, highest_K_sampled, all_burned_in_z);
 		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
-		PP(all_burned_in_z.front().first);
-		PP(all_burned_in_z.back ().first);
 	}
 }
 
