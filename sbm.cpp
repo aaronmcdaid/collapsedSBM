@@ -1902,6 +1902,29 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
+void recursive(const int deciding, const int K, vector<int> &new_names, vector<bool> &already_taken, const vector<bool> &is_currently_empty) {
+	if(deciding == K) {
+		cout << "leaf: ";
+		for(int old_k = 0; old_k < K; ++old_k) {
+			cout << ' ' << new_names.at(old_k);
+		}
+		cout << endl;
+		return;
+	}
+	if(is_currently_empty.at(deciding)) {
+		// we don't care about finding a label for the empty clusters
+		recursive(deciding+1, K, new_names, already_taken, is_currently_empty);
+		return;
+	}
+	for(int new_k = 0; new_k < K; ++new_k) {
+		if(already_taken.at(new_k)) // could this be made more efficient? keeping a linked list of available ids?
+			continue;
+		new_names.at(deciding) = new_k;
+		already_taken.at(new_k) = true;
+		recursive(deciding + 1, K, new_names, already_taken, is_currently_empty);
+		already_taken.at(new_k) = false;
+	}
+}
 vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
 	cout << endl << '=' << endl;
 	const size_t N = relab_freq.size();
@@ -1962,9 +1985,36 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 				new_z.at(n) = new_z_n;
 			}
 			return new_z;
-		} else {
-			assert(1==2);
 		}
+	}
+
+	{ // we're here because the optimistic route didn't work,
+	  // so we have to try the hard way
+	  // instead of maximizing similarity, let's minimize dissimilarity
+	  //
+	  // the minimum dissimilarity is zero, so let's subtract from the rows
+		cout << " fall back to branch and bound" << endl;
+		For(row, kbyk) {
+			const int largest_element = *max_element(row->begin(), row->end());
+			For(cell, *row) {
+				*cell = largest_element - *cell;
+			}
+		}
+		For(row, kbyk) {
+			For(cell, *row) {
+				cout
+					<< ' '
+					<< stack.push << fixed << setw(6)
+					<< *cell
+					<< stack.pop;
+			}
+			cout << endl;
+		}
+		vector<int> new_names(K);
+		vector<bool> already_taken(K);
+		recursive(0, K, new_names, already_taken, is_currently_empty);
+		new_z.clear();
+		return new_z;
 	}
 }
 
@@ -1994,6 +2044,7 @@ void label_switch(
 			// leave the first one as-is
 		} else {
 			const vector<int> new_z = calculate_best_relabelling(one_state->second, relab_freq);
+			assert(new_z.size() == N);
 			one_state -> second = new_z;
 		}
 		// Now, the 'current' kz has been relabelled.  We must add its details to the counts
