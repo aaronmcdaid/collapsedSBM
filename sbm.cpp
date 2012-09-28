@@ -1902,6 +1902,62 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
+void calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
+	cout << endl << '=' << endl;
+	const size_t N = relab_freq.size();
+	assert(N>0);
+	const size_t K = relab_freq.front().size();
+	vector<bool> is_currently_empty(K,true);
+
+	// Consider the clustering in z, and construct a K-by-K matrix of similarity
+	// THEN, convert it to a *distance* matrix
+	vector< vector<int> > kbyk(K, vector<int>(K,0));
+	for(size_t n=0; n<N; ++n) {
+		const int current_z_n = z.at(n);
+		cout << ' ' << current_z_n;
+		is_currently_empty.at(current_z_n) = false;
+		const vector<int> & relab_freq_n = relab_freq.at(n);
+		for(size_t new_k=0; new_k<K; ++new_k) {
+			kbyk.at(current_z_n).at(new_k) += relab_freq_n.at(new_k);
+		}
+	}
+	cout << endl;
+	For(row, kbyk) {
+		For(cell, *row) {
+			cout << ' '
+				<< stack.push << fixed << setw(6)
+				<< *cell
+				<< stack.pop;
+		}
+		cout << endl;
+	}
+
+	// First, we'll try the optimistic approach,
+	// setting each cluster to its best match,
+	// where we hope that they all map to distinct clusters
+
+	{
+		vector<int> new_names(K);
+		vector<bool> already_taken(K);
+		bool optimism_failed = false;
+		for(size_t old_k = 0; old_k<K; ++old_k) {
+			const vector<int> & row = kbyk.at(old_k);
+			const size_t best_fit = max_element(row.begin()        , row.end()        ) - row.begin();
+			PP3(old_k, best_fit, is_currently_empty.at(old_k));
+			new_names.at(old_k) = best_fit;
+			if(!is_currently_empty.at(old_k)) {
+				if( already_taken.at(best_fit) ) {
+					optimism_failed = true;
+					break; // gotta give up on the optimistic route
+				}
+				already_taken.at(best_fit) = true;
+			}
+		}
+		if(optimism_failed)
+			assert(1==2);
+	}
+}
+
 void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
 		, const size_t N, const size_t max_K
@@ -1927,6 +1983,7 @@ void label_switch(
 		if(one_state == all_burned_in_z.begin()) {
 			// leave the first one as-is
 		} else {
+			calculate_best_relabelling(one_state->second, relab_freq);
 		}
 		// Now, the 'current' kz has been relabelled.  We must add its details to the counts
 		for(size_t n=0; n<N; ++n) {
