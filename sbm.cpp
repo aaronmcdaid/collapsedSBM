@@ -1902,7 +1902,11 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
-void label_switch(const size_t N, const size_t max_K, vector< pair<int, vector<int> > > & all_burned_in_z) {
+void label_switch(
+		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
+		, const size_t N, const size_t max_K
+		, vector< pair<int, vector<int> > > & all_burned_in_z
+		) {
 	// Note: max_K includes the empty clusters.  This is necessary as the z_n may be as high as max_K-1
 	assert(N>=1);
 	assert(max_K>=1);
@@ -1933,19 +1937,39 @@ void label_switch(const size_t N, const size_t max_K, vector< pair<int, vector<i
 		}
 	}
 	{ // print out the summary output from label-switching
-		for(size_t k=0; k<max_K; ++k) {
+#define FIELD_WIDTH 8
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< "nodeid"
+					<< stack.pop;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< "nodename"
+					<< stack.pop;
+			for(size_t k=0; k<max_K; ++k) {
 				ostringstream oss;
 				oss << "< " << k << " >";
 				cout
-					<< stack.push << fixed << setw(6)
+					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< oss.str()
 					<< stack.pop;
-		}
-		cout << endl;
+			}
+			cout << endl;
+
+		// the last few lines printed the column names. Next, we print the data
+
 		for(size_t n=0; n<N; ++n) {
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< n
+					<< stack.pop;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< g->node_name_as_string(n)
+					<< stack.pop;
 			for(size_t k=0; k<max_K; ++k) {
 				cout
-					<< stack.push << fixed << setw(6)
+					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< relab_freq.at(n).at(k)
 					<< stack.pop;
 			}
@@ -2276,7 +2300,7 @@ try_again:
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
 		cout << " ... label-switching" << endl;
-		label_switch(s._N, highest_K_sampled, all_burned_in_z);
+		label_switch(s._g, s._N, highest_K_sampled, all_burned_in_z);
 		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
 	}
 }
