@@ -1902,12 +1902,13 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
-void calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
+vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
 	cout << endl << '=' << endl;
 	const size_t N = relab_freq.size();
 	assert(N>0);
 	const size_t K = relab_freq.front().size();
 	vector<bool> is_currently_empty(K,true);
+	vector<int> new_z(N); // this will be the return value
 
 	// Consider the clustering in z, and construct a K-by-K matrix of similarity
 	// THEN, convert it to a *distance* matrix
@@ -1953,8 +1954,17 @@ void calculate_best_relabelling(const vector<int> & z, const vector< vector<int>
 				already_taken.at(best_fit) = true;
 			}
 		}
-		if(optimism_failed)
+		if(!optimism_failed) {
+			// the optimistic route succeeded, applying the relabelling and return.
+			for(size_t n=0; n<N; ++n) {
+				const int current_z_n = z.at(n);
+				const int new_z_n = new_names.at(current_z_n);
+				new_z.at(n) = new_z_n;
+			}
+			return new_z;
+		} else {
 			assert(1==2);
+		}
 	}
 }
 
@@ -1983,7 +1993,8 @@ void label_switch(
 		if(one_state == all_burned_in_z.begin()) {
 			// leave the first one as-is
 		} else {
-			calculate_best_relabelling(one_state->second, relab_freq);
+			const vector<int> new_z = calculate_best_relabelling(one_state->second, relab_freq);
+			one_state -> second = new_z;
 		}
 		// Now, the 'current' kz has been relabelled.  We must add its details to the counts
 		for(size_t n=0; n<N; ++n) {
