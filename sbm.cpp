@@ -1903,7 +1903,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 };
 
 void label_switch(
-		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
+		const graph :: NetworkInterfaceConvertedToString *g
 		, const size_t N, const size_t max_K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
 		) {
@@ -1959,13 +1959,21 @@ void label_switch(
 		// the last few lines printed the column names. Next, we print the data
 
 		for(size_t n=0; n<N; ++n) {
+			// first, create a nicely-formatted version of the
+			// node*name*, the string/int that appeared in the edge-list file
+			ostringstream node_name;
+			if(g->was_string_data_not_int() ) {
+				node_name << '"' << g->node_name_as_string(n) << '"';
+			} else {
+				node_name << g->node_name_as_string(n);
+			}
 			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< n
 					<< stack.pop;
 			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH+2)
-					<< g->node_name_as_string(n)
+					<< node_name.str()
 					<< stack.pop;
 			for(size_t k=0; k<max_K; ++k) {
 				cout
