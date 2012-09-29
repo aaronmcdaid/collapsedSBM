@@ -2125,6 +2125,38 @@ void label_switch(
 			++ relab_freq.at(n).at(   z_n  );
 		}
 	}
+
+	// now, we'll relabel either to the ground truth, or,
+	//   if there's no ground truth, put the largest clusters first
+	{
+		vector< pair<int64_t,size_t> > size_of_clusters(max_K);
+		for(size_t k=0; k < max_K; ++k) {
+			size_of_clusters.at(k).second = k;
+		}
+		For(row, relab_freq) {
+			for(size_t k=0; k < max_K; ++k) {
+				size_of_clusters.at(k).first += row->at(k);
+			}
+		}
+		for(size_t k=0; k < max_K; ++k) {
+			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
+			PP2(sz->first, sz->second);
+		}
+		sort(size_of_clusters.begin(), size_of_clusters.end());
+		reverse(size_of_clusters.begin(), size_of_clusters.end());
+		vector<size_t> new_names(max_K, -1);
+		for(size_t k=0; k < max_K; ++k) {
+			new_names.at( size_of_clusters.at(k).second ) = k;
+		}
+		uint64_t total = 0;
+		for(size_t k=0; k < max_K; ++k) {
+			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
+			PP3(sz->first, sz->second, new_names.at(k));
+			total += sz->first;
+		}
+		assert(total == N * all_burned_in_z.size());
+	}
+
 	{ // print out the summary output from label-switching
 #define FIELD_WIDTH 8
 			cout
