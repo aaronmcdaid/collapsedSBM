@@ -1923,21 +1923,21 @@ void recursive(const int deciding, const int K
 	assert((int)kbyk.size() == K);
 	if(deciding == K) {
 		int score = 0;
-		cout << "leaf: ";
+		// cout << "leaf: ";
 		for(int old_k = 0; old_k < K; ++old_k) {
 			assert((int)kbyk.at(old_k).size() == K);
 			const int new_k = new_names.at(old_k);
 			if(new_k>=0) {
 				assert(new_k <  K);
-				cout << ' ' << new_k;
+				// cout << ' ' << new_k;
 				score += kbyk.at(old_k).at(new_k);
 			} else {
 				assert(new_k == -1); // this is an empty cluster, no need to rename
 			}
 		}
 		assert(score == partial_score);
-		cout << "\tscore:" << setw(8) << score;
-		cout << endl;
+		// cout << "\tscore:" << setw(8) << score;
+		// cout << endl;
 		if(best_score_so_far > score) {
 			best_score_so_far = score;
 			best_relabelling_so_far = new_names;
@@ -2024,7 +2024,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		}
 	}
 
-	{ // print the current state
+	if(0) { // print the current state
 		for(size_t n=0; n<N; ++n) {
 			const int current_z_n = z.at(n);
 			cout << ' ' << current_z_n;
@@ -2037,7 +2037,6 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	  // instead of maximizing similarity, let's minimize dissimilarity
 	  //
 	  // the minimum dissimilarity is zero, so let's subtract from the rows
-		cout << " fall back to branch and bound" << endl;
 		for(size_t k=0; k<K; ++k) {
 			vector<int> * row = &kbyk.at(k);
 			const int largest_element = *max_element(row->begin(), row->end());
@@ -2053,6 +2052,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 			}
 			}
 		}
+		/*
 		For(row, kbyk) {
 			For(cell, *row) {
 				cout
@@ -2063,13 +2063,13 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 			}
 			cout << endl;
 		}
+		*/
 		vector<int> new_names(K);
 		vector<bool> already_taken(K);
 		int best_score_so_far = INT_MAX;
 		vector<int> best_relabelling_so_far;
 		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far, 0);
 		assert(best_relabelling_so_far.size() == K);
-		PP(best_score_so_far);
 		for(size_t n=0; n<N; ++n) {
 			const int current_z_n = z.at(n);
 			const int new_z_n = best_relabelling_so_far.at(current_z_n);
