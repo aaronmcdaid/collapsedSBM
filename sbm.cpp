@@ -2072,6 +2072,7 @@ void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
 		, const size_t N, const size_t K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
+		, const vector<int> * const groundTruth
 		) {
 // TODO
 //  - probable bug: K < groundTruthNumberOfClusters (both fixed K, and learned K)
@@ -2123,7 +2124,19 @@ void label_switch(
 
 	// now, we'll relabel either to the ground truth, or,
 	//   if there's no ground truth, put the largest clusters first
-	{
+	if(groundTruth) {
+		assert(groundTruth->size() == N);
+		const vector<int> relabelling = calculate_best_relabelling(*groundTruth, relab_freq);
+		// GT cluster k is closest to found cluster relabelling.at(k)
+		for(size_t n=0; n<N; ++n) {
+			vector<int> & one_node = relab_freq.at(n);
+			vector<int> new_row_from_relab_freq(K);
+			for(size_t k=0; k<K; ++k) {
+				new_row_from_relab_freq.at( k ) = one_node.at( relabelling.at(k) );
+			}
+			new_row_from_relab_freq.swap( one_node );
+		}
+	} else {
 		vector< pair<int64_t,size_t> > size_of_clusters(K);
 		for(size_t k=0; k < K; ++k) {
 			size_of_clusters.at(k).second = k;
@@ -2594,7 +2607,7 @@ try_again:
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
 		cout << " ... label-switching" << endl;
-		label_switch(s._g, s._N, highest_K_sampled, all_burned_in_z);
+		label_switch(s._g, s._N, highest_K_sampled, all_burned_in_z, groundTruth);
 		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
 	}
 }
