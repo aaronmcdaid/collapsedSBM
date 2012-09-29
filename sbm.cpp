@@ -2268,6 +2268,19 @@ void label_switch(
 			cout << endl;
 		}
 	}
+	{ // print out the summary output from label-switching
+			cout << "Best single clustering:" << endl;
+
+		// the last few lines printed the column names. Next, we print the data
+
+		for(size_t n=0; n<N; ++n) {
+			const vector<int> & relab_freq_n = relab_freq.at(n);
+			if(n>0)
+				cout << ',';
+			cout << max_element(relab_freq_n.begin(), relab_freq_n.end()) - relab_freq_n.begin();
+		}
+		cout << endl;
+	}
 }
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
