@@ -2155,6 +2155,14 @@ void label_switch(
 			total += sz->first;
 		}
 		assert(total == N * all_burned_in_z.size());
+		for(size_t n=0; n<N; ++n) {
+			vector<int> & one_node = relab_freq.at(n);
+			vector<int> new_row_from_relab_freq(K);
+			for(size_t k=0; k<K; ++k) {
+				new_row_from_relab_freq.at( k ) = one_node.at( size_of_clusters.at(k).second );
+			}
+			new_row_from_relab_freq.swap( one_node );
+		}
 	}
 
 	{ // print out the summary output from label-switching
