@@ -2082,7 +2082,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 
 void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
-		, const size_t N, const size_t max_K
+		, const size_t N, const size_t K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
 		) {
 // TODO
@@ -2093,19 +2093,19 @@ void label_switch(
 //  - remove the set<int> below, and other optimisizations
 //  - refactor the bits that are duplicated between the optimistic and brute-force version.
 
-	// Note: max_K includes the empty clusters.  This is necessary as the z_n may be as high as max_K-1
+	// Note: K includes the empty clusters.  This is necessary as the z_n may be as high as K-1
 	assert(N>=1);
-	assert(max_K>=1);
+	assert(K>=1);
 	assert(!all_burned_in_z.empty());
 	// already sorted by the number of non-empty clusters
-	vector< vector<int> > relab_freq(N, vector<int>(max_K, 0) );
+	vector< vector<int> > relab_freq(N, vector<int>(K, 0) );
 	For(one_state, all_burned_in_z) {
 		{ // verify the number of non-empty clusters
 			set<int> non_empty_clusters;
 			for(size_t n=0; n<N; ++n) {
 				assert(one_state->second.size() == N);
 				const size_t z_n = one_state->second.at(n);
-				assert(z_n < max_K);
+				assert(z_n < K);
 				non_empty_clusters.insert(z_n);
 			}
 			assert( (int) non_empty_clusters.size() == one_state -> first);
@@ -2121,7 +2121,7 @@ void label_switch(
 		for(size_t n=0; n<N; ++n) {
 			assert(one_state->second.size() == N);
 			const size_t z_n = one_state->second.at(n);
-			assert(z_n < max_K);
+			assert(z_n < K);
 			++ relab_freq.at(n).at(   z_n  );
 		}
 	}
@@ -2129,27 +2129,27 @@ void label_switch(
 	// now, we'll relabel either to the ground truth, or,
 	//   if there's no ground truth, put the largest clusters first
 	{
-		vector< pair<int64_t,size_t> > size_of_clusters(max_K);
-		for(size_t k=0; k < max_K; ++k) {
+		vector< pair<int64_t,size_t> > size_of_clusters(K);
+		for(size_t k=0; k < K; ++k) {
 			size_of_clusters.at(k).second = k;
 		}
 		For(row, relab_freq) {
-			for(size_t k=0; k < max_K; ++k) {
+			for(size_t k=0; k < K; ++k) {
 				size_of_clusters.at(k).first += row->at(k);
 			}
 		}
-		for(size_t k=0; k < max_K; ++k) {
+		for(size_t k=0; k < K; ++k) {
 			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
 			PP2(sz->first, sz->second);
 		}
 		sort(size_of_clusters.begin(), size_of_clusters.end());
 		reverse(size_of_clusters.begin(), size_of_clusters.end());
-		vector<size_t> new_names(max_K, -1);
-		for(size_t k=0; k < max_K; ++k) {
+		vector<size_t> new_names(K, -1);
+		for(size_t k=0; k < K; ++k) {
 			new_names.at( size_of_clusters.at(k).second ) = k;
 		}
 		uint64_t total = 0;
-		for(size_t k=0; k < max_K; ++k) {
+		for(size_t k=0; k < K; ++k) {
 			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
 			PP3(sz->first, sz->second, new_names.at(k));
 			total += sz->first;
@@ -2167,7 +2167,7 @@ void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH+2)
 					<< "nodename"
 					<< stack.pop;
-			for(size_t k=0; k<max_K; ++k) {
+			for(size_t k=0; k<K; ++k) {
 				ostringstream oss;
 				oss << "< " << k << " >";
 				cout
@@ -2196,7 +2196,7 @@ void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH+2)
 					<< node_name.str()
 					<< stack.pop;
-			for(size_t k=0; k<max_K; ++k) {
+			for(size_t k=0; k<K; ++k) {
 				cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< relab_freq.at(n).at(k)
