@@ -1995,7 +1995,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	// setting each cluster to its best match,
 	// where we hope that they all map to distinct clusters
 
-	if(1) {
+	{
 		vector<int> new_names(K);
 		vector<bool> already_taken(K);
 		bool optimism_failed = false;
@@ -2075,14 +2075,9 @@ void label_switch(
 		, const vector<int> * const groundTruth
 		) {
 // TODO
-//  - probable bug: K < groundTruthNumberOfClusters (both fixed K, and learned K)
 //  - I think I'm calculating some wasted stuff while sorting by largest-first
-//  - reenable the optimistic version
-//  - check for non consecutive -1 in leaf
 //  - assert(largest > 0) ? Is this OK?
 //  - subtract column-wise, instead of row-wise?
-//  - remove the set<int> below, and other optimisizations
-//  - refactor the bits that are duplicated between the optimistic and brute-force version.
 
 	// Note: K includes the empty clusters.  This is necessary as the z_n may be as high as K-1
 	assert(N>=1);
