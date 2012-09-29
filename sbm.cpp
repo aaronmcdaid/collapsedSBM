@@ -1915,6 +1915,10 @@ void recursive(const int deciding, const int K
 		, vector<int> & best_relabelling_so_far
 		, const int partial_score
 		) {
+	if(partial_score >= best_score_so_far) {
+		// never gonna improve, may as well quit now
+		return;
+	}
 	assert((int)new_names.size() == K);
 	assert((int)kbyk.size() == K);
 	if(deciding == K) {
