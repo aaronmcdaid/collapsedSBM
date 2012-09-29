@@ -2075,8 +2075,6 @@ void label_switch(
 		, const vector<int> * const groundTruth
 		) {
 // TODO
-//  - I think I'm calculating some wasted stuff while sorting by largest-first
-//  - assert(largest > 0) ? Is this OK?
 //  - subtract column-wise, instead of row-wise?
 
 	// Note: K includes the empty clusters.  This is necessary as the z_n may be as high as K-1
@@ -2166,10 +2164,6 @@ void label_switch(
 		}
 		sort(size_of_clusters.begin(), size_of_clusters.end());
 		reverse(size_of_clusters.begin(), size_of_clusters.end());
-		vector<size_t> new_names(K, -1);
-		for(size_t k=0; k < K; ++k) {
-			new_names.at( size_of_clusters.at(k).second ) = k;
-		}
 		for(size_t n=0; n<N; ++n) {
 			vector<int> & one_node = relab_freq.at(n);
 			vector<int> new_row_from_relab_freq(K);
