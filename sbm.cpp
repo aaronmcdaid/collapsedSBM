@@ -163,6 +163,10 @@ int main(int argc, char **argv) {
 				break;
 			groundTruth.push_back(z_i);
 			++n;
+			if(GTvectorStream.peek()==',') {
+				char c;
+				GTvectorStream >> c;
+			}
 		}
 		if((int) groundTruth.size() != network->numNodes() || GTvectorStream.eof()==false ) {
 			cerr << endl << "Error: the GT.vector file \"" << args_info.GT_vector_arg << "\" has " << groundTruth.size() << " valid lines (positive integers only). "
