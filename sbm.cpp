@@ -15,6 +15,7 @@ using namespace std;
 // #include <gsl/gsl_sf.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <climits>
 
 #include "Range.hpp"
 #include "format_flag_stack/format_flag_stack.hpp"
@@ -1906,18 +1907,41 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
-void recursive(const int deciding, const int K, vector<int> &new_names, vector<bool> &already_taken, const vector<bool> &is_currently_empty) {
+void recursive(const int deciding, const int K
+		, vector<int> &new_names, vector<bool> &already_taken
+		, const vector<bool> &is_currently_empty
+		, const vector< vector<int> > & kbyk
+		, int & best_score_so_far
+		, vector<int> & best_relabelling_so_far
+		) {
+	assert((int)new_names.size() == K);
+	assert((int)kbyk.size() == K);
 	if(deciding == K) {
+		int score = 0;
 		cout << "leaf: ";
 		for(int old_k = 0; old_k < K; ++old_k) {
-			cout << ' ' << new_names.at(old_k);
+			assert((int)kbyk.at(old_k).size() == K);
+			const int new_k = new_names.at(old_k);
+			if(new_k>=0) {
+				assert(new_k <  K);
+				cout << ' ' << new_k;
+				score += kbyk.at(old_k).at(new_k);
+			} else {
+				assert(new_k == -1); // this is an empty cluster, no need to rename
+			}
 		}
+		cout << "\tscore:" << setw(8) << score;
 		cout << endl;
+		if(best_score_so_far > score) {
+			best_score_so_far = score;
+			best_relabelling_so_far = new_names;
+		}
 		return;
 	}
 	if(is_currently_empty.at(deciding)) {
 		// we don't care about finding a label for the empty clusters
-		recursive(deciding+1, K, new_names, already_taken, is_currently_empty);
+		new_names.at(deciding) = -1;
+		recursive(deciding+1, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
 		return;
 	}
 	for(int new_k = 0; new_k < K; ++new_k) {
@@ -1925,7 +1949,7 @@ void recursive(const int deciding, const int K, vector<int> &new_names, vector<b
 			continue;
 		new_names.at(deciding) = new_k;
 		already_taken.at(new_k) = true;
-		recursive(deciding + 1, K, new_names, already_taken, is_currently_empty);
+		recursive(deciding + 1, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
 		already_taken.at(new_k) = false;
 	}
 }
@@ -2025,8 +2049,16 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		}
 		vector<int> new_names(K);
 		vector<bool> already_taken(K);
-		recursive(0, K, new_names, already_taken, is_currently_empty);
-		new_z.clear();
+		int best_score_so_far = INT_MAX;
+		vector<int> best_relabelling_so_far;
+		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
+		assert(best_relabelling_so_far.size() == K);
+		PP(best_score_so_far);
+		for(size_t n=0; n<N; ++n) {
+			const int current_z_n = z.at(n);
+			const int new_z_n = best_relabelling_so_far.at(current_z_n);
+			new_z.at(n) = new_z_n;
+		}
 		return new_z;
 	}
 }
@@ -2036,6 +2068,14 @@ void label_switch(
 		, const size_t N, const size_t max_K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
 		) {
+// TODO
+//  - reenable the optimistic version
+//  - check for non consecutive -1 in leaf
+//  - assert(largest > 0) ? Is this OK?
+//  - subtract column-wise, instead of row-wise?
+//  - remove the set<int> below, and other optimisizations
+//  - refactor the bits that are duplicated between the optimistic and brute-force version.
+
 	// Note: max_K includes the empty clusters.  This is necessary as the z_n may be as high as max_K-1
 	assert(N>=1);
 	assert(max_K>=1);
