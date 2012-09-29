@@ -1954,7 +1954,6 @@ void recursive(const int deciding, const int K
 	}
 }
 vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
-	cout << endl << '=' << endl;
 	const size_t N = relab_freq.size();
 	assert(N>0);
 	const size_t K = relab_freq.front().size();
@@ -1966,14 +1965,13 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	vector< vector<int> > kbyk(K, vector<int>(K,0));
 	for(size_t n=0; n<N; ++n) {
 		const int current_z_n = z.at(n);
-		cout << ' ' << current_z_n;
 		is_currently_empty.at(current_z_n) = false;
 		const vector<int> & relab_freq_n = relab_freq.at(n);
 		for(size_t new_k=0; new_k<K; ++new_k) {
 			kbyk.at(current_z_n).at(new_k) += relab_freq_n.at(new_k);
 		}
 	}
-	cout << endl;
+	/*
 	For(row, kbyk) {
 		For(cell, *row) {
 			cout << ' '
@@ -1983,6 +1981,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		}
 		cout << endl;
 	}
+	*/
 
 	// First, we'll try the optimistic approach,
 	// setting each cluster to its best match,
@@ -1995,7 +1994,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		for(size_t old_k = 0; old_k<K; ++old_k) {
 			const vector<int> & row = kbyk.at(old_k);
 			const size_t best_fit = max_element(row.begin()        , row.end()        ) - row.begin();
-			PP3(old_k, best_fit, is_currently_empty.at(old_k));
+			// PP3(old_k, best_fit, is_currently_empty.at(old_k));
 			new_names.at(old_k) = best_fit;
 			if(!is_currently_empty.at(old_k)) {
 				if( already_taken.at(best_fit) ) {
@@ -2014,6 +2013,14 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 			}
 			return new_z;
 		}
+	}
+
+	{ // print the current state
+		for(size_t n=0; n<N; ++n) {
+			const int current_z_n = z.at(n);
+			cout << ' ' << current_z_n;
+		}
+		cout << endl;
 	}
 
 	{ // we're here because the optimistic route didn't work,
