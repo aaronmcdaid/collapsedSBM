@@ -2172,6 +2172,53 @@ void label_switch(
 			cout << endl;
 		}
 	}
+	{ // print out the summary output from label-switching
+#define FIELD_WIDTH 8
+			cout
+				<< endl
+				<< "best single clustering:"
+				<< endl;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< "nodeid"
+					<< stack.pop;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< "nodename"
+					<< stack.pop;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< "cluster"
+					<< stack.pop;
+			cout << endl;
+
+		// the last few lines printed the column names. Next, we print the data
+
+		for(size_t n=0; n<N; ++n) {
+			// first, create a nicely-formatted version of the
+			// node*name*, the string/int that appeared in the edge-list file
+			ostringstream node_name;
+			if(g->was_string_data_not_int() ) {
+				node_name << '"' << g->node_name_as_string(n) << '"';
+			} else {
+				node_name << g->node_name_as_string(n);
+			}
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< n
+					<< stack.pop;
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< node_name.str()
+					<< stack.pop;
+			const vector<int> & relab_freq_n = relab_freq.at(n);
+			cout
+					<< stack.push << fixed << setw(FIELD_WIDTH)
+					<< max_element(relab_freq_n.begin(), relab_freq_n.end()) - relab_freq_n.begin()
+					<< stack.pop;
+			cout << endl;
+		}
+	}
 }
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
