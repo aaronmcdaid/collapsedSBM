@@ -1913,6 +1913,7 @@ void recursive(const int deciding, const int K
 		, const vector< vector<int> > & kbyk
 		, int & best_score_so_far
 		, vector<int> & best_relabelling_so_far
+		, const int partial_score
 		) {
 	assert((int)new_names.size() == K);
 	assert((int)kbyk.size() == K);
@@ -1930,6 +1931,7 @@ void recursive(const int deciding, const int K
 				assert(new_k == -1); // this is an empty cluster, no need to rename
 			}
 		}
+		assert(score == partial_score);
 		cout << "\tscore:" << setw(8) << score;
 		cout << endl;
 		if(best_score_so_far > score) {
@@ -1941,7 +1943,7 @@ void recursive(const int deciding, const int K
 	if(is_currently_empty.at(deciding)) {
 		// we don't care about finding a label for the empty clusters
 		new_names.at(deciding) = -1;
-		recursive(deciding+1, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
+		recursive(deciding+1, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far, partial_score);
 		return;
 	}
 	for(int new_k = 0; new_k < K; ++new_k) {
@@ -1949,7 +1951,10 @@ void recursive(const int deciding, const int K
 			continue;
 		new_names.at(deciding) = new_k;
 		already_taken.at(new_k) = true;
-		recursive(deciding + 1, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
+		recursive(deciding + 1, K, new_names, already_taken, is_currently_empty, kbyk
+				, best_score_so_far, best_relabelling_so_far
+				, partial_score + kbyk.at(deciding).at(new_k)
+				);
 		already_taken.at(new_k) = false;
 	}
 }
@@ -2058,7 +2063,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		vector<bool> already_taken(K);
 		int best_score_so_far = INT_MAX;
 		vector<int> best_relabelling_so_far;
-		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far);
+		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far, 0);
 		assert(best_relabelling_so_far.size() == K);
 		PP(best_score_so_far);
 		for(size_t n=0; n<N; ++n) {
