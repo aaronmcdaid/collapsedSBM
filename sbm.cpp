@@ -2137,6 +2137,19 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			}
 			s.moveNodeAndInformOfEdges2(v, z_i);
 		}
+		while(commandLineK > s._k) {
+			s.appendEmptyCluster();
+		}
+		if(commandLineK != -1 && commandLineK != s._k) {
+			cerr << endl
+				<< "Error: Problem using the --initGT and -K args. The GT.vector file \""
+				<< args_info.GT_vector_arg
+				<< "\" has " << s._k << " clusters, "
+				<< "but you requested -K " << commandLineK << " clusters."
+				<< endl;
+			exit(1);
+
+		}
 	} else {
 		if(commandLineK != -1)
 			randomize(s, commandLineK);
@@ -2203,6 +2216,8 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (" << ELAPSED() << " seconds)" << endl << endl;
 	for(int i=1; i<=iterations; i++) {
+		if(commandLineK != -1)
+			assert(commandLineK == s._k);
 		/*
 		cout
 			<< "iteration\t" << i
