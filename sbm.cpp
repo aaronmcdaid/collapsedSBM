@@ -2128,12 +2128,33 @@ void label_switch(
 	//   if there's no ground truth, put the largest clusters first
 	if(groundTruth) {
 		assert(groundTruth->size() == N);
-		const vector<int> relabelling = calculate_best_relabelling(*groundTruth, relab_freq);
+		vector<int> relabelling = calculate_best_relabelling(*groundTruth, relab_freq);
+		set<int> unused_ids;
+		for(size_t k=0; k<K; ++k)
+			unused_ids.insert(k);
+		assert(unused_ids.size() == K);
+		for(size_t k=0; k<K; ++k) {
+			if(relabelling.at(k) != -1) {
+				const bool was_erased = unused_ids.erase(relabelling.at(k));
+				assert(was_erased);
+			}
+		}
+		for(size_t k=0; k<K; ++k) {
+			if(relabelling.at(k) == -1) {
+				assert(!unused_ids.empty());
+				const int use_this_id_for_empty = *unused_ids.begin();
+				unused_ids.erase(unused_ids.begin());
+				relabelling.at(k) = use_this_id_for_empty;
+			}
+		}
+		assert(unused_ids.empty());
 		// GT cluster k is closest to found cluster relabelling.at(k)
 		for(size_t n=0; n<N; ++n) {
 			vector<int> & one_node = relab_freq.at(n);
 			vector<int> new_row_from_relab_freq(K);
 			for(size_t k=0; k<K; ++k) {
+				assert(relabelling.at(k) >= 0);
+				assert(relabelling.at(k) <  (int)K);
 				new_row_from_relab_freq.at( k ) = one_node.at( relabelling.at(k) );
 			}
 			new_row_from_relab_freq.swap( one_node );
