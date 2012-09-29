@@ -1964,7 +1964,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	// setting each cluster to its best match,
 	// where we hope that they all map to distinct clusters
 
-	{
+	if(1) {
 		vector<int> new_names(K);
 		vector<bool> already_taken(K);
 		bool optimism_failed = false;
@@ -1998,10 +1998,19 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	  //
 	  // the minimum dissimilarity is zero, so let's subtract from the rows
 		cout << " fall back to branch and bound" << endl;
-		For(row, kbyk) {
+		for(size_t k=0; k<K; ++k) {
+			vector<int> * row = &kbyk.at(k);
 			const int largest_element = *max_element(row->begin(), row->end());
+			if(is_currently_empty.at(k)) {
+				assert(largest_element==0);
+				For(cell, *row) {
+					assert(*cell == 0);
+				}
+			} else {
+				assert(largest_element>0);
 			For(cell, *row) {
 				*cell = largest_element - *cell;
+			}
 			}
 		}
 		For(row, kbyk) {
