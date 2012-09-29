@@ -2620,7 +2620,14 @@ try_again:
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
 		cout << " ... label-switching" << endl;
-		label_switch(s._g, s._N, highest_K_sampled, all_burned_in_z, groundTruth);
+		size_t max_K_to_consider_in_label_switching = highest_K_sampled;
+		if(groundTruth) {
+			const size_t max_K_in_ground_truth = 1 + *max_element(groundTruth->begin(), groundTruth->end());
+			if(max_K_to_consider_in_label_switching < max_K_in_ground_truth) {
+				max_K_to_consider_in_label_switching = max_K_in_ground_truth;
+			}
+		}
+		label_switch(s._g, s._N, max_K_to_consider_in_label_switching, all_burned_in_z, groundTruth);
 		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
 	}
 }
