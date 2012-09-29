@@ -2071,8 +2071,9 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far, 0);
 		assert(best_relabelling_so_far.size() == K);
 		for(size_t n=0; n<N; ++n) {
-			const int current_z_n = z.at(n);
-			const int new_z_n = best_relabelling_so_far.at(current_z_n);
+			const size_t current_z_n = z.at(n);
+			const size_t new_z_n = best_relabelling_so_far.at(current_z_n);
+			assert(new_z_n <  K);
 			new_z.at(n) = new_z_n;
 		}
 		return new_z;
