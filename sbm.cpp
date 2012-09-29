@@ -1967,7 +1967,6 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	assert(N>0);
 	const size_t K = relab_freq.front().size();
 	vector<bool> is_currently_empty(K,true);
-	vector<int> new_z(N); // this will be the return value
 
 	// Consider the clustering in z, and construct a K-by-K matrix of similarity
 	// THEN, convert it to a *distance* matrix
@@ -2015,12 +2014,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		}
 		if(!optimism_failed) {
 			// the optimistic route succeeded, applying the relabelling and return.
-			for(size_t n=0; n<N; ++n) {
-				const int current_z_n = z.at(n);
-				const int new_z_n = new_names.at(current_z_n);
-				new_z.at(n) = new_z_n;
-			}
-			return new_z;
+			return new_names;
 		}
 	}
 
@@ -2070,13 +2064,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		vector<int> best_relabelling_so_far;
 		recursive(0, K, new_names, already_taken, is_currently_empty, kbyk, best_score_so_far, best_relabelling_so_far, 0);
 		assert(best_relabelling_so_far.size() == K);
-		for(size_t n=0; n<N; ++n) {
-			const size_t current_z_n = z.at(n);
-			const size_t new_z_n = best_relabelling_so_far.at(current_z_n);
-			assert(new_z_n <  K);
-			new_z.at(n) = new_z_n;
-		}
-		return new_z;
+		return best_relabelling_so_far;
 	}
 }
 
@@ -2086,6 +2074,8 @@ void label_switch(
 		, vector< pair<int, vector<int> > > & all_burned_in_z
 		) {
 // TODO
+//  - probable bug: K < groundTruthNumberOfClusters (both fixed K, and learned K)
+//  - I think I'm calculating some wasted stuff while sorting by largest-first
 //  - reenable the optimistic version
 //  - check for non consecutive -1 in leaf
 //  - assert(largest > 0) ? Is this OK?
@@ -2113,9 +2103,14 @@ void label_switch(
 		if(one_state == all_burned_in_z.begin()) {
 			// leave the first one as-is
 		} else {
-			const vector<int> new_z = calculate_best_relabelling(one_state->second, relab_freq);
-			assert(new_z.size() == N);
-			one_state -> second = new_z;
+			const vector<int> relabelling = calculate_best_relabelling(one_state->second, relab_freq);
+			assert(relabelling.size() == K);
+			vector<int> & z = one_state -> second;
+			for(size_t n=0; n<N; ++n) {
+				const int current_z_n = z.at(n);
+				const int new_z_n = relabelling.at(current_z_n);
+				z.at(n) = new_z_n;
+			}
 		}
 		// Now, the 'current' kz has been relabelled.  We must add its details to the counts
 		for(size_t n=0; n<N; ++n) {
