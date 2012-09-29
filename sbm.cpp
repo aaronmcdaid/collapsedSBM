@@ -2110,6 +2110,8 @@ void label_switch(
 			for(size_t n=0; n<N; ++n) {
 				const int current_z_n = z.at(n);
 				const int new_z_n = relabelling.at(current_z_n);
+				assert(new_z_n >= 0);
+				assert(new_z_n <  (int)K);
 				z.at(n) = new_z_n;
 			}
 		}
@@ -2146,23 +2148,12 @@ void label_switch(
 				size_of_clusters.at(k).first += row->at(k);
 			}
 		}
-		for(size_t k=0; k < K; ++k) {
-			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
-			PP2(sz->first, sz->second);
-		}
 		sort(size_of_clusters.begin(), size_of_clusters.end());
 		reverse(size_of_clusters.begin(), size_of_clusters.end());
 		vector<size_t> new_names(K, -1);
 		for(size_t k=0; k < K; ++k) {
 			new_names.at( size_of_clusters.at(k).second ) = k;
 		}
-		uint64_t total = 0;
-		for(size_t k=0; k < K; ++k) {
-			pair<int64_t,size_t> * sz = & size_of_clusters.at(k);
-			PP3(sz->first, sz->second, new_names.at(k));
-			total += sz->first;
-		}
-		assert(total == N * all_burned_in_z.size());
 		for(size_t n=0; n<N; ++n) {
 			vector<int> & one_node = relab_freq.at(n);
 			vector<int> new_row_from_relab_freq(K);
