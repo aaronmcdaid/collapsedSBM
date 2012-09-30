@@ -2140,26 +2140,29 @@ void label_switch(
 	if(groundTruth) {
 		assert(groundTruth->size() == N);
 		vector<int> relabelling = calculate_best_relabelling(*groundTruth, relab_freq);
-		assert_valid_relabelling(K, relabelling, __LINE__);
-		set<int> unused_ids;
-		for(size_t k=0; k<K; ++k)
-			unused_ids.insert(k);
-		assert(unused_ids.size() == K);
-		for(size_t k=0; k<K; ++k) {
-			if(relabelling.at(k) != -1) {
-				const bool was_erased = unused_ids.erase(relabelling.at(k));
-				assert(was_erased);
+		{ // if there are any -1s (for empty clusters) we should fill
+		  // them in with unused ids
+			assert_valid_relabelling(K, relabelling, __LINE__);
+			set<int> unused_ids;
+			for(size_t k=0; k<K; ++k)
+				unused_ids.insert(k);
+			assert(unused_ids.size() == K);
+			for(size_t k=0; k<K; ++k) {
+				if(relabelling.at(k) != -1) {
+					const bool was_erased = unused_ids.erase(relabelling.at(k));
+					assert(was_erased);
+				}
 			}
-		}
-		for(size_t k=0; k<K; ++k) {
-			if(relabelling.at(k) == -1) {
-				assert(!unused_ids.empty());
-				const int use_this_id_for_empty = *unused_ids.begin();
-				unused_ids.erase(unused_ids.begin());
-				relabelling.at(k) = use_this_id_for_empty;
+			for(size_t k=0; k<K; ++k) {
+				if(relabelling.at(k) == -1) {
+					assert(!unused_ids.empty());
+					const int use_this_id_for_empty = *unused_ids.begin();
+					unused_ids.erase(unused_ids.begin());
+					relabelling.at(k) = use_this_id_for_empty;
+				}
 			}
+			assert(unused_ids.empty());
 		}
-		assert(unused_ids.empty());
 		// GT cluster k is closest to found cluster relabelling.at(k)
 		for(size_t n=0; n<N; ++n) {
 			vector<int> & one_node = relab_freq.at(n);
