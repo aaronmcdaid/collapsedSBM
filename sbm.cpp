@@ -2017,14 +2017,6 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		}
 	}
 
-	if(0) { // print the current state
-		for(size_t n=0; n<N; ++n) {
-			const int current_z_n = z.at(n);
-			cout << ' ' << current_z_n;
-		}
-		cout << endl;
-	}
-
 	{ // we're here because the optimistic route didn't work,
 	  // so we have to try the hard way
 	  // instead of maximizing similarity, let's minimize dissimilarity
@@ -2045,18 +2037,6 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 			}
 			}
 		}
-		/*
-		For(row, kbyk) {
-			For(cell, *row) {
-				cout
-					<< ' '
-					<< stack.push << fixed << setw(6)
-					<< *cell
-					<< stack.pop;
-			}
-			cout << endl;
-		}
-		*/
 		vector<int> new_names(K);
 		vector<bool> already_taken(K);
 		int best_score_so_far = INT_MAX;
@@ -2195,6 +2175,8 @@ void label_switch(
 			new_row_from_relab_freq.swap( one_node );
 		}
 	}
+
+	cout << " Done. (after " << ELAPSED() << " seconds)" << endl;
 
 	{ // print out the summary output from label-switching
 #define FIELD_WIDTH 8
@@ -2415,7 +2397,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
 	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
-	cout << endl << " = Starting MCMC =  (" << ELAPSED() << " seconds)" << endl << endl;
+	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	for(int i=1; i<=iterations; i++) {
 		if(commandLineK != -1)
 			assert(commandLineK == s._k);
@@ -2608,7 +2590,7 @@ try_again:
 			}
 		}
 	}
-	cout << endl << " = MCMC complete =  (" << ELAPSED() << " seconds)" << endl << endl;
+	cout << endl << " = MCMC complete =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	assert(highest_K_sampled > 0);
 	assert(highest_K_sampled >= highest_KnonEmpty_sampled);
 	if(save_z_fstream)
@@ -2639,10 +2621,11 @@ try_again:
 		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
 	}
 	if(args_info.labels_arg) {
-		assert(!all_burned_in_z.empty());
-		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
-		cout << " ... label-switching" << endl;
+		assert(!all_burned_in_z.empty());
+		cout << "label-switching ...";
+		cout.flush();
+		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		size_t max_K_to_consider_in_label_switching = highest_K_sampled;
 		if(groundTruth) {
 			const size_t max_K_in_ground_truth = 1 + *max_element(groundTruth->begin(), groundTruth->end());
@@ -2651,8 +2634,8 @@ try_again:
 			}
 		}
 		label_switch(s._g, s._N, max_K_to_consider_in_label_switching, all_burned_in_z, groundTruth);
-		// cout << endl << " = label-switching complete =  (" << ELAPSED() << " seconds)" << endl << endl;
 	}
+	cout << "SBM complete. (after " << ELAPSED() << " seconds)" << endl;
 }
 
 typedef vector<long double > theta_t;
