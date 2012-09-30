@@ -5,16 +5,12 @@ BITS=
 
 MAIN=sbm
 
-all: tags ${MAIN}
+all: ${MAIN}
 
 clean:
-	-rm tags ${MAIN} labels *.o */*.o
-
-tags:
-	ctags *.[ch]pp
+	-rm ${MAIN} labels *.o */*.o
 
 
-					#-Wclobbered   -Wempty-body   \ -Wignored-qualifiers  -Woverride-init   \ -Wtype-limits   -Wunused-but-set-parameter 
 CXXFLAGS=       \
           -std=gnu++0x   \
           -Wmissing-field-initializers   \
