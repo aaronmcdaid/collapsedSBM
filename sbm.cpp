@@ -2184,10 +2184,6 @@ void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< "nodeid"
 					<< stack.pop;
-			cout
-					<< stack.push << fixed << setw(FIELD_WIDTH+2)
-					<< "nodename"
-					<< stack.pop;
 			for(size_t k=0; k<K; ++k) {
 				ostringstream oss;
 				oss << "< " << k << " >";
@@ -2196,6 +2192,10 @@ void label_switch(
 					<< oss.str()
 					<< stack.pop;
 			}
+			cout
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< "nodename"
+					<< stack.pop;
 			cout << endl;
 
 		// the last few lines printed the column names. Next, we print the data
@@ -2213,16 +2213,16 @@ void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< n
 					<< stack.pop;
-			cout
-					<< stack.push << fixed << setw(FIELD_WIDTH+2)
-					<< node_name.str()
-					<< stack.pop;
 			for(size_t k=0; k<K; ++k) {
 				cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< relab_freq.at(n).at(k)
 					<< stack.pop;
 			}
+			cout
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< node_name.str()
+					<< stack.pop;
 			cout << endl;
 		}
 	}
@@ -2237,12 +2237,12 @@ void label_switch(
 					<< "nodeid"
 					<< stack.pop;
 			cout
-					<< stack.push << fixed << setw(FIELD_WIDTH+2)
-					<< "nodename"
-					<< stack.pop;
-			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< "cluster"
+					<< stack.pop;
+			cout
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< "nodename"
 					<< stack.pop;
 			cout << endl;
 
@@ -2261,14 +2261,14 @@ void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< n
 					<< stack.pop;
-			cout
-					<< stack.push << fixed << setw(FIELD_WIDTH+2)
-					<< node_name.str()
-					<< stack.pop;
 			const vector<int> & relab_freq_n = relab_freq.at(n);
 			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< max_element(relab_freq_n.begin(), relab_freq_n.end()) - relab_freq_n.begin()
+					<< stack.pop;
+			cout
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< node_name.str()
 					<< stack.pop;
 			cout << endl;
 		}
