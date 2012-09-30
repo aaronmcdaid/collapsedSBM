@@ -1996,15 +1996,14 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 	// where we hope that they all map to distinct clusters
 
 	{
-		vector<int> new_names(K);
+		vector<int> new_names(K, -1);
 		vector<bool> already_taken(K);
 		bool optimism_failed = false;
 		for(size_t old_k = 0; old_k<K; ++old_k) {
-			const vector<int> & row = kbyk.at(old_k);
-			const size_t best_fit = max_element(row.begin()        , row.end()        ) - row.begin();
-			// PP3(old_k, best_fit, is_currently_empty.at(old_k));
-			new_names.at(old_k) = best_fit;
 			if(!is_currently_empty.at(old_k)) {
+				const vector<int> & row = kbyk.at(old_k);
+				const size_t best_fit = max_element(row.begin()        , row.end()        ) - row.begin();
+				new_names.at(old_k) = best_fit;
 				if( already_taken.at(best_fit) ) {
 					optimism_failed = true;
 					break; // gotta give up on the optimistic route
@@ -2067,6 +2066,25 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		return best_relabelling_so_far;
 	}
 }
+void assert_valid_relabelling(const int K, const vector<int> &relabelling, int lineno) {
+	assert((int)relabelling.size() == K);
+	set<int> used_ids;
+	For(r, relabelling) {
+		const int id = *r;
+		if(id!=-1) {
+			assert(id>=0);
+			assert(id< K);
+			bool was_inserted =
+				used_ids.insert(id)
+				.second
+				;
+			if(!was_inserted) {
+				PP2(lineno, id);
+				assert(was_inserted);
+			}
+		}
+	}
+}
 
 void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
@@ -2098,7 +2116,7 @@ void label_switch(
 			// leave the first one as-is
 		} else {
 			const vector<int> relabelling = calculate_best_relabelling(one_state->second, relab_freq);
-			assert(relabelling.size() == K);
+			assert_valid_relabelling(K, relabelling, __LINE__);
 			vector<int> & z = one_state -> second;
 			for(size_t n=0; n<N; ++n) {
 				const int current_z_n = z.at(n);
@@ -2122,6 +2140,7 @@ void label_switch(
 	if(groundTruth) {
 		assert(groundTruth->size() == N);
 		vector<int> relabelling = calculate_best_relabelling(*groundTruth, relab_freq);
+		assert_valid_relabelling(K, relabelling, __LINE__);
 		set<int> unused_ids;
 		for(size_t k=0; k<K; ++k)
 			unused_ids.insert(k);
