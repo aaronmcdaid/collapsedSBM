@@ -25,7 +25,7 @@ To get the latest code from github and compile:
 
 You can simply run it with
 
-     ./sbm edge_list.txt -z output.txt
+     ./sbm edge_list.txt
 
 where edge_list.txt is your edge list file, made up of one line per edge.
 Each line gives the two nodes that are connected, separated by whitespace.
@@ -35,19 +35,21 @@ To use other options, run
 
      ./sbm --help
 
-There will be a lot of debugging output printed to the screen, but the
-important output will be stored in output.txt (or whichever filename
-you specify for '-z').  To apply the label-(un)switching procedure,
-described in section 5.6 of our draft [1], you can then run:
+The output will contain a lot of summary information on the results of the
+algorithm.  Hopefully much of it will be self-explanatory - don't hesitate
+to contact me if you have any questions or requests [2].  There is a large
+table near the end of the output will lists every node, showing how many
+iterations the node spent in each of the clusters.
 
-    ./labels < output.txt > output_unswitched.txt
+The final line of output will be a simple clustering of the nodes, where
+each node has been assigned to the single cluster to which it is most
+strongly assigned.
 
-This file, 'output_unswitched.txt' will be the most useful form of
-output - you should now see that most nodes spend the vast majority of
-their time in one cluster, in constrast with the regular relabelling of
-clusters within 'output.txt'.
+I would appreciate any feedback, and would be willing to make changes if
+you have any requests.
 
 
    == References ==
 
 [1] http://arxiv.org/abs/1203.3083
+[2] aaronmcdaid@gmail.com
