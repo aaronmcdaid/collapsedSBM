@@ -4,7 +4,8 @@
 
 This is an MCMC algorithm to cluster the nodes of a network according
 to the Stochastic Blockmodel of Nowicki & Snijders 2001.
-As described in our draft on arXiv [1].
+Our paper is accepted for publication in Computational Statistics & Data Analysis.
+    http://dx.doi.org/10.1016/j.csda.2012.10.021
 
 Copyright: Aaron McDaid. aaronmcdaid@gmail.com
 
@@ -37,9 +38,9 @@ To use other options, run
 
 The output will contain a lot of summary information on the results of the
 algorithm.  Hopefully much of it will be self-explanatory - don't hesitate
-to contact me if you have any questions or requests [2].  There is a large
-table near the end of the output will lists every node, showing how many
-iterations the node spent in each of the clusters.
+to contact me if you have any questions or requests [aaronmcdaid@gmail.com].
+There is a large table near the end of the output will lists every node,
+showing how many iterations the node spent in each of the clusters.
 
 The final line of output will be a simple clustering of the nodes, where
 each node has been assigned to the single cluster to which it is most
@@ -47,9 +48,3 @@ strongly assigned.
 
 I would appreciate any feedback, and would be willing to make changes if
 you have any requests.
-
-
-   == References ==
-
-[1] http://arxiv.org/abs/1203.3083
-[2] aaronmcdaid@gmail.com
