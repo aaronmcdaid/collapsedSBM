@@ -2084,7 +2084,16 @@ void label_switch(
 	assert(!all_burned_in_z.empty());
 	// already sorted by the number of non-empty clusters
 	vector< vector<int> > relab_freq(N, vector<int>(K, 0) );
+	int num_states_processed = 0;
 	For(one_state, all_burned_in_z) {
+		if(num_states_processed % 1000 == 0)
+			cout
+				<< " .. label-switching: "
+				<< num_states_processed
+				<< "/" << all_burned_in_z.size()
+				<< "\t(after " << ELAPSED() << " seconds)"
+				<< endl;
+		++num_states_processed;
 		{ // verify the number of non-empty clusters
 			set<int> non_empty_clusters;
 			for(size_t n=0; n<N; ++n) {
@@ -2530,9 +2539,11 @@ try_again:
 		// PP(s.pmf());
 		// cout << endl;
 		if(i%1000 == 0) {
-			cerr
-				<< "i:" << i
-				<< " nonEmpty:" << s.labelling.NonEmptyClusters
+			cout
+				<< " .. iteration: " << i
+				<< "/" << iterations
+				<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
+				<< "\t(after " << ELAPSED() << " seconds)"
 				<< endl;
 		}
 		if(i*2 >= iterations) {
@@ -2631,7 +2642,8 @@ try_again:
 		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
 		assert(!all_burned_in_z.empty());
 		cout << "label-switching ...";
-		cout.flush();
+		//cout.flush(); cout << " sorted ..."
+		cout << endl;
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
 		size_t max_K_to_consider_in_label_switching = highest_K_sampled;
 		if(groundTruth) {
