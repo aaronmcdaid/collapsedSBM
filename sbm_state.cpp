@@ -617,6 +617,8 @@ namespace sbm {
 		}
 		if(VERYCLOSE(perCluster_bits, this->P_z_orders())) {
 			perCluster_bits = this->P_z_orders();
+		} else {
+			PP3(perCluster_bits, this->P_z_orders(), perCluster_bits-this->P_z_orders());
 		}
 		assert(perCluster_bits == this->P_z_orders());
 		if(VERYCLOSE(perCluster_bits, 0.0L)) {
