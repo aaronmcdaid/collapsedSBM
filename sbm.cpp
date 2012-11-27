@@ -2529,8 +2529,12 @@ try_again:
 	
 		// PP(s.pmf());
 		// cout << endl;
-		// if(i%1000 == 0)
-			// cerr << "i:" << i << endl;
+		if(i%1000 == 0) {
+			cerr
+				<< "i:" << i
+				<< " nonEmpty:" << s.labelling.NonEmptyClusters
+				<< endl;
+		}
 		if(i*2 >= iterations) {
 			K_freq.at( s._k                        ) ++;
 			KnonEmpty_freq.at( s.labelling.NonEmptyClusters) ++;
