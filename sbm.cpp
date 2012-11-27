@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
 	PP(args_info.stringIDs_flag);
 	PP(args_info.mega_flag);
 	PP(args_info.alpha_arg);
+	PP2(args_info.beta1_arg, args_info.beta2_arg);;
 	if(args_info.GT_vector_given)
 		PP(args_info.GT_vector_arg);
 	else
@@ -105,6 +106,8 @@ int main(int argc, char **argv) {
 	sbm :: ObjectiveFunction_Poisson :: s     = args_info.gamma_s_arg;
 	sbm :: ObjectiveFunction_Poisson :: theta = args_info.gamma_phi_arg;
 	sbm :: ls_alpha_k = args_info.lsalpha_arg;
+	sbm :: ObjectiveFunction_Bernoulli :: beta_1     = args_info.beta1_arg;
+	sbm :: ObjectiveFunction_Bernoulli :: beta_2     = args_info.beta2_arg;
 
 
 	if(args_info.model_scf_flag) {
