@@ -278,9 +278,6 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
-		AR                    ->notify(false);
-		AR_alittleConservative->notify(false);
-		AR_veryConservative->notify(false);
 		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
 	assert(s._k >= 2);
