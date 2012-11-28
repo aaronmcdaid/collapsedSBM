@@ -1874,6 +1874,16 @@ static void label_switch(
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
+enum POSSIBLE_MOVES {
+		POS_MetroK
+		,POS_Gibbs
+		,POS_M3
+		,POS_AE
+		,POS_MoneNode
+		,POS_update_ls_positions
+		,POS_M3_LS
+};
+
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
 	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
@@ -2009,49 +2019,71 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			}
 		}
 
-try_again:
-		int random_move = static_cast<int>(drand48() * 7);
-		switch( random_move ) { /// use try_again if move not attempted
-			break; case 0: // can NOT handle LSSBM
+		vector<POSSIBLE_MOVES> possible_moves;
+				if(commandLineK == -1 && args_info.algo_metroK_arg) {
+					possible_moves.push_back(POS_MetroK);
+				}
+				if(args_info.algo_gibbs_arg) {
+					possible_moves.push_back(POS_Gibbs);
+				}
+				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg && s._k>1) {
+					possible_moves.push_back(POS_M3);
+				}
+				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
+					possible_moves.push_back(POS_AE);
+				}
+				if(s.cluster_to_points_map.empty() && args_info.algo_1node_arg) {
+					possible_moves.push_back(POS_MoneNode);
+				}
+				if(args_info.algo_lspos_arg) {
+					possible_moves.push_back(POS_update_ls_positions);
+				}
+				if(args_info.algo_lsm3_arg) {
+					possible_moves.push_back(POS_M3_LS);
+				}
+		assert(!possible_moves.empty());
+		int random_move = static_cast<int>(drand48() * possible_moves.size());
+		switch( possible_moves.at(random_move) ) {
+			break; case POS_MetroK: // can NOT handle LSSBM
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
 						pmf_track += MetropolisOnK(s, obj, r, &AR_metroK);
 				} else {
-					goto try_again;
+					assert(1==2);
 				}
-			break; case 1: // CAN handle LSSBM
+			break; case POS_Gibbs: // CAN handle LSSBM
 				if(args_info.algo_gibbs_arg) {
 
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
 				}
-			break; case 2: // can NOT handle LSSBM
+			break; case POS_M3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
 						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, MOVE_M3);
 				} else
-					goto try_again;
-			break; case 3: // can NOT handle LSSBM
+					assert(1==2);
+			break; case POS_AE: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
 				} else
-					goto try_again;
-			break; case 4: // can NOT handle LSSBM
+					assert(1==2);
+			break; case POS_MoneNode: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_1node_arg) {
 					pmf_track += MoneNode(s, obj, &AR_metro1Node);
 				} else
-					goto try_again;
-			break; case 5: // CAN handle LSSBM
+					assert(1==2);
+			break; case POS_update_ls_positions: // CAN handle LSSBM
 				if(args_info.algo_lspos_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
 				} else
-					goto try_again;
-			break; case 6: // CAN handle LSSBM
+					assert(1==2);
+			break; case POS_M3_LS: // CAN handle LSSBM
 				if(args_info.algo_lsm3_arg) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
 				} else
-					goto try_again;
+					assert(1==2);
 		}
 
 		// PP(i);
