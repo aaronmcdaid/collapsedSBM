@@ -145,27 +145,8 @@ namespace sbm {
 	}
 	int Labelling :: moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
-		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
-		const int _k = static_cast<int>(this->clusters.size());
-		assert(newClusterID >= 0 && newClusterID < _k);
-		assert(oldClusterID >= 0 && oldClusterID < _k);
-		assert(newClusterID != oldClusterID);
-
-		Cluster *cl = this->clusters.at(newClusterID);
-		Cluster *oldcl = this->clusters.at(oldClusterID);
-		assert(cl);
-		assert(oldcl);
-
-		this->fixUpIterators(n, cl, oldcl);
-
-		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
-
-		assert(oldClusterSize-1 == oldcl->order());
-		const int   clOrder =    cl->order();
-		const int   oldClOrder =  oldcl->order();
-		assert(clOrder > 0);
-		this->deltaSumOfLog2Facts(oldClOrder, clOrder);
-		// assert(isfinite(this->SumOfLog2Facts));
+		this->removeNode(n);
+		this->insertNode(n, newClusterID);
 		return oldClusterID;
 	}
 	int Labelling :: removeNode(const int n) {
