@@ -576,12 +576,16 @@ namespace sbm {
 			const pair<int,int> eps = this->vsg->EndPoints(relId);
 			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);
 			const int sndClusterNew = this->labelling.cluster_id.at(eps.second);
+
+			// The current/new block is fstClusterNew<>sndClusterNew,
+			// but we need to work out was block the rel *was* in
+
 			int fstClusterOld = fstClusterNew;
+			int sndClusterOld = sndClusterNew;
 			if(n == eps.first) {
 				assert(fstClusterOld == newcl);
 				fstClusterOld = oldcl;
 			}
-			int sndClusterOld = sndClusterNew;
 			if(n == eps.second) {
 				assert(sndClusterOld == newcl);
 				sndClusterOld = oldcl;

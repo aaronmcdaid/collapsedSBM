@@ -303,11 +303,22 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 			const long double pre = s.pmf_slow(obj);
 			const long double pre_fast = s.P_all_fastish(obj);
 			assert(VERYCLOSE(pre, pre_fast));
+
 			s.moveNodeAndInformOfEdges(*node, right);
+
 			const long double post = s.pmf_slow(obj);
 			const long double post_fast = s.P_all_fastish(obj);
 			assert(VERYCLOSE(post, post_fast));
-			s.moveNodeAndInformOfEdges(*node, left);
+
+			const int n = *node;
+
+			const int oldClusterID = s.labelling.cluster_id.at(n);
+			assert(oldClusterID == right);
+			s.labelling.removeNode(n);
+			s.labelling.insertNode(n, left);
+			s.informNodeMove(n, oldClusterID, left);
+			// s.informNodeMove(n, oldClusterID, -1);
+			// s.informNodeMove(n, -1, left);
 		}
 	}
 	s.deleteClusterFromTheEnd();
