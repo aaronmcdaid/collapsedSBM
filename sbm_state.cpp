@@ -115,7 +115,7 @@ namespace sbm {
 		this->clusters.pop_back();
 		delete clusterToDelete;
 		this->_k --;
-		this->SumOfLog2Facts -= LOG2GAMMA(this->_alpha);
+		this->SumOfLog2Facts -= this->log2GammaAlphaPlus.at(0);
 	}
 	void State :: deleteClusterFromTheEnd() {
 		assert(this->_k >= 1);
