@@ -154,6 +154,7 @@ namespace sbm {
 		Cluster *cl = this->clusters.at(newClusterID);
 		Cluster *oldcl = this->clusters.at(oldClusterID);
 		assert(cl);
+		assert(oldcl);
 
 		this->fixUpIterators(n, cl, oldcl);
 
@@ -166,6 +167,55 @@ namespace sbm {
 		this->deltaSumOfLog2Facts(oldClOrder, clOrder);
 		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
+	}
+	void Labelling :: removeNode(const int n) {
+		// remove a node from its cluster, leaving it as MISSING DATA
+		const int oldClusterID = this->cluster_id.at(n);
+		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
+		assert(oldClusterSize > 0);
+		const int _k = static_cast<int>(this->clusters.size());
+		assert(oldClusterID >= 0 && oldClusterID < _k);
+
+		Cluster *oldcl = this->clusters.at(oldClusterID);
+		assert(oldcl);
+
+		const list<int>:: iterator it = this->its.at(n);
+		assert(*it == n);
+		oldcl->eraseMember(it);
+		// WARNING: this->its.at(n) is now undefined
+
+		this->cluster_id.at(n) = -1;
+
+		assert(oldClusterSize-1 == oldcl->order());
+		if(oldClusterSize == 1) { this->NonEmptyClusters--; }
+		this->SumOfLog2Facts +=
+					- (this->log2GammaAlphaPlus.at(oldClusterSize ))
+					+ (this->log2GammaAlphaPlus.at(oldClusterSize-1   ))
+					;
+		// assert(isfinite(this->SumOfLog2Facts));
+	}
+	void Labelling :: insertNode(const int n, const int newClusterID) {
+		// currently UNASSIGNED
+		assert( this->cluster_id.at(n) == -1 );
+		const int _k = static_cast<int>(this->clusters.size());
+		assert(newClusterID >= 0 && newClusterID < _k);
+
+		Cluster *cl = this->clusters.at(newClusterID);
+		assert(cl);
+		const int initial_size_of_new_cluster = cl->order();
+
+		const list<int>:: iterator newit = cl->newMember(n); // fix up this->clusters.members
+		this->its.at(n) = newit; // fix up this->its
+		assert(1+initial_size_of_new_cluster == cl->order());
+
+		this->cluster_id.at(n) = newClusterID; // fix up this->cluster_id
+
+		if(initial_size_of_new_cluster == 0) { this->NonEmptyClusters++; }
+		this->SumOfLog2Facts +=
+					- (this->log2GammaAlphaPlus.at(initial_size_of_new_cluster ))
+					+ (this->log2GammaAlphaPlus.at(initial_size_of_new_cluster+1   ))
+					;
+
 	}
 	int State :: moveNode(const int n, const int newClusterID) {
 		return this->labelling.moveNode(n, newClusterID);
