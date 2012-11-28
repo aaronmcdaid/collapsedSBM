@@ -261,19 +261,32 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-enum M3orSM { MOVE_M3, MOVE_SM };
+enum POSSIBLE_MOVES {
+		POS_MetroK
+		,POS_Gibbs
+		,POS_M3
+		,POS_SM_Merge
+		,POS_SM_Split
+		,POS_AE
+		,POS_MoneNode
+		,POS_update_ls_positions
+		,POS_M3_LS
+};
+
+
 static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
 		, gsl_rng *r
-		, enum M3orSM move_type
+		, enum POSSIBLE_MOVES move_type
 		) {
-	assert(move_type == MOVE_M3);
-	// 1. Choose two clusters at random
-
-	if(s._k < 2) {
+	assert(move_type == POS_M3 || move_type == POS_SM_Merge || move_type == POS_SM_Split);
+	if(move_type != POS_SM_Split && s._k < 2) {
 		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
-	assert(s._k >= 2);
+
+	if(move_type == POS_SM_Split) {
+		s.appendEmptyCluster();
+	}
 
 // #define M3_debugPrinting
 // #define M3_Paranoid
@@ -283,10 +296,29 @@ static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 #endif
 	// const long double preRandom_P_z_K = s.P_z_orders();
 	assert(AR);
+
 	const int pre_k = s._k;
-	const int left = static_cast<int>(drand48() * s._k);
-	int right_; do { right_ = static_cast<int>(drand48() * s._k); } while (left==right_);
-	const int right = right_;
+	int left;
+	int right;
+	switch(move_type) {
+		break; case POS_M3 :
+			left = static_cast<int>(drand48() * s._k);
+			do { right = static_cast<int>(drand48() * s._k); } while (left==right);
+		break; case POS_SM_Merge :
+			left = static_cast<int>(drand48() * s._k);
+			do { right = static_cast<int>(drand48() * s._k); } while (left==right);
+		break; case POS_SM_Split :
+			left = static_cast<int>(drand48() * s._k-1);
+			assert(s.labelling.clusters.at(s._k-1)->order() == 0);
+			right = s._k-1;
+		break; default :
+			assert(1==2);
+	}
+	assert(left != right);
+	assert(left >= 0); assert(left < s._k);
+	assert(right >= 0); assert(right < s._k);
+
+
 #ifdef M3_debugPrinting
 	PP3(s._k, left,right);
 #endif
@@ -488,6 +520,9 @@ static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		}
 	}
 	assert(pre_k == s._k);
+	if(move_type == POS_SM_Split) {
+		s.deleteClusterFromTheEnd();
+	}
 	AR_alittleConservative->notify(false);
 	AR_veryConservative->notify(false);
 	return 0.0L;
@@ -1874,16 +1909,6 @@ static void label_switch(
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
-enum POSSIBLE_MOVES {
-		POS_MetroK
-		,POS_Gibbs
-		,POS_M3
-		,POS_AE
-		,POS_MoneNode
-		,POS_update_ls_positions
-		,POS_M3_LS
-};
-
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
 	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
@@ -2057,9 +2082,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			break; case POS_M3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, MOVE_M3);
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_M3);
 				} else
 					assert(1==2);
+			break; case POS_SM_Merge:
+				assert(1==2); // shouldn't get here as the merge stuff isn't in possible_moves yet
+			break; case POS_SM_Split:
+				assert(1==2); // shouldn't get here as the merge stuff isn't in possible_moves yet
 			break; case POS_AE: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
