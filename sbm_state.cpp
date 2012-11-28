@@ -633,6 +633,13 @@ namespace sbm {
 		const long double K_prior = this->P_z_K();
 		return assertNonPositiveFinite(K_prior + P_z_orders());
 	}
+	long double State :: P_all_fastish(const ObjectiveFunction *obj) const {
+		// This does have to iterate over all the blocks, but it's fast enough otherwise
+		const long double K_prior  = this->P_z_K();
+		const long double P_z_fast = this->P_z_orders();
+		const long double P_x_given_z = this->P_edges_given_z_slow(obj);
+		return K_prior + P_z_fast + P_x_given_z;
+	}
 
 	
 	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
