@@ -1927,6 +1927,8 @@ void recursive(const int deciding, const int K
 	if(deciding == K) {
 		int score = 0;
 		// cout << "leaf: ";
+#if 0
+		DO NOT REENABLE THIS by default.  It can be really slow
 		for(int old_k = 0; old_k < K; ++old_k) {
 			assert((int)kbyk.at(old_k).size() == K);
 			const int new_k = new_names.at(old_k);
@@ -1941,6 +1943,7 @@ void recursive(const int deciding, const int K
 		assert(score == partial_score);
 		// cout << "\tscore:" << setw(8) << score;
 		// cout << endl;
+#endif
 		if(best_score_so_far > score) {
 			best_score_so_far = score;
 			best_relabelling_so_far = new_names;
