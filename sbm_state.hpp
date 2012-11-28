@@ -64,6 +64,7 @@ struct Labelling {
 	int NonEmptyClusters;
 	mutable long double SumOfLog2Facts;
 	std :: vector<long double> log2GammaAlphaPlus;
+	int missing_nodes;
 	Labelling(const int _N, const long double _alpha);
 
 
@@ -206,6 +207,11 @@ struct State {
 
 	long double pmf_slow(const ObjectiveFunction *obj) const;
 	long double pmf(const ObjectiveFunction *obj) const;
+	inline bool is_full_of_nodes() const {
+		assert(this->labelling.missing_nodes >= 0);
+		assert(this->labelling.missing_nodes < this->_N);
+		return this->labelling.missing_nodes == 0;
+	}
 };
 struct ObjectiveFunction {
 	const bool selfloops;

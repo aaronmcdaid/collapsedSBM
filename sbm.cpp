@@ -2068,6 +2068,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 		assert(!possible_moves.empty());
 		int random_move = static_cast<int>(drand48() * possible_moves.size());
+		assert(s.labelling.missing_nodes == 0);
 		switch( possible_moves.at(random_move) ) {
 			break; case POS_MetroK: // can NOT handle LSSBM
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {

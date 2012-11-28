@@ -40,6 +40,7 @@ namespace sbm {
 		assert((int)this->cluster_id.size()==this->_N);
 		assert((int)this->its.size()==this->_N);
 		assert((int)this->clusters.back()->order()==this->_N);
+		this->missing_nodes = 0;
 
 		for(int i=0; i < this->_N+1; i++) {
 			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
@@ -150,6 +151,7 @@ namespace sbm {
 		return oldClusterID;
 	}
 	int Labelling :: removeNode(const int n) {
+		++ this->missing_nodes;
 		// remove a node from its cluster, leaving it as MISSING DATA
 		const int oldClusterID = this->cluster_id.at(n);
 		assert(oldClusterID >= 0);
@@ -178,6 +180,7 @@ namespace sbm {
 		return oldClusterID;
 	}
 	void Labelling :: insertNode(const int n, const int newClusterID) {
+		-- this->missing_nodes;
 		// currently UNASSIGNED
 		assert( this->cluster_id.at(n) == -1 );
 		const int _k = static_cast<int>(this->clusters.size());
@@ -814,9 +817,11 @@ namespace sbm {
 			assert(blocksEncountered == this->_k * (this->_k+1) / 2);
 			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
 		}
+		if(this->is_full_of_nodes()) {
 		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
 			PP2(total_edge_weight_verification , this->total_edge_weight);
 			PP (total_edge_weight_verification - this->total_edge_weight);
+		}
 		}
 		/*
 		DYINGWORDS(VERYCLOSE(edges_bits, this->P_edges_given_z_baseline() + this->P_edges_given_z_correction())) {
