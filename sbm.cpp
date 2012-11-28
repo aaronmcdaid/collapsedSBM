@@ -198,7 +198,7 @@ void randomize(sbm :: State &s, const int K) { // randomize the partition and ha
 	s.internalCheck();
 }
 
-bool fiftyfifty() {
+static bool fiftyfifty() {
 	if(drand48() < 0.5)
 		return true;
 	else
@@ -260,7 +260,7 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative, gsl_rng *r) {
+static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative, gsl_rng *r) {
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
@@ -487,7 +487,7 @@ long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceR
 	}
 }
 
-long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
+static long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 	assert(args_info.scf_flag);
 	const int successes = y_kl;
 	assert(successes >= 0);
@@ -496,7 +496,7 @@ long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 	const long double draw = gsl_ran_beta(r, successes + sbm :: ObjectiveFunction_Bernoulli :: beta_1, failures + sbm :: ObjectiveFunction_Bernoulli :: beta_2) ;
 	return draw;
 }
-long double gamma_draw(const int p_kl, const int y_kl, gsl_rng *r) {
+static long double gamma_draw(const int p_kl, const int y_kl, gsl_rng *r) {
 	const long double s_post = sbm :: ObjectiveFunction_Poisson :: s + y_kl;
 	const long double phi_post = 1.0L / (1.0L/sbm :: ObjectiveFunction_Poisson :: theta + p_kl);
 	const long double draw = gsl_ran_gamma(r, s_post, phi_post);
@@ -539,7 +539,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 	return min_on_diagonal > max_off_diagonal;
 }
 
-// static
+static
 long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
 	if(args_info.scf_flag) {
 		assert(!args_info.latentspace_flag);
@@ -847,7 +847,7 @@ long double update_one_nodes_position(const int n, sbm :: State &s, const sbm ::
 
 }
 #endif
-long double MH_update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
+static long double MH_update_one_nodes_position(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng * r) {
 	// cout << "MH_update_one_nodes_position" << endl;
 	// PP(n);
 	const int k = s.labelling.cluster_id.at(n);
@@ -924,7 +924,7 @@ long double MH_update_one_nodes_position(const int n, sbm :: State &s, const sbm
 	}
 }
 
-long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *ar, gsl_rng * r) {
+static long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *ar, gsl_rng * r) {
 	assert(args_info.scf_flag == 0);
 	// - take each cluster in turn.
 	//   - take each node in that cluster in turn
@@ -953,7 +953,7 @@ long double update_ls_positions(sbm :: State &s, const sbm :: ObjectiveFunction 
 	// assert(VERYCLOSE(post - pre , l2_delta_bits));
 	return l2_delta_bits;
 }
-pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int n, const int left, const int right) {
+static pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int n, const int left, const int right) {
 	assert(!obj->weighted && !obj->selfloops && !obj->directed);
 	assert((int)s.cluster_to_points_map.size() == s._N);
 
@@ -991,7 +991,7 @@ pair<long double, long double> prepare_two_M3_ls_proposals(sbm :: State &s, cons
 	const long double denominator = exp2l(pmf_left) + exp2l(pmf_right);
 	return make_pair (exp2l(pmf_left) / denominator, exp2l(pmf_right) / denominator);
 }
-long double M3_LS(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
+static long double M3_LS(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
 	assert(args_info.scf_flag == 0);
 	if(s._k < 2)
 		return 0.0;
@@ -1893,7 +1893,7 @@ struct CountSharedCluster { // for each *pair* of nodes, how often they share th
 	}
 };
 
-void recursive(const int deciding, const int K
+static void recursive(const int deciding, const int K
 		, vector<int> &new_names, vector<bool> &already_taken
 		, const vector<bool> &is_currently_empty
 		, const vector< vector<int> > & kbyk
@@ -1951,7 +1951,7 @@ void recursive(const int deciding, const int K
 		already_taken.at(new_k) = false;
 	}
 }
-vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
+static vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vector<int> > & relab_freq) {
 	const size_t N = relab_freq.size();
 	assert(N>0);
 	const size_t K = relab_freq.front().size();
@@ -2035,7 +2035,7 @@ vector<int> calculate_best_relabelling(const vector<int> & z, const vector< vect
 		return best_relabelling_so_far;
 	}
 }
-void assert_valid_relabelling(const int K, const vector<int> &relabelling, int lineno) {
+static void assert_valid_relabelling(const int K, const vector<int> &relabelling, int lineno) {
 	assert((int)relabelling.size() == K);
 	set<int> used_ids;
 	For(r, relabelling) {
@@ -2055,7 +2055,7 @@ void assert_valid_relabelling(const int K, const vector<int> &relabelling, int l
 	}
 }
 
-void label_switch(
+static void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
 		, const size_t N, const size_t K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
