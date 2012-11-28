@@ -8,7 +8,7 @@ MAIN=sbm
 all: ${MAIN}
 
 clean:
-	-rm ${MAIN} labels *.o */*.o
+	-rm ${MAIN} *.o */*.o
 
 
 CXXFLAGS=       \
