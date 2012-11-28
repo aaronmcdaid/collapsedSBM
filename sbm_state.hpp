@@ -193,7 +193,7 @@ struct State {
 	// 2. The bits for each cluster's size
 	// 3. The edges "baseline", where there are assumed to be no edges
 	// 4. The edges correction over the baseline.
-	long double P_z_K() const; // 1.
+	long double P_z_K(int k = -2) const; // 1.
 	long double P_z_orders() const; // 2.
 	long double P_z_slow() const;
 	long double P_z() const;

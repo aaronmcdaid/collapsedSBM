@@ -598,9 +598,12 @@ namespace sbm {
 		swap(this->_edgeCounts.counts.at(cl1), this->_edgeCounts.counts.at(cl2));
 	}
 
-	long double State :: P_z_K() const { // 1 and 2
+	long double State :: P_z_K(int k /*= -2*/) const { // 1 and 2
+		if(k==-2)
+			k = this->_k;
+		assert(k>=0);
 		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K
-		const long double priorOnK = args_info.uniformK_flag ? 0 : -LOG2FACT(this->_k); // Poisson(1) prior on K
+		const long double priorOnK = args_info.uniformK_flag ? 0 : -LOG2FACT(k); // Poisson(1) prior on K
 		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State :: P_z_orders() const { // given our current this->_k, what's P(z | k)
