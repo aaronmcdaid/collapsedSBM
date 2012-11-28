@@ -39,7 +39,7 @@ using namespace std;
 struct UsageMessage {
 };
 
-static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) ;
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
 
 static long double my_likelihood(const int n, sbm :: State &s, const sbm :: ObjectiveFunction *obj, int k = -1);
 static bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, gsl_rng *r);
@@ -75,6 +75,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_gibbs_arg);
 	PP(args_info.algo_1node_arg);
 	PP(args_info.algo_m3_arg);
+	PP(args_info.algo_sm_arg);
 	PP(args_info.algo_ejectabsorb_arg);
 	PP(args_info.initGT_flag);
 	PP(args_info.stringIDs_flag);
@@ -177,7 +178,7 @@ int main(int argc, char **argv) {
 	if(args_info.model_scf_flag) {
 		runSCF(network.get(), args_info.K_arg, args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, r);
 	} else {
-		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info.algo_gibbs_arg, args_info.algo_m3_arg, args_info, r);
+		runSBM(network.get(), args_info.K_arg, obj.get(), args_info.initGT_flag, groundTruth.empty() ? NULL : &groundTruth, args_info.iterations_arg, args_info, r);
 	}
 }
 
@@ -260,7 +261,13 @@ bool acceptTest(const long double delta, AcceptanceRate *AR = NULL) {
 
 static long double delta_P_z_x__1RowOfBlocks(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, const int pre_k, const int t, const int isolatedClusterId, const long double isolatedNodesSelfLoop);
 
-static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative, gsl_rng *r) {
+enum M3orSM { MOVE_M3, MOVE_SM };
+static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
+		, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
+		, gsl_rng *r
+		, enum M3orSM move_type
+		) {
+	assert(move_type == MOVE_M3);
 	// 1. Choose two clusters at random
 
 	if(s._k < 2) {
@@ -1867,7 +1874,7 @@ static void label_switch(
 
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
-static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const bool algo_gibbs, const bool algo_m3 , const  gengetopt_args_info &args_info, gsl_rng *r) {
+static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
 	if(g->get_plain_graph()->number_of_self_loops() > 0 && !obj->selfloops ){
 		cerr << endl << "Error: You must specify the -s flag to fully support self-loops. Your network has " << g->get_plain_graph()->number_of_self_loops() << " self-loops." << endl;
 		exit(1);
@@ -2012,13 +2019,13 @@ try_again:
 					goto try_again;
 				}
 			break; case 1: // CAN handle LSSBM
-				if(algo_gibbs) {
+				if(args_info.algo_gibbs_arg) {
 
 					pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
 				}
 			break; case 2: // can NOT handle LSSBM
-				if(s.cluster_to_points_map.empty() && algo_m3) {
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
+				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, MOVE_M3);
 				} else
 					goto try_again;
 			break; case 3: // can NOT handle LSSBM

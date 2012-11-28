@@ -70,6 +70,9 @@ struct gengetopt_args_info
   int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
   char * algo_m3_orig;	/**< @brief Use M3 in the algorithm original value given at command line.  */
   const char *algo_m3_help; /**< @brief Use M3 in the algorithm help description.  */
+  int algo_sm_arg;	/**< @brief Use SplitMerge (based on M3) in the algorithm (default='0').  */
+  char * algo_sm_orig;	/**< @brief Use SplitMerge (based on M3) in the algorithm original value given at command line.  */
+  const char *algo_sm_help; /**< @brief Use SplitMerge (based on M3) in the algorithm help description.  */
   int algo_ejectabsorb_arg;	/**< @brief Use N+F's eject-absorb move (default='1').  */
   char * algo_ejectabsorb_orig;	/**< @brief Use N+F's eject-absorb move original value given at command line.  */
   const char *algo_ejectabsorb_help; /**< @brief Use N+F's eject-absorb move help description.  */
@@ -144,6 +147,7 @@ struct gengetopt_args_info
   unsigned int algo_1node_given ;	/**< @brief Whether algo.1node was given.  */
   unsigned int algo_gibbs_given ;	/**< @brief Whether algo.gibbs was given.  */
   unsigned int algo_m3_given ;	/**< @brief Whether algo.m3 was given.  */
+  unsigned int algo_sm_given ;	/**< @brief Whether algo.sm was given.  */
   unsigned int algo_ejectabsorb_given ;	/**< @brief Whether algo.ejectabsorb was given.  */
   unsigned int iterations_given ;	/**< @brief Whether iterations was given.  */
   unsigned int initGT_given ;	/**< @brief Whether initGT was given.  */
