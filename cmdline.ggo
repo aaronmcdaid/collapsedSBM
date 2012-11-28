@@ -18,7 +18,6 @@ option  "iterations"         i "How many iterations"                 int       d
 option  "initGT"             - "Initialize to the ground truth"      flag       off
 option  "model.scf"          - "Stochastic community finding"        flag       off
 option  "scf"                - "Collapsed SCF"                       flag       off
-option  "algo.sbm.cem"       - "Classification EM (CEM) for the SBM"     flag       off
 option  "stringIDs"          - "string IDs in the input"             flag       off
 option  "mega"               - "dumb down the algorithm for *big* networks"  flag       off
 option  "printEveryNIters"   - "How often to print an update"        int        default="1000" no
