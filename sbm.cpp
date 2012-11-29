@@ -299,26 +299,33 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	}
 	s.appendEmptyCluster();
 	{
+		const long double pre = s.pmf_slow(obj);
+		const long double pre_fast = s.P_all_fastish(obj);
+		assert(VERYCLOSE(pre, pre_fast));
+
 		For(node, all_nodes) {
-			const long double pre = s.pmf_slow(obj);
-			const long double pre_fast = s.P_all_fastish(obj);
-			assert(VERYCLOSE(pre, pre_fast));
-
-			s.moveNodeAndInformOfEdges(*node, right);
-
-			const long double post = s.pmf_slow(obj);
-			const long double post_fast = s.P_all_fastish(obj);
-			assert(VERYCLOSE(post, post_fast));
-
 			const int n = *node;
-
-			assert(s.labelling.cluster_id.at(n) == right);
-			s.labelling.removeNode(n);
-			s.labelling.insertNode(n, left);
-			s.informNodeMove(n, right, left);
-			// s.informNodeMove(n, right, -1);
-			// s.informNodeMove(n, -1, left);
+			const int oldcl = s.labelling.removeNode(n);
+			assert(oldcl == left);
+			s.informNodeMove(n, left, -1);
 		}
+		For(node, all_nodes) {
+			const int n = *node;
+			s.labelling.insertNode(n, right);
+			s.informNodeMove(n, -1, right);
+		}
+		For(node, all_nodes) {
+			const int oldcl = s.moveNodeAndInformOfEdges(*node, left);
+			assert(oldcl == right);
+		}
+
+		const long double post2 = s.pmf_slow(obj);
+		const long double post_fast2 = s.P_all_fastish(obj);
+		assert(VERYCLOSE(post2, post_fast2));
+
+		assert(pre_fast == post_fast2);
+		assert(pre == post2);
+
 	}
 	s.deleteClusterFromTheEnd();
 	return 0.0L;
