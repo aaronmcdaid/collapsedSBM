@@ -280,12 +280,40 @@ static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, enum POSSIBLE_MOVES move_type
 		) {
 	assert(move_type == POS_M3 || move_type == POS_SM_Merge || move_type == POS_SM_Split);
+	/*
+	cout << " . . "; switch(move_type) {
+		break; case POS_M3 : cout << "POS_M3" << endl;
+		break; case POS_SM_Merge : cout << "POS_SM_Merge" << endl;
+		break; case POS_SM_Split : cout << "POS_SM_Split" << endl;
+		break; default :
+			assert(1==2);
+	}
+	*/
 	if(move_type != POS_SM_Split && s._k < 2) {
 		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
 
+	long double delta_from_an_extra_cluster_in_SM_Split = 0.0L;
 	if(move_type == POS_SM_Split) {
+		const int small_k = s._k;
+		const int big_k = s._k + 1;
+		delta_from_an_extra_cluster_in_SM_Split =
+			-( s.P_z_K(small_k) )
+			+( s.P_z_K(big_k  ) )
+			-( LOG2GAMMA(small_k * s._alpha) - LOG2GAMMA(small_k * s._alpha + s._N) )
+			+( LOG2GAMMA(big_k   * s._alpha) - LOG2GAMMA(big_k   * s._alpha + s._N) )
+			;
+		/*
+		const long double pre_append = s.P_z_slow();
+		PP(s.labelling.SumOfLog2Facts + LOG2GAMMA(s._alpha));
+		*/
 		s.appendEmptyCluster();
+		/*
+		PP(s.labelling.SumOfLog2Facts);
+		const long double post_append = s.P_z_slow();
+		PP2(post_append - pre_append, delta_from_an_extra_cluster_in_SM_Split);
+		assert(VERYCLOSE(post_append - pre_append, delta_from_an_extra_cluster_in_SM_Split));
+		*/
 	}
 
 // #define M3_debugPrinting
@@ -499,7 +527,8 @@ static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		AR_veryConservative->notify(changed>0 && changed < M);
 
 		assert(pre_k == s._k);
-		return delta_P_zK;
+		// cout << "Accepted" << endl;
+		return delta_P_zK + delta_from_an_extra_cluster_in_SM_Split;
 	}
 	else
 	{
@@ -525,6 +554,7 @@ static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	}
 	AR_alittleConservative->notify(false);
 	AR_veryConservative->notify(false);
+	// cout << "Rejected" << endl;
 	return 0.0L;
 	}
 }
