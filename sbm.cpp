@@ -2130,6 +2130,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				<< " .. iteration: " << i
 				<< "/" << iterations
 				<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
+				<< "\tK: " << s._k
 				<< "\t(after " << ELAPSED() << " seconds)"
 				<< endl;
 		}
