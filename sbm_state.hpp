@@ -156,6 +156,8 @@ struct State {
 	int appendEmptyCluster();
 	void deleteClusterFromTheEnd() ;
 	int moveNode(const int n, const int newClusterID);
+	int removeNodeAndInformOfEdges(const int n);
+	void insertNodeAndInformOfEdges(const int n, const int newClusterID);
 	int isolateNode(const int n); // create a new (probably temporary) cluster to hold this one node
 	void unIsolateTempNode(const int n, const int newClusterID); // move a node from its 'temporary' cluster to an existing cluster
 	void swapClusters(const int cl1, const int cl2);

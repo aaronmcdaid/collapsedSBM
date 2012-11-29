@@ -146,6 +146,7 @@ namespace sbm {
 	}
 	int Labelling :: moveNode(const int n, const int newClusterID) {
 		const int oldClusterID = this->cluster_id.at(n);
+		assert(oldClusterID >=0);
 		this->removeNode(n);
 		this->insertNode(n, newClusterID);
 		return oldClusterID;
@@ -205,6 +206,15 @@ namespace sbm {
 	}
 	int State :: moveNode(const int n, const int newClusterID) {
 		return this->labelling.moveNode(n, newClusterID);
+	}
+	int State :: removeNodeAndInformOfEdges(const int n) {
+		const int oldCluster = this->labelling.removeNode(n);
+		this->informNodeMove(n, oldCluster, -1);
+		return oldCluster;
+	}
+	void State :: insertNodeAndInformOfEdges(const int n, const int newClusterID) {
+		this->labelling.insertNode(n, newClusterID);
+		this->informNodeMove(n, -1, newClusterID);
 	}
 	int State :: isolateNode(const int n) { // create a new (probably temporary) cluster to hold this one node
 		assert(n>=0 && n<this->_N);
@@ -614,7 +624,8 @@ namespace sbm {
 	}
 	int State :: moveNodeAndInformOfEdges(const int n, const int newcl) {
 		const int oldClusterID = this->labelling.cluster_id.at(n);
-		this->moveNode(n, newcl);
+		const int old = this->moveNode(n, newcl);
+		assert(old == oldClusterID);
 		this->informNodeMove(n, oldClusterID, newcl);
 		return oldClusterID;
 	}
