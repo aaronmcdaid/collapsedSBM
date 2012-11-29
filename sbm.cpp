@@ -2143,7 +2143,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg && s._k>1) {
 					possible_moves.push_back(POS_M3);
 				}
-				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg          ) {
+				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg          ) {
 					possible_moves.push_back(POS_SM_Merge);
 					possible_moves.push_back(POS_SM_Split);
 				}
@@ -2185,7 +2185,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				} else
 					assert(1==2);
 			break; case POS_SM_Split: // can NOT handle LSSBM
-				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
+				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg) {
 						pmf_track += SM_Split(s, obj, r);
 				} else
 					assert(1==2);
