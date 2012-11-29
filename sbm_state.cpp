@@ -168,9 +168,10 @@ namespace sbm {
 		// assert(isfinite(this->SumOfLog2Facts));
 		return oldClusterID;
 	}
-	void Labelling :: removeNode(const int n) {
+	int Labelling :: removeNode(const int n) {
 		// remove a node from its cluster, leaving it as MISSING DATA
 		const int oldClusterID = this->cluster_id.at(n);
+		assert(oldClusterID >= 0);
 		const int oldClusterSize = this->clusters.at(oldClusterID)->order();
 		assert(oldClusterSize > 0);
 		const int _k = static_cast<int>(this->clusters.size());
@@ -193,6 +194,7 @@ namespace sbm {
 					+ (this->log2GammaAlphaPlus.at(oldClusterSize-1   ))
 					;
 		// assert(isfinite(this->SumOfLog2Facts));
+		return oldClusterID;
 	}
 	void Labelling :: insertNode(const int n, const int newClusterID) {
 		// currently UNASSIGNED
@@ -600,6 +602,10 @@ namespace sbm {
 				assert(sndClusterOld == newcl);
 				sndClusterOld = oldcl;
 			}
+
+			// PP2(fstClusterOld, sndClusterOld);
+			// PP2(fstClusterNew, sndClusterNew);
+
 			this->_edgeCounts.uninform(fstClusterOld, sndClusterOld, relId);
 			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew, relId);
 		}

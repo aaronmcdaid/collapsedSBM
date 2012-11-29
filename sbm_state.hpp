@@ -72,7 +72,7 @@ struct Labelling {
 	void deltaSumOfLog2Facts(const int oldClOrder, const int clOrder);
 	void fixUpIterators(const int n, Cluster *cl, Cluster *oldcl);
 	int moveNode(const int n, const int newClusterID);
-	void removeNode(const int n);
+	int removeNode(const int n);
 	void insertNode(const int n, const int newClusterID);
 	void swapClusters(const int cl1, const int cl2);
 };
