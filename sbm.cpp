@@ -2162,12 +2162,12 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					assert(1==2);
 			break; case POS_SM_Merge: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_SM_Merge);
+						pmf_track += SM_Split(s, obj, r);
 				} else
 					assert(1==2);
 			break; case POS_SM_Split: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_SM_Split);
+						pmf_track += SM_Split(s, obj, r);
 				} else
 					assert(1==2);
 			break; case POS_AE: // can NOT handle LSSBM
