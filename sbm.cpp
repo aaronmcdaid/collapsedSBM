@@ -323,11 +323,11 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		}
 
 		const long double post2 = s.pmf_slow(obj);
-		const long double post_fast2 = s.P_all_fastish(obj);
-		assert(VERYCLOSE(post2, post_fast2));
+		const long double post2_fast = s.P_all_fastish(obj);
+		assert(VERYCLOSE(post2, post2_fast));
 
-		assert(pre_fast == post_fast2);
-		assert(pre == post2);
+		assert(VERYCLOSE(pre_fast, post2_fast));
+		assert(VERYCLOSE(pre, post2));
 
 	}
 	s.deleteClusterFromTheEnd();
