@@ -2231,7 +2231,19 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				<< " .. iteration: " << i
 				<< "/" << iterations
 				<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
-				<< "\tK: " << s._k
+				<< "\tK: " << s._k;
+			if(groundTruth) {
+				vector<int> z_vector(s._N);
+				for (int n=0; n < s._N; n++) {
+					const int id_of_cluster = s.labelling.cluster_id.at(n);
+					z_vector.at(n) = id_of_cluster;
+				}
+				assert(z_vector.size() == groundTruth->size());
+				cout
+					<< "\tnmi: "
+					<< sbm :: State :: NMI(z_vector, *groundTruth) * 100;
+			}
+			cout
 				<< "\t(after " << ELAPSED() << " seconds)"
 				<< endl;
 		}
