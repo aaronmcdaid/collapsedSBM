@@ -309,13 +309,12 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		For(node, all_nodes) {
 			const int n = *node;
 			const int oldcl = s.labelling.removeNode(n);
-			assert(oldcl == left);
 			s.informNodeMove(n, left, -1);
+			assert(oldcl == left);
 		}
 		For(node, all_nodes) {
 			const int n = *node;
-			s.labelling.insertNode(n, right);
-			s.informNodeMove(n, -1, right);
+			s.insertNodeAndInformOfEdges(n,right);
 		}
 		For(node, all_nodes) {
 			const int oldcl = s.moveNodeAndInformOfEdges(*node, left);
