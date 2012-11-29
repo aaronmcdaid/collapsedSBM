@@ -273,6 +273,46 @@ enum POSSIBLE_MOVES {
 		,POS_M3_LS
 };
 
+long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
+		, gsl_rng * //r
+		) {
+	/* Split
+	 * 1. select a cluster at random and shuffle its nodes
+	 * 2. remove all those nodes from that cluster
+	 * 3. randomly reassign, recording the decisions made and remembering this part of the proposal probablity
+	 * 4. calculate the two prob-ratios and execute
+	 */
+	/* Merge
+	 * 1. select two clusters at random, and shuffle their nodes.
+	 * 2. remove all those nodes from that cluster
+	 * 3. NON-randomly reassign, FORCING the decisions made and remembering this part of the proposal probablity
+	 * 4. calculate the two prob-ratios and execute
+	 */
+	const int pre_k = s._k;
+	const int left = static_cast<int>(drand48() * pre_k);
+	const int right = s._k;
+	vector<int> all_nodes;
+	{
+		const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
+		For(node, lCluster->get_members()) { all_nodes.push_back(*node); }
+		random_shuffle(all_nodes.begin(), all_nodes.end());
+	}
+	s.appendEmptyCluster();
+	{
+		For(node, all_nodes) {
+			const long double pre = s.pmf_slow(obj);
+			const long double pre_fast = s.P_all_fastish(obj);
+			assert(VERYCLOSE(pre, pre_fast));
+			s.moveNodeAndInformOfEdges(*node, right);
+			const long double post = s.pmf_slow(obj);
+			const long double post_fast = s.P_all_fastish(obj);
+			assert(VERYCLOSE(post, post_fast));
+			s.moveNodeAndInformOfEdges(*node, left);
+		}
+	}
+	s.deleteClusterFromTheEnd();
+	return 0.0L;
+}
 
 static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
