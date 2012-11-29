@@ -2124,6 +2124,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg && s._k>1) {
 					possible_moves.push_back(POS_M3);
 				}
+				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg          ) {
+					possible_moves.push_back(POS_SM_Merge);
+					possible_moves.push_back(POS_SM_Split);
+				}
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 					possible_moves.push_back(POS_AE);
 				}
@@ -2156,10 +2160,16 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_M3);
 				} else
 					assert(1==2);
-			break; case POS_SM_Merge:
-				assert(1==2); // shouldn't get here as the merge stuff isn't in possible_moves yet
-			break; case POS_SM_Split:
-				assert(1==2); // shouldn't get here as the merge stuff isn't in possible_moves yet
+			break; case POS_SM_Merge: // can NOT handle LSSBM
+				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_SM_Merge);
+				} else
+					assert(1==2);
+			break; case POS_SM_Split: // can NOT handle LSSBM
+				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
+						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r, POS_SM_Split);
+				} else
+					assert(1==2);
 			break; case POS_AE: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
