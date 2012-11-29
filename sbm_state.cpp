@@ -546,6 +546,8 @@ namespace sbm {
 	State :: EdgeCounts :: EdgeCounts(const graph :: weights :: EdgeDetailsInterface *edge_details) : _edge_details(edge_details), externalEdgeWeight(0.0L) {
 	}
 	void State :: EdgeCounts :: inform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
+		if( cl1==-1 || cl2 == -1)
+			return;
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
@@ -558,6 +560,8 @@ namespace sbm {
 		}
 	}
 	void State :: EdgeCounts :: uninform(const int cl1, const int cl2, int relId) { // inform us of an edge between cl1 and cl2
+		if( cl1==-1 || cl2 == -1)
+			return;
 		assert(cl1 >= 0); // && cl1 < this->_k);
 		assert(cl2 >= 0); // && cl2 < this->_k);
 		long double l2h = this->_edge_details->getl2h(relId);
@@ -570,30 +574,40 @@ namespace sbm {
 		}
 	}
 	void State :: informNodeMove(const int n, const int oldcl, const int newcl) { // a node has just moved from one cluster to another. We must consider it's neighbours for _edgeCounts
+		// cout << endl;
 		assert(oldcl != newcl);
+		assert(oldcl >= -1);
+		assert(newcl >= -1);
+		assert(newcl == -1 || this->labelling.cluster_id.at(n) == newcl);
+		// If either is -1, then consider those paris to be MISSING data
 		const std :: vector<int32_t> & rels = this->vsg->neighbouring_rels_in_order(n);
 		forEach(const int relId, amd :: mk_range(rels)) {
+			// PP(relId);
 			const pair<int,int> eps = this->vsg->EndPoints(relId);
-			const int fstClusterNew = this->labelling.cluster_id.at(eps.first);
-			const int sndClusterNew = this->labelling.cluster_id.at(eps.second);
+			int fstClusterNew = this->labelling.cluster_id.at(eps.first);
+			int sndClusterNew = this->labelling.cluster_id.at(eps.second);
 
 			// The current/new block is fstClusterNew<>sndClusterNew,
 			// but we need to work out was block the rel *was* in
+			// We'll start by guessing that old==new, then correct it.
 
 			int fstClusterOld = fstClusterNew;
 			int sndClusterOld = sndClusterNew;
 			if(n == eps.first) {
-				assert(fstClusterOld == newcl);
+				assert(newcl == -1 || fstClusterOld == newcl);
 				fstClusterOld = oldcl;
+				fstClusterNew = newcl;
 			}
 			if(n == eps.second) {
-				assert(sndClusterOld == newcl);
+				assert(newcl == -1 || sndClusterOld == newcl);
 				sndClusterOld = oldcl;
+				sndClusterNew = newcl;
 			}
 
 			// PP2(fstClusterOld, sndClusterOld);
 			// PP2(fstClusterNew, sndClusterNew);
 
+			// if either block is a "-1" block, then we can rely on {un,}inform to ignore them
 			this->_edgeCounts.uninform(fstClusterOld, sndClusterOld, relId);
 			this->_edgeCounts.  inform(fstClusterNew, sndClusterNew, relId);
 		}
