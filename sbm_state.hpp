@@ -209,7 +209,7 @@ struct State {
 	long double pmf(const ObjectiveFunction *obj) const;
 	inline bool is_full_of_nodes() const {
 		assert(this->labelling.missing_nodes >= 0);
-		assert(this->labelling.missing_nodes < this->_N);
+		assert(this->labelling.missing_nodes <= this->_N);
 		return this->labelling.missing_nodes == 0;
 	}
 };
