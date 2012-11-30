@@ -276,6 +276,82 @@ enum POSSIBLE_MOVES {
 template<typename T>
 void Ignore(const T&) { }
 
+long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
+		, gsl_rng * //r
+		, const vector<int> &all_nodes
+		, const int left
+		, const int right
+		, vector<int> &z
+		) {
+	// given a set of nodes, all currently unassigned,
+	// assign them to one of two clusters randomly.
+	// Return *this* part of the proposal probability.
+	// The z vector is used to return, *or to input*,
+	// the assignments of each node.
+	assert(left>=0  &&  left<s._k);
+	assert(right>=0 && right<s._k);
+	assert(left != right);
+	const size_t num = all_nodes.size();
+	assert(num == z.size());
+	assert(num > 0);
+	long double this_prop_prob = 0.0L;
+	for(size_t ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		assert(n>=0 && n<s._N);
+		assert(-1 == s.labelling.cluster_id.at(n));
+		const long double miss_score = s.P_all_fastish(obj);
+
+		s.insertNodeAndInformOfEdges(n, left);
+		long double left_score = s.P_all_fastish(obj);
+		s.removeNodeAndInformOfEdges(n);
+
+		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));
+
+		s.insertNodeAndInformOfEdges(n, right);
+		long double right_score = s.P_all_fastish(obj);
+		s.removeNodeAndInformOfEdges(n);
+
+		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));
+		assert(miss_score > left_score);
+		assert(miss_score > right_score);
+		// DYINGWORDS(VERYCLOSE(left_score, right_score)) { PP3(left_score, right_score, left_score - right_score); }
+
+		const long double max_score = left_score > right_score ? left_score : right_score;
+		left_score -= max_score;
+		right_score -= max_score;
+		left_score = exp2l(left_score);
+		right_score = exp2l(right_score);
+		// PP2(left_score, right_score);
+		const long double total = left_score + right_score;
+		left_score /= total;
+		right_score /= total;
+		// PP2(left_score, right_score);
+		// assert(VERYCLOSE(left_score , 0.5L));
+		// assert(VERYCLOSE(right_score , 0.5L));
+
+		assert(VERYCLOSE(left_score + right_score , 1.0L));
+
+		assert(z.at(ii) == -1); // This will change later
+		if(z.at(ii) == -1) {
+			const long double unif = drand48();
+			if(unif < left_score)
+				z.at(ii) = left;
+			else
+				z.at(ii) = right;
+		}
+		s.insertNodeAndInformOfEdges(n, z.at(ii));
+
+		if(z.at(ii) == left) {
+			this_prop_prob += log2l(left_score);
+		}
+		else if(z.at(ii) == right) {
+			this_prop_prob += log2l(right_score);
+		} else
+			assert(1==2);
+	}
+	return this_prop_prob;
+}
+
 long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng * //r
 		) {
