@@ -353,7 +353,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 }
 
 long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
-		, gsl_rng * //r
+		, gsl_rng *r
 		) {
 	/* Split
 	 * 1. select a cluster at random and shuffle its nodes
@@ -376,6 +376,9 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		For(node, lCluster->get_members()) { all_nodes.push_back(*node); }
 		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
+	const int num = all_nodes.size();
+	if(num==0)
+		return 0.0L;
 	s.appendEmptyCluster();
 	{
 		const long double pre = s.pmf_slow(obj);
@@ -388,8 +391,13 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 			s.informNodeMove(n, left, -1);
 			assert(oldcl == left);
 		}
+		{ // all the nodes have now been removed, let's start using SM_worker
+			vector<int> z(num, -1);
+			SM_worker(s, obj, r, all_nodes, left, right, z);
+		}
 		For(node, all_nodes) {
 			const int n = *node;
+			s.removeNodeAndInformOfEdges(n);
 			s.insertNodeAndInformOfEdges(n,right);
 		}
 		For(node, all_nodes) {
