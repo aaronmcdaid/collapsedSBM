@@ -380,39 +380,36 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	if(num==0)
 		return 0.0L;
 	s.appendEmptyCluster();
-	{
-		const long double pre = s.pmf_slow(obj);
-		const long double pre_fast = s.P_all_fastish(obj);
-		assert(VERYCLOSE(pre, pre_fast));
 
-		For(node, all_nodes) {
-			const int n = *node;
-			const int oldcl = s.labelling.removeNode(n);
-			s.informNodeMove(n, left, -1);
-			assert(oldcl == left);
-		}
-		{ // all the nodes have now been removed, let's start using SM_worker
-			vector<int> z(num, -1);
-			SM_worker(s, obj, r, all_nodes, left, right, z);
-		}
-		For(node, all_nodes) {
-			const int n = *node;
-			s.removeNodeAndInformOfEdges(n);
-			s.insertNodeAndInformOfEdges(n,right);
-		}
-		For(node, all_nodes) {
-			const int oldcl = s.moveNodeAndInformOfEdges(*node, left);
-			assert(oldcl == right);
-		}
+	const long double pre_fast = s.P_all_fastish(obj);
 
-		const long double post2 = s.pmf_slow(obj);
-		const long double post2_fast = s.P_all_fastish(obj);
-		assert(VERYCLOSE(post2, post2_fast));
+	// remove all the nodes from their cluster
+	// reassign randomly
+	// calculate FULL proposal probability
+	// Accept/Reject:
+	// 	accept: return
+	// 	reject: undo
 
-		assert(VERYCLOSE(pre_fast, post2_fast));
-		assert(VERYCLOSE(pre, post2));
-
+	For(node, all_nodes) {
+		const int n = *node;
+		const int oldcl = s.labelling.removeNode(n);
+		s.informNodeMove(n, left, -1);
+		assert(oldcl == left);
 	}
+	{ // all the nodes have now been removed, let's start using SM_worker
+		vector<int> z(num, -1);
+		SM_worker(s, obj, r, all_nodes, left, right, z);
+	}
+	For(node, all_nodes) {
+		const int n = *node;
+		s.removeNodeAndInformOfEdges(n);
+		s.insertNodeAndInformOfEdges(n,left);
+	}
+
+	const long double post2_fast = s.P_all_fastish(obj);
+
+	assert(VERYCLOSE(pre_fast, post2_fast));
+
 	s.deleteClusterFromTheEnd();
 	return 0.0L;
 }
