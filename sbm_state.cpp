@@ -665,7 +665,8 @@ namespace sbm {
 		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State :: P_z_orders() const { // given our current this->_k, what's P(z | k)
-		return                        LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
+		const int non_missing_N = this->_N - this->labelling.missing_nodes;
+		return                        LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + non_missing_N) - this->_k*LOG2GAMMA(this->_alpha) + this->labelling.SumOfLog2Facts;
 	}
 
 	long double State :: P_z_slow() const { // given our current this->_k, what's P(z | k)
@@ -828,6 +829,7 @@ namespace sbm {
 			assert(isfinite(ls_bits));
 			edges_bits += ls_bits;
 		}
+		if(this->is_full_of_nodes()) {
 		if(obj->directed) {
 			assert(blocksEncountered == this->_k * this->_k);
 			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
@@ -835,7 +837,6 @@ namespace sbm {
 			assert(blocksEncountered == this->_k * (this->_k+1) / 2);
 			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
 		}
-		if(this->is_full_of_nodes()) {
 		DYINGWORDS(total_edge_weight_verification == this->total_edge_weight) {
 			PP2(total_edge_weight_verification , this->total_edge_weight);
 			PP (total_edge_weight_verification - this->total_edge_weight);
