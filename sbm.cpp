@@ -273,6 +273,9 @@ enum POSSIBLE_MOVES {
 		,POS_M3_LS
 };
 
+template<typename T>
+void Ignore(const T&) { }
+
 long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng * //r
 		) {
