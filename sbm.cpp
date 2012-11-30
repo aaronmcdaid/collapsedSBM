@@ -961,16 +961,16 @@ static long double MH_update_one_nodes_position(const int n, sbm :: State &s, co
 		const long double sum_weight_on_this_rel = s.sum_weights_BOTH_directions(n,m);
 
 		// I'll first make the calculations as if there are no edges, then correct for that if necessary
-		const long double disconnected_prob = -log2l(1+expl(sbm :: ls_alpha_k - dist_2));
+		const long double disconnected_prob = -log2l(1+exp2l(sbm :: ls_alpha_k - dist_2));
 		acceptance_prob += disconnected_prob * (obj->directed ? 2 : 1);
-		const long double old_disconnected_prob = -log2l(1+expl(sbm :: ls_alpha_k - old_dist_2));
+		const long double old_disconnected_prob = -log2l(1+exp2l(sbm :: ls_alpha_k - old_dist_2));
 		sort_of_reverse_acceptance_prob += old_disconnected_prob * (obj->directed ? 2 : 1);
 
 		if(sum_weight_on_this_rel > 0) {
-			const long double this_is_what_is_actually_subtracted = -log2l(1+expl(dist_2-sbm :: ls_alpha_k)) - disconnected_prob;
+			const long double this_is_what_is_actually_subtracted = -log2l(1+exp2l(dist_2-sbm :: ls_alpha_k)) - disconnected_prob;
 			acceptance_prob += this_is_what_is_actually_subtracted * sum_weight_on_this_rel;
 
-			const long double old_this_is_what_is_actually_subtracted = -log2l(1+expl(old_dist_2-sbm :: ls_alpha_k)) - old_disconnected_prob;
+			const long double old_this_is_what_is_actually_subtracted = -log2l(1+exp2l(old_dist_2-sbm :: ls_alpha_k)) - old_disconnected_prob;
 			sort_of_reverse_acceptance_prob += old_this_is_what_is_actually_subtracted * sum_weight_on_this_rel;
 		}
 	}
