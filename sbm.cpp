@@ -379,9 +379,9 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	const int num = all_nodes.size();
 	if(num==0)
 		return 0.0L;
-	s.appendEmptyCluster();
 
 	const long double pre_fast = s.P_all_fastish(obj);
+	s.appendEmptyCluster();
 
 	// remove all the nodes from their cluster
 	// reassign randomly
@@ -396,21 +396,32 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		s.informNodeMove(n, left, -1);
 		assert(oldcl == left);
 	}
-	{ // all the nodes have now been removed, let's start using SM_worker
-		vector<int> z(num, -1);
-		SM_worker(s, obj, r, all_nodes, left, right, z);
+
+	// all the nodes have now been removed, let's start using SM_worker
+	vector<int> z(num, -1);
+	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+	// Ignore(partial_prop_prob);
+	const long double new_fast = s.P_all_fastish(obj);
+
+	const long double partial_acceptance_prob = new_fast - pre_fast - (partial_prop_prob - log2l(pre_k));
+	// PP2(new_fast - pre_fast, partial_prop_prob);
+
+	const double unif = drand48();
+	if(log2l(unif) < partial_acceptance_prob) {
+		PP(partial_acceptance_prob);
+		return new_fast - pre_fast;
 	}
+
 	For(node, all_nodes) {
 		const int n = *node;
 		s.removeNodeAndInformOfEdges(n);
 		s.insertNodeAndInformOfEdges(n,left);
 	}
 
+	s.deleteClusterFromTheEnd();
 	const long double post2_fast = s.P_all_fastish(obj);
-
 	assert(VERYCLOSE(pre_fast, post2_fast));
 
-	s.deleteClusterFromTheEnd();
 	return 0.0L;
 }
 
