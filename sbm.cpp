@@ -377,8 +377,6 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
 	const int num = all_nodes.size();
-	if(num==0)
-		return 0.0L;
 
 	const long double pre_fast = s.P_all_fastish(obj);
 	s.appendEmptyCluster();
