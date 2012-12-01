@@ -297,12 +297,14 @@ namespace sbm {
 			}
 			cout << endl;
 		}
-		if(obj->directed) {
-			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
-		} else {
-			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
+		if(this->is_full_of_nodes()) {
+			if(obj->directed) {
+				assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
+			} else {
+				assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?1:-1) ) / 2);
+			}
+			assert(total_edge_weight_verification == this->total_edge_weight);
 		}
-		assert(total_edge_weight_verification == this->total_edge_weight);
 	}
 
 	void State :: internalCheck() const {
@@ -681,8 +683,9 @@ namespace sbm {
 	}
 
 	long double State :: P_z_slow() const { // given our current this->_k, what's P(z | k)
+		const int non_missing_N = this->_N - this->labelling.missing_nodes;
 		const long double K_prior = this->P_z_K();
-		long double perCluster_bits = LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + this->_N) - this->_k*LOG2GAMMA(this->_alpha);
+		long double perCluster_bits = LOG2GAMMA(this->_k * this->_alpha) - LOG2GAMMA(this->_k * this->_alpha + non_missing_N) - this->_k*LOG2GAMMA(this->_alpha);
 		for(int CL=0; CL < this->_k; CL++) {
 			const Cluster *cl = this->labelling.clusters.at(CL);
 			assert(cl);
