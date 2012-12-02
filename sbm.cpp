@@ -324,6 +324,10 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		left_score = exp2l(left_score);
 		right_score = exp2l(right_score);
 		// PP2(left_score, right_score);
+		switch(ii) {
+			break; case 0: left_score = 0.99; right_score = 0.01;
+			break; case 1:   left_score = 0.01; right_score = 0.99;
+		}
 		const long double total = left_score + right_score;
 		left_score /= total;
 		right_score /= total;
@@ -350,6 +354,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 			this_prop_prob += log2l(right_score);
 		} else
 			assert(1==2);
+		assert(isfinite(this_prop_prob));
 	}
 	return this_prop_prob;
 }
@@ -407,8 +412,9 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	// Ignore(partial_prop_prob);
 	const long double new_fast = s.P_all_fastish(obj);
 
-	const long double partial_acceptance_prob = new_fast - pre_fast - (partial_prop_prob - log2l(pre_k));
-	// PP2(new_fast - pre_fast, partial_prop_prob);
+	const long double partial_acceptance_prob = new_fast - pre_fast - (partial_prop_prob - log2l(pre_k))
+		// next terms are for the reverse prop prob
+		- log2l(pre_k+1) - log2l(pre_k) + 1 ;
 
 	assert(!z.empty());
 	const double unif = drand48();
