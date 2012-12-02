@@ -337,7 +337,6 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 
 		assert(VERYCLOSE(left_score + right_score , 1.0L));
 
-		assert(z.at(ii) == -1); // This will change later
 		if(z.at(ii) == -1) {
 			const long double unif = drand48();
 			if(unif < left_score)
@@ -391,6 +390,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 
 	const long double pre_fast = s.P_all_fastish(obj);
 	s.appendEmptyCluster();
+	assert(s.labelling.clusters.at(s._k-1)->order() == 0);
 
 	// remove all the nodes from their cluster
 	// reassign randomly
@@ -402,7 +402,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	For(node, all_nodes) {
 		const int n = *node;
 		const int oldcl = s.labelling.removeNode(n);
-		s.informNodeMove(n, left, -1);
+		s.informNodeMove(n, oldcl, -1);
 		assert(oldcl == left);
 	}
 
