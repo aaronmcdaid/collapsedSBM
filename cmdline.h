@@ -46,6 +46,9 @@ struct gengetopt_args_info
   int K_arg;	/**< @brief Number of clusters, K (default='-1').  */
   char * K_orig;	/**< @brief Number of clusters, K original value given at command line.  */
   const char *K_help; /**< @brief Number of clusters, K help description.  */
+  int maxK_arg;	/**< @brief Maximum number of clusters, K (default='-1').  */
+  char * maxK_orig;	/**< @brief Maximum number of clusters, K original value given at command line.  */
+  const char *maxK_help; /**< @brief Maximum number of clusters, K help description.  */
   int directed_flag;	/**< @brief directed (default=off).  */
   const char *directed_help; /**< @brief directed help description.  */
   int weighted_flag;	/**< @brief weighted (default=off).  */
@@ -138,6 +141,7 @@ struct gengetopt_args_info
   unsigned int git_version_given ;	/**< @brief Whether git-version was given.  */
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
   unsigned int K_given ;	/**< @brief Whether K was given.  */
+  unsigned int maxK_given ;	/**< @brief Whether maxK was given.  */
   unsigned int directed_given ;	/**< @brief Whether directed was given.  */
   unsigned int weighted_given ;	/**< @brief Whether weighted was given.  */
   unsigned int selfloop_given ;	/**< @brief Whether selfloop was given.  */

@@ -37,6 +37,7 @@ const char *gengetopt_args_info_help[] = {
   "      --git-version           detailed version description  (default=off)",
   "  -v, --verbose               detailed debugging  (default=off)",
   "  -K, --K=INT                 Number of clusters, K  (default=`-1')",
+  "      --maxK=INT              Maximum number of clusters, K  (default=`-1')",
   "  -d, --directed              directed  (default=off)",
   "  -w, --weighted              weighted  (default=off)",
   "  -s, --selfloop              selfloops allowed  (default=off)",
@@ -100,6 +101,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->git_version_given = 0 ;
   args_info->verbose_given = 0 ;
   args_info->K_given = 0 ;
+  args_info->maxK_given = 0 ;
   args_info->directed_given = 0 ;
   args_info->weighted_given = 0 ;
   args_info->selfloop_given = 0 ;
@@ -142,6 +144,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->verbose_flag = 0;
   args_info->K_arg = -1;
   args_info->K_orig = NULL;
+  args_info->maxK_arg = -1;
+  args_info->maxK_orig = NULL;
   args_info->directed_flag = 0;
   args_info->weighted_flag = 0;
   args_info->selfloop_flag = 0;
@@ -209,38 +213,39 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->git_version_help = gengetopt_args_info_help[2] ;
   args_info->verbose_help = gengetopt_args_info_help[3] ;
   args_info->K_help = gengetopt_args_info_help[4] ;
-  args_info->directed_help = gengetopt_args_info_help[5] ;
-  args_info->weighted_help = gengetopt_args_info_help[6] ;
-  args_info->selfloop_help = gengetopt_args_info_help[7] ;
-  args_info->seed_help = gengetopt_args_info_help[8] ;
-  args_info->GT_vector_help = gengetopt_args_info_help[9] ;
-  args_info->algo_metroK_help = gengetopt_args_info_help[10] ;
-  args_info->algo_1node_help = gengetopt_args_info_help[11] ;
-  args_info->algo_gibbs_help = gengetopt_args_info_help[12] ;
-  args_info->algo_m3_help = gengetopt_args_info_help[13] ;
-  args_info->algo_sm_help = gengetopt_args_info_help[14] ;
-  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[15] ;
-  args_info->iterations_help = gengetopt_args_info_help[16] ;
-  args_info->initGT_help = gengetopt_args_info_help[17] ;
-  args_info->model_scf_help = gengetopt_args_info_help[18] ;
-  args_info->scf_help = gengetopt_args_info_help[19] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[20] ;
-  args_info->mega_help = gengetopt_args_info_help[21] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[22] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[23] ;
-  args_info->alpha_help = gengetopt_args_info_help[24] ;
-  args_info->beta1_help = gengetopt_args_info_help[25] ;
-  args_info->beta2_help = gengetopt_args_info_help[26] ;
-  args_info->save_z_help = gengetopt_args_info_help[27] ;
-  args_info->gamma_s_help = gengetopt_args_info_help[28] ;
-  args_info->gamma_phi_help = gengetopt_args_info_help[29] ;
-  args_info->latentspace_help = gengetopt_args_info_help[30] ;
-  args_info->lsalpha_help = gengetopt_args_info_help[31] ;
-  args_info->algo_lspos_help = gengetopt_args_info_help[32] ;
-  args_info->algo_lsm3_help = gengetopt_args_info_help[33] ;
-  args_info->uniformK_help = gengetopt_args_info_help[34] ;
-  args_info->save_lsz_help = gengetopt_args_info_help[35] ;
-  args_info->labels_help = gengetopt_args_info_help[36] ;
+  args_info->maxK_help = gengetopt_args_info_help[5] ;
+  args_info->directed_help = gengetopt_args_info_help[6] ;
+  args_info->weighted_help = gengetopt_args_info_help[7] ;
+  args_info->selfloop_help = gengetopt_args_info_help[8] ;
+  args_info->seed_help = gengetopt_args_info_help[9] ;
+  args_info->GT_vector_help = gengetopt_args_info_help[10] ;
+  args_info->algo_metroK_help = gengetopt_args_info_help[11] ;
+  args_info->algo_1node_help = gengetopt_args_info_help[12] ;
+  args_info->algo_gibbs_help = gengetopt_args_info_help[13] ;
+  args_info->algo_m3_help = gengetopt_args_info_help[14] ;
+  args_info->algo_sm_help = gengetopt_args_info_help[15] ;
+  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[16] ;
+  args_info->iterations_help = gengetopt_args_info_help[17] ;
+  args_info->initGT_help = gengetopt_args_info_help[18] ;
+  args_info->model_scf_help = gengetopt_args_info_help[19] ;
+  args_info->scf_help = gengetopt_args_info_help[20] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[21] ;
+  args_info->mega_help = gengetopt_args_info_help[22] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[23] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[24] ;
+  args_info->alpha_help = gengetopt_args_info_help[25] ;
+  args_info->beta1_help = gengetopt_args_info_help[26] ;
+  args_info->beta2_help = gengetopt_args_info_help[27] ;
+  args_info->save_z_help = gengetopt_args_info_help[28] ;
+  args_info->gamma_s_help = gengetopt_args_info_help[29] ;
+  args_info->gamma_phi_help = gengetopt_args_info_help[30] ;
+  args_info->latentspace_help = gengetopt_args_info_help[31] ;
+  args_info->lsalpha_help = gengetopt_args_info_help[32] ;
+  args_info->algo_lspos_help = gengetopt_args_info_help[33] ;
+  args_info->algo_lsm3_help = gengetopt_args_info_help[34] ;
+  args_info->uniformK_help = gengetopt_args_info_help[35] ;
+  args_info->save_lsz_help = gengetopt_args_info_help[36] ;
+  args_info->labels_help = gengetopt_args_info_help[37] ;
   
 }
 
@@ -325,6 +330,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
 {
   unsigned int i;
   free_string_field (&(args_info->K_orig));
+  free_string_field (&(args_info->maxK_orig));
   free_string_field (&(args_info->seed_orig));
   free_string_field (&(args_info->GT_vector_arg));
   free_string_field (&(args_info->GT_vector_orig));
@@ -395,6 +401,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "verbose", 0, 0 );
   if (args_info->K_given)
     write_into_file(outfile, "K", args_info->K_orig, 0);
+  if (args_info->maxK_given)
+    write_into_file(outfile, "maxK", args_info->maxK_orig, 0);
   if (args_info->directed_given)
     write_into_file(outfile, "directed", 0, 0 );
   if (args_info->weighted_given)
@@ -722,6 +730,7 @@ cmdline_parser_internal (
         { "git-version",	0, NULL, 0 },
         { "verbose",	0, NULL, 'v' },
         { "K",	1, NULL, 'K' },
+        { "maxK",	1, NULL, 0 },
         { "directed",	0, NULL, 'd' },
         { "weighted",	0, NULL, 'w' },
         { "selfloop",	0, NULL, 's' },
@@ -879,6 +888,20 @@ cmdline_parser_internal (
             if (update_arg((void *)&(args_info->git_version_flag), 0, &(args_info->git_version_given),
                 &(local_args_info.git_version_given), optarg, 0, 0, ARG_FLAG,
                 check_ambiguity, override, 1, 0, "git-version", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Maximum number of clusters, K.  */
+          else if (strcmp (long_options[option_index].name, "maxK") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->maxK_arg), 
+                 &(args_info->maxK_orig), &(args_info->maxK_given),
+                &(local_args_info.maxK_given), optarg, 0, "-1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "maxK", '-',
                 additional_error))
               goto failure;
           

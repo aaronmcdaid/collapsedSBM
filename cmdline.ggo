@@ -4,6 +4,7 @@ purpose "Fit models to network data"
 option  "git-version"        - "detailed version description"        flag       off
 option  "verbose"            v "detailed debugging"                  flag       off
 option  "K"                  K "Number of clusters, K"               int        default="-1" no
+option  "maxK"               - "Maximum number of clusters, K"       int        default="-1" no
 option  "directed"           d "directed"                            flag       off
 option  "weighted"           w "weighted"                            flag       off
 option  "selfloop"           s "selfloops allowed"                   flag       off
