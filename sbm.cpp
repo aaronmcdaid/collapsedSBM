@@ -444,6 +444,122 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 
 	return 0.0L;
 }
+long double SM_Merge(sbm :: State &s, const sbm :: ObjectiveFunction *obj
+		, gsl_rng *r
+		) {
+	// cout << endl << "Attempt a merge" << endl;
+	/* Merge
+	 * 1. select two clusters at random, and shuffle their nodes.
+	 * 2. record the pre_score_still_split
+	 * 3. remove all those nodes from that cluster
+	 * 4. NON-randomly reassign, FORCING the decisions made and remembering this part of the proposal probablity
+	 * 5. verify that the score is back to the pre_score_still_split
+	 * 6. force them to merge, and calculate post_score_now_merged
+	 * 7. calculate the two prob-ratios and execute
+	 */
+	const int pre_k = s._k;
+	if(pre_k < 2)
+		return 0.0;
+
+must_be_different_try_again:
+	const int left = static_cast<int>(drand48() * pre_k);
+	const int right = static_cast<int>(drand48() * pre_k);
+	if(left == right)
+		goto must_be_different_try_again;
+
+	vector<int> all_nodes;
+	{
+		const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
+		For(node, lCluster->get_members()) { all_nodes.push_back(*node); }
+		const sbm :: Cluster * const rCluster = s.labelling.clusters.at(right);
+		For(node, rCluster->get_members()) { all_nodes.push_back(*node); }
+		random_shuffle(all_nodes.begin(), all_nodes.end());
+	}
+	const int num = all_nodes.size();
+	if(num==0) {
+		return 0.0L; // change of plan again!  We will not split an empty cluster in
+				// two, nor will we merge *two* *empty* clusters into one.
+	}
+
+	const long double pre_score_still_split_up = s.P_all_fastish(obj);
+
+	// remove all the nodes from their cluster
+	// reassign randomly
+	// calculate FULL proposal probability
+	// Accept/Reject:
+	// 	accept: return
+	// 	reject: undo
+
+	vector<int> z(num, -1);
+	for(int ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		const int oldcl = s.labelling.removeNode(n);
+		z.at(ii) = oldcl;
+		s.informNodeMove(n, oldcl, -1);
+		assert(oldcl == left || oldcl == right);
+	}
+
+	// all the nodes have now been removed, let's start using SM_worker
+	const long double pre_worker = s.P_all_fastish(obj);
+	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+	const long double post_worker = s.P_all_fastish(obj);
+	assert(VERYCLOSE(pre_score_still_split_up, post_worker));
+	assert(pre_worker >= post_worker);
+
+	// Now, we need to force them to merge and calculate the score there
+	for(int ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		const int oldcl = s.labelling.cluster_id.at(n);
+		assert(oldcl == z.at(ii));
+		if(oldcl != left) {
+			assert(oldcl == right);
+			// const int oldcl = s.labelling.removeNode(n);
+			// s.informNodeMove(n, oldcl, -1);
+			s.moveNodeAndInformOfEdges(n, left);
+		}
+	}
+
+	assert(s.labelling.clusters.at(right)->order() == 0);
+	if(right != s._k-1) s.swapClusters(right, s._k-1);
+	s.deleteClusterFromTheEnd();
+	const long double post_score_now_merged = s.P_all_fastish(obj);
+	s.appendEmptyCluster();
+	if(right != s._k-1) s.swapClusters(right, s._k-1);
+
+	const long double partial_acceptance_prob = post_score_now_merged - pre_score_still_split_up
+		// divide by this prop prob
+		+ log2l(pre_k) + log2l(pre_k-1)
+		// multiply by the reverse prop prob
+		+ (partial_prop_prob - log2l(pre_k-1));
+
+	assert(!z.empty());
+	const double unif = drand48();
+	if(log2l(unif) < partial_acceptance_prob) {
+		// cout << "     Merge "; PP3(partial_acceptance_prob ,+ log2l(pre_k) + log2l(pre_k-1) ,partial_prop_prob - log2l(pre_k-1));
+		assert(s.labelling.clusters.at(right)->order() == 0);
+		if(right != s._k-1) s.swapClusters(right, s._k-1);
+		s.deleteClusterFromTheEnd();
+		// PP2 (post_score_now_merged , pre_score_still_split_up);
+		return post_score_now_merged - pre_score_still_split_up;
+	}
+
+	// Not accepted.  We should undo everything, splitting them, and return zero
+
+	for(int ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		const int oldcl = s.labelling.cluster_id.at(n);
+		assert(oldcl == left);
+		if(z.at(ii) != left) {
+			assert(z.at(ii) == right);
+			s.moveNodeAndInformOfEdges(n, right);
+		}
+	}
+
+	const long double post2_fast = s.P_all_fastish(obj);
+	assert(VERYCLOSE(pre_score_still_split_up, post2_fast));
+
+	return 0.0L;
+}
 
 static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
