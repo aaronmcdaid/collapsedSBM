@@ -1621,6 +1621,13 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 			// assert(VERYCLOSE(presumed_delta, s.pmf(obj) - prePMF));
 
 			AR->notify(true);
+
+			// 2012-12-02: We shouldn't just add the new one at the end.
+			const int new_cluster_id = static_cast<int>(drand48() * s._k);
+			if(new_cluster_id != s._k-1) {
+				s.swapClusters(new_cluster_id, s._k-1);
+			}
+
 			return presumed_delta;
 		} else {
 			// cout << "k: rej inc" << endl;
