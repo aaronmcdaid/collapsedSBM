@@ -367,7 +367,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	 * 3. randomly reassign, recording the decisions made and remembering this part of the proposal probablity
 	 * 4. calculate the two prob-ratios and execute
 	 */
-	/* Merge
+	/* Merge [implemented in SM_Merge(), not here]
 	 * 1. select two clusters at random, and shuffle their nodes.
 	 * 2. remove all those nodes from that cluster
 	 * 3. NON-randomly reassign, FORCING the decisions made and remembering this part of the proposal probablity
@@ -415,11 +415,16 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	// Ignore(partial_prop_prob);
 	const long double new_fast = s.P_all_fastish(obj);
 
+	// const int small_k = pre_k;
+	// const int big_k = s._k;
+	assert(s._k == pre_k+1);
 	const long double partial_acceptance_prob = new_fast - pre_fast
 		// divide by this prop prob
-		- (partial_prop_prob - log2l(pre_k))
+		- partial_prop_prob
+		// - (log2l(small_k) - log2l(big_k)) // select one of K clusters to be split, select one of K+1 slots into which to insert the new cluster
 		// multiply by the reverse prop prob
-		- log2l(pre_k+1) - log2l(pre_k);
+		// - log2l(big_k) - log2l(small_k)
+		; // select one of bigK clusters to be embiggened, select one of smallK to be the victim
 
 	assert(!z.empty());
 	const double unif = drand48();
@@ -526,14 +531,21 @@ must_be_different_try_again:
 	if(right != s._k-1) s.swapClusters(right, s._k-1);
 	s.deleteClusterFromTheEnd();
 	const long double post_score_now_merged = s.P_all_fastish(obj);
+
+	// const int big_k = pre_k;
+	// const int small_k = s._k;
+	assert(s._k == pre_k-1);
+
 	s.appendEmptyCluster();
 	if(right != s._k-1) s.swapClusters(right, s._k-1);
 
 	const long double partial_acceptance_prob = post_score_now_merged - pre_score_still_split_up
 		// divide by this prop prob
-		+ log2l(pre_k) + log2l(pre_k-1)
+		// + log2l(big_k) + log2l(small_k)
 		// multiply by the reverse prop prob
-		+ (partial_prop_prob - log2l(pre_k-1));
+		+ partial_prop_prob
+		//+( - log2l(small_k)-log2l(big_k))
+		;
 
 	assert(!z.empty());
 	const double unif = drand48();
