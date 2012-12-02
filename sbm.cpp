@@ -274,7 +274,7 @@ enum POSSIBLE_MOVES {
 };
 
 template<typename T>
-void Ignore(const T&) { }
+static inline void Ignore(const T&) { }
 
 long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng * //r
