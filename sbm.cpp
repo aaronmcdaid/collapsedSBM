@@ -1728,9 +1728,11 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		assert(proposalProbForMerge == 0.5);
 		assert(s._k >= 2);
 		// cout << "Absorb" << endl;
-		const int j2 = s._k - 1;
-		const int j1 = drand48() * (s._k - 1);
-		assert(j1 >= 0 && j1 < j2);
+		const int j2 = static_cast<int>(drand48() * s._k);
+must_be_different:
+		const int j1 = static_cast<int>(drand48() * s._k);
+		if(j1==j2)
+			goto must_be_different;
 		const int n_j1 = s.labelling.clusters.at(j1)->order();
 		const int n_j2 = s.labelling.clusters.at(j2)->order();
 		const std :: vector<int> j2_members(s.labelling.clusters.at(j2)->get_members().begin(), s.labelling.clusters.at(j2)->get_members().end());
@@ -1739,8 +1741,12 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 			const int shouldBej2 = s.moveNodeAndInformOfEdges(*i, j1);
 			assert(j2 == shouldBej2);
 		}
+		assert(0==s.labelling.clusters.at(j2)->order());
 		const int n_jBoth = s.labelling.clusters.at(j1)->order();
 		assert(n_jBoth == n_j1 + n_j2);
+		// 2012-12-02: We shouldn't just add the new one at the end.
+		if(j2 != s._k-1) { s.swapClusters(j2, s._k-1); }
+		assert(0==s.labelling.clusters.at(s._k-1)->order());
 		s.deleteClusterFromTheEnd();
 		const long double post = s.pmf(obj);
 		// PP3(pre,post, post-pre);
@@ -1759,10 +1765,10 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 			return post-pre;
 		} else { // reject, split 'em again
 			AR->notify(false);
-			const int new_cluster_id = s.appendEmptyCluster();
-			assert(new_cluster_id == j2);
+			s.appendEmptyCluster();
+			if(j2 != s._k-1) { s.swapClusters(j2, s._k-1); }
 			For(j2_member, j2_members) {
-				const int shouldBej1 = s.moveNodeAndInformOfEdges(*j2_member, new_cluster_id);
+				const int shouldBej1 = s.moveNodeAndInformOfEdges(*j2_member, j2);
 				assert(j1 == shouldBej1);
 			}
 			return 0.0;
@@ -1808,6 +1814,13 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		}
 		if(provisional_accept) { // accept
 			AR->notify(true);
+			{
+				// 2012-12-02: We shouldn't just add the new one at the end.
+				const int new_cluster_id = static_cast<int>(drand48() * s._k);
+				if(new_cluster_id != s._k-1) {
+					s.swapClusters(new_cluster_id, s._k-1);
+				}
+			}
 			return post-pre;
 		} else { // reject
 			AR->notify(false);
