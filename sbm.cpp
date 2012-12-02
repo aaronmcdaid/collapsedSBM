@@ -412,14 +412,21 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	// Ignore(partial_prop_prob);
 	const long double new_fast = s.P_all_fastish(obj);
 
-	const long double partial_acceptance_prob = new_fast - pre_fast - (partial_prop_prob - log2l(pre_k))
-		// next terms are for the reverse prop prob
-		- log2l(pre_k+1) - log2l(pre_k) + 1 ;
+	const long double partial_acceptance_prob = new_fast - pre_fast
+		// divide by this prop prob
+		- (partial_prop_prob - log2l(pre_k))
+		// multiply by the reverse prop prob
+		- log2l(pre_k+1) - log2l(pre_k);
 
 	assert(!z.empty());
 	const double unif = drand48();
 	if(log2l(unif) < partial_acceptance_prob) {
-		PP(partial_acceptance_prob);
+		// Important: The new cluster shouldn't just be put on the end
+		assert(s._k-1 == pre_k); // the new cluster's id is 'pre_k'
+		const int empty_cluster_id = static_cast<int>(drand48() * s._k);
+		if(empty_cluster_id != pre_k) {
+			s.swapClusters(pre_k, empty_cluster_id);
+		}
 		return new_fast - pre_fast;
 	}
 
