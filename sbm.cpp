@@ -373,6 +373,9 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	 * 3. NON-randomly reassign, FORCING the decisions made and remembering this part of the proposal probablity
 	 * 4. calculate the two prob-ratios and execute
 	 */
+	if(args_info.maxK_arg > 0 && s._k >= args_info.maxK_arg) {
+		return 0.0L;
+	}
 	const int pre_k = s._k;
 	const int left = static_cast<int>(drand48() * pre_k);
 	const int right = s._k;
@@ -1586,6 +1589,9 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 	/// const long double prePMF12 = s.P_z_K();
 	const int preK = s._k;
 	if(fiftyfifty()) { // propose increase in K
+		if(args_info.maxK_arg > 0 && s._k >= args_info.maxK_arg) {
+			return 0.0;
+		}
 		s.appendEmptyCluster();
 		// const long double postPMF12 = s.P_z_K();
 		// assert(VERYCLOSE(s.pmf(), prePMF - prePMF12 + postPMF12));
@@ -1763,6 +1769,9 @@ static long double EjectAbsorb(sbm :: State &s, const sbm :: ObjectiveFunction *
 		}
 		assert(1==2); // should never get here
 	} else {
+		if(args_info.maxK_arg > 0 && s._k >= args_info.maxK_arg) {
+			return 0.0L;
+		}
 		// cout << "Eject" << endl;
 		// apply a split
 		// choose a cluster at random to split in two
@@ -2344,6 +2353,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	for(int i=1; i<=iterations; i++) {
 		if(commandLineK != -1)
 			assert(commandLineK == s._k);
+		if(args_info.maxK_arg != -1) {
+			assert(args_info.maxK_arg > 0);
+			assert(s._k <= args_info.maxK_arg);
+		}
 		/*
 		cout
 			<< "iteration\t" << i
