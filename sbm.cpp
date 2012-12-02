@@ -293,7 +293,9 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	assert(left != right);
 	const size_t num = all_nodes.size();
 	assert(num == z.size());
-	assert(num > 0);
+	if(num == 0) {
+		return 0.0L;
+	}
 	long double this_prop_prob = 0.0L;
 	for(size_t ii = 0; ii < num; ++ii) {
 		const int n = all_nodes.at(ii);
@@ -377,6 +379,10 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
 	const int num = all_nodes.size();
+	if(num==0) {
+		return 0.0L; // change of plan again!  We will not split an empty cluster in
+				// two, nor will we merge *two* *empty* clusters into one.
+	}
 
 	const long double pre_fast = s.P_all_fastish(obj);
 	s.appendEmptyCluster();
@@ -404,11 +410,14 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	const long double partial_acceptance_prob = new_fast - pre_fast - (partial_prop_prob - log2l(pre_k));
 	// PP2(new_fast - pre_fast, partial_prop_prob);
 
+	assert(!z.empty());
 	const double unif = drand48();
 	if(log2l(unif) < partial_acceptance_prob) {
 		PP(partial_acceptance_prob);
 		return new_fast - pre_fast;
 	}
+
+	// Not accepted.  We should undo everything and return zero
 
 	For(node, all_nodes) {
 		const int n = *node;
