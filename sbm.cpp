@@ -297,20 +297,29 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		return 0.0L;
 	}
 	long double this_prop_prob = 0.0L;
+	pair<int,int> justTheseClusters(left,right);
 	for(size_t ii = 0; ii < num; ++ii) {
 		const int n = all_nodes.at(ii);
 		assert(n>=0 && n<s._N);
 		assert(-1 == s.labelling.cluster_id.at(n));
 		const long double miss_score = s.P_all_fastish(obj);
+		const long double miss_scoreJ= s.P_all_fastish(obj, justTheseClusters);
 
 		s.insertNodeAndInformOfEdges(n, left);
 		long double left_score = s.P_all_fastish(obj);
+		long double left_scoreJ= s.P_all_fastish(obj, justTheseClusters);
 		s.removeNodeAndInformOfEdges(n);
+
+		// PP3(left_score, left_scoreJ, left_score - left_scoreJ);
+		// PP3(miss_score, miss_scoreJ, miss_score - miss_scoreJ);
+		assert(left_score - left_scoreJ == miss_score - miss_scoreJ);
 
 		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));
 
 		s.insertNodeAndInformOfEdges(n, right);
 		long double right_score = s.P_all_fastish(obj);
+		long double right_scoreJ= s.P_all_fastish(obj, justTheseClusters);
+		assert(right_score - right_scoreJ == miss_score - miss_scoreJ);
 		s.removeNodeAndInformOfEdges(n);
 
 		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));

@@ -707,22 +707,36 @@ namespace sbm {
 		const long double K_prior = this->P_z_K();
 		return assertNonPositiveFinite(K_prior + P_z_orders());
 	}
-	long double State :: P_all_fastish(const ObjectiveFunction *obj) const {
-		// This does have to iterate over all the blocks, but it's fast enough otherwise
+	long double State :: P_all_fastish(const ObjectiveFunction *obj, const std :: pair<int,int> justTheseClusters /*= std :: make_pair(-1,-1)*/ ) const {
+		// if justThisCluster is non-negative, then only consider block that involve that cluster
 		const long double K_prior  = this->P_z_K();
 		const long double P_z_fast = this->P_z_orders();
-		const long double P_x_given_z = this->P_edges_given_z_slow(obj);
+		const long double P_x_given_z = this->P_edges_given_z_slow(obj, justTheseClusters);
 		return K_prior + P_z_fast + P_x_given_z;
 	}
 
 	
-	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj) const {
+	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj, const std :: pair<int,int> justTheseClusters /*= std :: make_pair(-1,-1)*/) const {
 		long double edges_bits = 0.0L;
 		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
 		int blocksEncountered = 0; // should be K*K, or 1/2 * K * (K+1)
+		const bool doingEveryBlock = justTheseClusters.first == -1;
+		if(doingEveryBlock)
+			assert(justTheseClusters.second == -1);
+		else {
+			assert(justTheseClusters.first  >= 0);
+			assert(justTheseClusters.second >= 0);
+		}
 		for(int i=0; i<this->_k; i++) {
 			for(int j=0; j<this->_k; j++) {
+				if( !doingEveryBlock
+					&& i != justTheseClusters.first
+					&& j != justTheseClusters.first
+					&& i != justTheseClusters.second
+					&& j != justTheseClusters.second
+					)
+					continue;
 				if(!obj->isValidBlock(i,j))
 					break;
 				assert(obj->directed || j <= i);
@@ -844,7 +858,7 @@ namespace sbm {
 			assert(isfinite(ls_bits));
 			edges_bits += ls_bits;
 		}
-		if(this->is_full_of_nodes()) {
+		if(doingEveryBlock && this->is_full_of_nodes()) {
 		if(obj->directed) {
 			assert(blocksEncountered == this->_k * this->_k);
 			assert(pairsEncountered == long(this->_N) * long(this->_N + (obj->selfloops?0:-1) ));
