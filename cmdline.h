@@ -98,13 +98,13 @@ struct gengetopt_args_info
   int assume_N_nodes_arg;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree (default='0').  */
   char * assume_N_nodes_orig;	/**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree original value given at command line.  */
   const char *assume_N_nodes_help; /**< @brief Pre-create N nodes (0 to N-1), which may be left with zero degree help description.  */
-  float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='1').  */
+  float alpha_arg;	/**< @brief alpha. How uniform the cluster sizes (default='0.5').  */
   char * alpha_orig;	/**< @brief alpha. How uniform the cluster sizes original value given at command line.  */
   const char *alpha_help; /**< @brief alpha. How uniform the cluster sizes help description.  */
-  float beta1_arg;	/**< @brief beta_1. prior on block density (default='1').  */
+  float beta1_arg;	/**< @brief beta_1. prior on block density (default='0.5').  */
   char * beta1_orig;	/**< @brief beta_1. prior on block density original value given at command line.  */
   const char *beta1_help; /**< @brief beta_1. prior on block density help description.  */
-  float beta2_arg;	/**< @brief beta_2. prior on block density (default='1').  */
+  float beta2_arg;	/**< @brief beta_2. prior on block density (default='0.5').  */
   char * beta2_orig;	/**< @brief beta_2. prior on block density original value given at command line.  */
   const char *beta2_help; /**< @brief beta_2. prior on block density help description.  */
   char * save_z_arg;	/**< @brief save burnt-in z to this file (default='').  */

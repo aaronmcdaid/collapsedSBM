@@ -951,8 +951,8 @@ namespace sbm {
 	ObjectiveFunction_Poisson :: ObjectiveFunction_Poisson(const bool s, const bool d, const bool w) : ObjectiveFunction(s,d,w) {}
 	/*static*/ long double ObjectiveFunction_Poisson :: s = 1.0L;
 	/*static*/ long double ObjectiveFunction_Poisson :: theta = 1.0L;
-	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_1 = 1.0L; // prior
-	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_2 = 1.0L; // prior
+	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_1 = 0.5L; // prior
+	/*static*/ long double ObjectiveFunction_Bernoulli :: beta_2 = 0.5L; // prior
 	long double ObjectiveFunction_Poisson :: log2OneBlock(const long double y_b, const long int p_b, bool /*isDiagonal*/) const { // virtual
 		if(p_b==0)
 			return 0.0L;

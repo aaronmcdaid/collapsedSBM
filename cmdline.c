@@ -57,9 +57,9 @@ const char *gengetopt_args_info_help[] = {
   "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
   "      --printEveryNIters=INT  How often to print an update  (default=`1000')",
   "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
-  "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`1')",
-  "      --beta1=FLOAT           beta_1. prior on block density  (default=`1')",
-  "      --beta2=FLOAT           beta_2. prior on block density  (default=`1')",
+  "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`0.5')",
+  "      --beta1=FLOAT           beta_1. prior on block density  (default=`0.5')",
+  "      --beta2=FLOAT           beta_2. prior on block density  (default=`0.5')",
   "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
   "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
   "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
@@ -176,11 +176,11 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->printEveryNIters_orig = NULL;
   args_info->assume_N_nodes_arg = 0;
   args_info->assume_N_nodes_orig = NULL;
-  args_info->alpha_arg = 1;
+  args_info->alpha_arg = 0.5;
   args_info->alpha_orig = NULL;
-  args_info->beta1_arg = 1;
+  args_info->beta1_arg = 0.5;
   args_info->beta1_orig = NULL;
-  args_info->beta2_arg = 1;
+  args_info->beta2_arg = 0.5;
   args_info->beta2_orig = NULL;
   args_info->save_z_arg = gengetopt_strdup ("");
   args_info->save_z_orig = NULL;
@@ -1113,7 +1113,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->alpha_arg), 
                  &(args_info->alpha_orig), &(args_info->alpha_given),
-                &(local_args_info.alpha_given), optarg, 0, "1", ARG_FLOAT,
+                &(local_args_info.alpha_given), optarg, 0, "0.5", ARG_FLOAT,
                 check_ambiguity, override, 0, 0,
                 "alpha", '-',
                 additional_error))
@@ -1127,7 +1127,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->beta1_arg), 
                  &(args_info->beta1_orig), &(args_info->beta1_given),
-                &(local_args_info.beta1_given), optarg, 0, "1", ARG_FLOAT,
+                &(local_args_info.beta1_given), optarg, 0, "0.5", ARG_FLOAT,
                 check_ambiguity, override, 0, 0,
                 "beta1", '-',
                 additional_error))
@@ -1141,7 +1141,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->beta2_arg), 
                  &(args_info->beta2_orig), &(args_info->beta2_given),
-                &(local_args_info.beta2_given), optarg, 0, "1", ARG_FLOAT,
+                &(local_args_info.beta2_given), optarg, 0, "0.5", ARG_FLOAT,
                 check_ambiguity, override, 0, 0,
                 "beta2", '-',
                 additional_error))

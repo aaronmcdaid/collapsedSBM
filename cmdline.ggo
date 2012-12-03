@@ -24,9 +24,9 @@ option  "stringIDs"          - "string IDs in the input"             flag       
 option  "mega"               - "dumb down the algorithm for *big* networks"  flag       off
 option  "printEveryNIters"   - "How often to print an update"        int        default="1000" no
 option  "assume_N_nodes"     - "Pre-create N nodes (0 to N-1), which may be left with zero degree"       int        default="0" no
-option  "alpha"              - "alpha. How uniform the cluster sizes"        float        default="1" no
-option  "beta1"              - "beta_1. prior on block density"        float        default="1" no
-option  "beta2"              - "beta_2. prior on block density"        float        default="1" no
+option  "alpha"              - "alpha. How uniform the cluster sizes"        float        default="0.5" no
+option  "beta1"              - "beta_1. prior on block density"        float        default="0.5" no
+option  "beta2"              - "beta_2. prior on block density"        float        default="0.5" no
 option  "save.z"             z "save burnt-in z to this file"        string        default="" no
 option  "gamma.s"            - "(for weighted only). Shape of Gamma prior"        float        default="1" no
 option  "gamma.phi"          - "(for weighted only). Scale of Gamma prior"        float        default="1" no
