@@ -22,12 +22,13 @@ CXXFLAGS=       \
           -Wall -Wformat -Werror -Wextra #-Wconversion # scf.cpp doesn't like -Wconversion
 
 CXX=g++
-CC=g++
+CC=g++ ${PROFILE}
 #CXXFLAGS= ${BITS}     -g
 LDFLAGS+= -lrt
 LDFLAGS+= `gsl-config --libs`
 CXXFLAGS:= ${BITS} -O3        ${CXXFLAGS} -std=gnu++0x # -DNDEBUG
-#CXXFLAGS+= -p -pg
+# PROFILE= -p -pg
+CXXFLAGS+= ${PROFILE}
 #CXXFLAGS=              -O2                 
 
 #${MAIN}: CXXFLAGS += -DNDEBUG

@@ -2348,6 +2348,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int highest_KnonEmpty_sampled = 0;
 	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
+	long double lagging_time = ELAPSED();
 	for(int i=1; i<=iterations; i++) {
 		if(commandLineK != -1)
 			assert(commandLineK == s._k);
@@ -2483,7 +2484,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			cout << endl;
 		}
 #endif
-		if(i%1000 == 0) {
+
+		bool has_a_minute_elapsed = false;
+		if( int(lagging_time / 60) < int(ELAPSED() / 60) ) {
+			lagging_time = ELAPSED();
+			// another minute has elapsed
+			has_a_minute_elapsed = true;
+		}
+		if(has_a_minute_elapsed || i%1000 == 0) {
 			cout
 				<< " .. iteration: " << i
 				<< "/" << iterations
