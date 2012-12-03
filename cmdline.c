@@ -47,7 +47,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`0')",
   "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
   "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
-  "      --algo.sm=INT           Use SplitMerge (based on M3) in the algorithm  \n                                (default=`0')",
+  "      --algo.sm=INT           Use SplitMerge (based on M3) in the algorithm  \n                                (default=`1')",
   "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
   "  -i, --iterations=INT        How many iterations  (default=`120000')",
   "      --initGT                Initialize to the ground truth  (default=off)",
@@ -161,7 +161,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_orig = NULL;
   args_info->algo_m3_arg = 1;
   args_info->algo_m3_orig = NULL;
-  args_info->algo_sm_arg = 0;
+  args_info->algo_sm_arg = 1;
   args_info->algo_sm_orig = NULL;
   args_info->algo_ejectabsorb_arg = 1;
   args_info->algo_ejectabsorb_orig = NULL;
@@ -997,7 +997,7 @@ cmdline_parser_internal (
           
             if (update_arg( (void *)&(args_info->algo_sm_arg), 
                  &(args_info->algo_sm_orig), &(args_info->algo_sm_given),
-                &(local_args_info.algo_sm_given), optarg, 0, "0", ARG_INT,
+                &(local_args_info.algo_sm_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.sm", '-',
                 additional_error))
