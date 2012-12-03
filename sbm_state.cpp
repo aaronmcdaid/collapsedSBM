@@ -716,7 +716,7 @@ namespace sbm {
 	}
 
 	
-	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj, const std :: pair<int,int> justTheseClusters /*= std :: make_pair(-1,-1)*/) const {
+	long double State :: P_edges_given_z_slow(const ObjectiveFunction *obj, std :: pair<int,int> justTheseClusters /*= std :: make_pair(-1,-1)*/) const {
 		long double edges_bits = 0.0L;
 		long int pairsEncountered = 0;
 		long double total_edge_weight_verification = 0.0L;
@@ -727,16 +727,23 @@ namespace sbm {
 		else {
 			assert(justTheseClusters.first  >= 0);
 			assert(justTheseClusters.second >= 0);
+			assert(justTheseClusters.first  < this->_k);
+			assert(justTheseClusters.second < this->_k);
+			if(justTheseClusters.first > justTheseClusters.second)
+				swap(justTheseClusters.first, justTheseClusters.second);
+			assert(justTheseClusters.first < justTheseClusters.second);
 		}
 		for(int i=0; i<this->_k; i++) {
-			for(int j=0; j<this->_k; j++) {
-				if( !doingEveryBlock
-					&& i != justTheseClusters.first
-					&& j != justTheseClusters.first
-					&& i != justTheseClusters.second
-					&& j != justTheseClusters.second
-					)
-					continue;
+			const bool canShortCut = !doingEveryBlock && i != justTheseClusters.first && i != justTheseClusters.second;
+			for(int   j = 0 // canShortCut ? justTheseClusters . first    : 0
+				; j < this->_k // canShortCut ? (justTheseClusters.second+1) : this->_k
+				; j++) {
+				if( canShortCut && j<justTheseClusters.first)
+					j=justTheseClusters.first;
+				if( canShortCut && j>justTheseClusters.first && j<justTheseClusters.second)
+					j=justTheseClusters.second;
+				if( canShortCut && j>justTheseClusters.second)
+					break;
 				if(!obj->isValidBlock(i,j))
 					break;
 				assert(obj->directed || j <= i);
