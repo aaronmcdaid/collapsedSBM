@@ -302,30 +302,42 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		const int n = all_nodes.at(ii);
 		assert(n>=0 && n<s._N);
 		assert(-1 == s.labelling.cluster_id.at(n));
-		const long double miss_score = s.P_all_fastish(obj);
-		const long double miss_scoreJ= s.P_all_fastish(obj, justTheseClusters);
+// #define Paranoid
+
+
+#ifdef Paranoid
+		const long double miss_scoreF= s.P_all_fastish(obj);
+#endif
+		const long double miss_score = s.P_all_fastish(obj, justTheseClusters);
 
 		s.insertNodeAndInformOfEdges(n, left);
-		long double left_score = s.P_all_fastish(obj);
-		long double left_scoreJ= s.P_all_fastish(obj, justTheseClusters);
+#ifdef Paranoid
+		long double left_scoreF= s.P_all_fastish(obj);
+#endif
+		long double left_score = s.P_all_fastish(obj, justTheseClusters);
+
+
 		s.removeNodeAndInformOfEdges(n);
-
-		// PP3(left_score, left_scoreJ, left_score - left_scoreJ);
-		// PP3(miss_score, miss_scoreJ, miss_score - miss_scoreJ);
-		assert(left_score - left_scoreJ == miss_score - miss_scoreJ);
-
-		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));
+#ifdef Paranoid
+		// assert(VERYCLOSE(miss_scoreF, s.P_all_fastish(obj)));
+#endif
 
 		s.insertNodeAndInformOfEdges(n, right);
-		long double right_score = s.P_all_fastish(obj);
-		long double right_scoreJ= s.P_all_fastish(obj, justTheseClusters);
-		assert(right_score - right_scoreJ == miss_score - miss_scoreJ);
+#ifdef Paranoid
+		long double right_scoreF= s.P_all_fastish(obj);
+#endif
+		long double right_score = s.P_all_fastish(obj, justTheseClusters);
+#ifdef Paranoid
+		assert(VERYCLOSE(left_scoreF  - left_score  , miss_scoreF - miss_score));
+		assert(VERYCLOSE(right_scoreF - right_score , miss_scoreF - miss_score));
+#endif
 		s.removeNodeAndInformOfEdges(n);
+#ifdef Paranoid
+		// assert(VERYCLOSE(miss_scoreF, s.P_all_fastish(obj)));
+#endif
 
-		// assert(VERYCLOSE(miss_score, s.P_all_fastish(obj)));
 		assert(miss_score > left_score);
 		assert(miss_score > right_score);
-		// DYINGWORDS(VERYCLOSE(left_score, right_score)) { PP3(left_score, right_score, left_score - right_score); }
 
 		const long double max_score = left_score > right_score ? left_score : right_score;
 		left_score -= max_score;
