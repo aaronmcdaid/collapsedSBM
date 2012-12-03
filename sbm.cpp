@@ -2498,6 +2498,18 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	
 		// PP(s.pmf());
 		// cout << endl;
+#if 0
+		if(i%1 == 0 && i*2>=iterations) {
+			cout << "paranoid";
+			cout << "\t" << s._k;
+			cout << "\t" << s.labelling.NonEmptyClusters;
+			cout << "\t:";
+			for(int k=0; k<s._k; ++k) {
+				cout << "\t" << s.labelling.clusters.at(k)->order();
+			}
+			cout << endl;
+		}
+#endif
 		if(i%1000 == 0) {
 			cout
 				<< " .. iteration: " << i
