@@ -593,7 +593,8 @@ namespace sbm {
 		assert(newcl == -1 || this->labelling.cluster_id.at(n) == newcl);
 		// If either is -1, then consider those paris to be MISSING data
 		const std :: vector<int32_t> & rels = this->vsg->neighbouring_rels_in_order(n);
-		forEach(const int relId, amd :: mk_range(rels)) {
+		For(relId_ptr, rels) {
+			const int32_t relId = *relId_ptr;
 			// PP(relId);
 			const pair<int,int> eps = this->vsg->EndPoints(relId);
 			int fstClusterNew = this->labelling.cluster_id.at(eps.first);
