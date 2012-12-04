@@ -2387,7 +2387,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(args_info.algo_gibbs_arg) {
 					possible_moves.push_back(POS_Gibbs);
 				}
-				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg && s._k>1) {
+				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
 					possible_moves.push_back(POS_M3);
 				}
 				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg          ) {
