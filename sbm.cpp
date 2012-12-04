@@ -346,8 +346,8 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		right_score = exp2l(right_score);
 		// PP2(left_score, right_score);
 		switch(ii) {
-			break; case 0: left_score = 0.99; right_score = 0.01;
-			break; case 1:   left_score = 0.01; right_score = 0.99;
+			break; case 0: left_score = 1; right_score = 0.000000;
+			break; case 1:   left_score = 0.000000; right_score = 1;
 		}
 		const long double total = left_score + right_score;
 		left_score /= total;
@@ -368,9 +368,13 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		s.insertNodeAndInformOfEdges(n, z.at(ii));
 
 		if(z.at(ii) == left) {
+			if(left_score == 0.0)
+				return -LDBL_MAX;
 			this_prop_prob += log2l(left_score);
 		}
 		else if(z.at(ii) == right) {
+			if(right_score == 0.0)
+				return -LDBL_MAX;
 			this_prop_prob += log2l(right_score);
 		} else
 			assert(1==2);
@@ -433,6 +437,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	// all the nodes have now been removed, let's start using SM_worker
 	vector<int> z(num, -1);
 	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+	assert(partial_prop_prob != -LDBL_MAX);
 	// Ignore(partial_prop_prob);
 	const long double new_fast = s.P_all_fastish(obj);
 
@@ -505,6 +510,21 @@ must_be_different_try_again:
 		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
 	const int num = all_nodes.size();
+	bool will_fail = false;
+	if(num>=2) {
+		const int node1 = all_nodes.at(0);
+		const int node2 = all_nodes.at(1);
+		unless(s.labelling.cluster_id.at(node1) == left && s.labelling.cluster_id.at(node2) == right) {
+			will_fail = true;
+		}
+	}
+	if(num==1) {
+		const int node1 = all_nodes.at(0);
+		unless(s.labelling.cluster_id.at(node1) == left) {
+			will_fail = true;
+		}
+	}
+	if(will_fail) return 0.0L;
 	if(num==0) {
 		return 0.0L; // change of plan again!  We will not split an empty cluster in
 				// two, nor will we merge *two* *empty* clusters into one.
@@ -531,6 +551,9 @@ must_be_different_try_again:
 	// all the nodes have now been removed, let's start using SM_worker
 	const long double pre_worker = s.P_all_fastish(obj);
 	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+
+	assert(partial_prop_prob != -LDBL_MAX);
+
 	const long double post_worker = s.P_all_fastish(obj);
 	assert(VERYCLOSE(pre_score_still_split_up, post_worker));
 	assert(pre_worker >= post_worker);
@@ -585,9 +608,9 @@ must_be_different_try_again:
 		const int n = all_nodes.at(ii);
 		const int oldcl = s.labelling.cluster_id.at(n);
 		assert(oldcl == left);
-		if(z.at(ii) != left) {
+		if(z.at(ii) != oldcl) {
 			assert(z.at(ii) == right);
-			s.moveNodeAndInformOfEdges(n, right);
+			s.moveNodeAndInformOfEdges(n, z.at(ii) );
 		}
 	}
 
