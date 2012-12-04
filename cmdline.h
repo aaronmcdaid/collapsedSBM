@@ -82,7 +82,7 @@ struct gengetopt_args_info
   int algo_ejectabsorb_arg;	/**< @brief Use N+F's eject-absorb move (default='1').  */
   char * algo_ejectabsorb_orig;	/**< @brief Use N+F's eject-absorb move original value given at command line.  */
   const char *algo_ejectabsorb_help; /**< @brief Use N+F's eject-absorb move help description.  */
-  int iterations_arg;	/**< @brief How many iterations (default='120000').  */
+  int iterations_arg;	/**< @brief How many iterations (default='100000').  */
   char * iterations_orig;	/**< @brief How many iterations original value given at command line.  */
   const char *iterations_help; /**< @brief How many iterations help description.  */
   int initGT_flag;	/**< @brief Initialize to the ground truth (default=off).  */

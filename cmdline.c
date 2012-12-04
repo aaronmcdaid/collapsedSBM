@@ -50,7 +50,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.sm=INT           Use SplitMerge (based on M3) in the algorithm  \n                                (default=`1')",
   "      --algo.cf=INT           Use SplitMerge, but based on the \n                                community-finding heuristic  (default=`1')",
   "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
-  "  -i, --iterations=INT        How many iterations  (default=`120000')",
+  "  -i, --iterations=INT        How many iterations  (default=`100000')",
   "      --initGT                Initialize to the ground truth  (default=off)",
   "      --model.scf             Stochastic community finding  (default=off)",
   "      --scf                   Collapsed SCF  (default=off)",
@@ -169,7 +169,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_cf_orig = NULL;
   args_info->algo_ejectabsorb_arg = 1;
   args_info->algo_ejectabsorb_orig = NULL;
-  args_info->iterations_arg = 120000;
+  args_info->iterations_arg = 100000;
   args_info->iterations_orig = NULL;
   args_info->initGT_flag = 0;
   args_info->model_scf_flag = 0;
@@ -848,7 +848,7 @@ cmdline_parser_internal (
         
           if (update_arg( (void *)&(args_info->iterations_arg), 
                &(args_info->iterations_orig), &(args_info->iterations_given),
-              &(local_args_info.iterations_given), optarg, 0, "120000", ARG_INT,
+              &(local_args_info.iterations_given), optarg, 0, "100000", ARG_INT,
               check_ambiguity, override, 0, 0,
               "iterations", 'i',
               additional_error))

@@ -17,7 +17,7 @@ option  "algo.m3"            - "Use M3 in the algorithm"                        
 option  "algo.sm"            - "Use SplitMerge (based on M3) in the algorithm"  int       default="1" no
 option  "algo.cf"            - "Use SplitMerge, but based on the community-finding heuristic"  int       default="1" no
 option  "algo.ejectabsorb"   - "Use N+F's eject-absorb move"                    int       default="1" no
-option  "iterations"         i "How many iterations"                 int       default="120000" no
+option  "iterations"         i "How many iterations"                 int       default="100000" no
 option  "initGT"             - "Initialize to the ground truth"      flag       off
 option  "model.scf"          - "Stochastic community finding"        flag       off
 option  "scf"                - "Collapsed SCF"                       flag       off
