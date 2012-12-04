@@ -24,10 +24,7 @@ using namespace std;
 #include "scf.hpp"
 #include "sbm.hpp"
 
-const char gitstatus[] = 
-#include "comment.txt"
-#include "gitstatus.txt"
-;
+#include "gitstatus.hpp"
 #include "cmdline.h"
 #include "args_info.hpp"
 
