@@ -48,6 +48,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`1')",
   "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
   "      --algo.sm=INT           Use SplitMerge (based on M3) in the algorithm  \n                                (default=`1')",
+  "      --algo.cf=INT           Use SplitMerge, but based on the \n                                community-finding heuristic  (default=`1')",
   "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
   "  -i, --iterations=INT        How many iterations  (default=`120000')",
   "      --initGT                Initialize to the ground truth  (default=off)",
@@ -112,6 +113,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_given = 0 ;
   args_info->algo_m3_given = 0 ;
   args_info->algo_sm_given = 0 ;
+  args_info->algo_cf_given = 0 ;
   args_info->algo_ejectabsorb_given = 0 ;
   args_info->iterations_given = 0 ;
   args_info->initGT_given = 0 ;
@@ -163,6 +165,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_m3_orig = NULL;
   args_info->algo_sm_arg = 1;
   args_info->algo_sm_orig = NULL;
+  args_info->algo_cf_arg = 1;
+  args_info->algo_cf_orig = NULL;
   args_info->algo_ejectabsorb_arg = 1;
   args_info->algo_ejectabsorb_orig = NULL;
   args_info->iterations_arg = 120000;
@@ -224,28 +228,29 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_gibbs_help = gengetopt_args_info_help[13] ;
   args_info->algo_m3_help = gengetopt_args_info_help[14] ;
   args_info->algo_sm_help = gengetopt_args_info_help[15] ;
-  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[16] ;
-  args_info->iterations_help = gengetopt_args_info_help[17] ;
-  args_info->initGT_help = gengetopt_args_info_help[18] ;
-  args_info->model_scf_help = gengetopt_args_info_help[19] ;
-  args_info->scf_help = gengetopt_args_info_help[20] ;
-  args_info->stringIDs_help = gengetopt_args_info_help[21] ;
-  args_info->mega_help = gengetopt_args_info_help[22] ;
-  args_info->printEveryNIters_help = gengetopt_args_info_help[23] ;
-  args_info->assume_N_nodes_help = gengetopt_args_info_help[24] ;
-  args_info->alpha_help = gengetopt_args_info_help[25] ;
-  args_info->beta1_help = gengetopt_args_info_help[26] ;
-  args_info->beta2_help = gengetopt_args_info_help[27] ;
-  args_info->save_z_help = gengetopt_args_info_help[28] ;
-  args_info->gamma_s_help = gengetopt_args_info_help[29] ;
-  args_info->gamma_phi_help = gengetopt_args_info_help[30] ;
-  args_info->latentspace_help = gengetopt_args_info_help[31] ;
-  args_info->lsalpha_help = gengetopt_args_info_help[32] ;
-  args_info->algo_lspos_help = gengetopt_args_info_help[33] ;
-  args_info->algo_lsm3_help = gengetopt_args_info_help[34] ;
-  args_info->uniformK_help = gengetopt_args_info_help[35] ;
-  args_info->save_lsz_help = gengetopt_args_info_help[36] ;
-  args_info->labels_help = gengetopt_args_info_help[37] ;
+  args_info->algo_cf_help = gengetopt_args_info_help[16] ;
+  args_info->algo_ejectabsorb_help = gengetopt_args_info_help[17] ;
+  args_info->iterations_help = gengetopt_args_info_help[18] ;
+  args_info->initGT_help = gengetopt_args_info_help[19] ;
+  args_info->model_scf_help = gengetopt_args_info_help[20] ;
+  args_info->scf_help = gengetopt_args_info_help[21] ;
+  args_info->stringIDs_help = gengetopt_args_info_help[22] ;
+  args_info->mega_help = gengetopt_args_info_help[23] ;
+  args_info->printEveryNIters_help = gengetopt_args_info_help[24] ;
+  args_info->assume_N_nodes_help = gengetopt_args_info_help[25] ;
+  args_info->alpha_help = gengetopt_args_info_help[26] ;
+  args_info->beta1_help = gengetopt_args_info_help[27] ;
+  args_info->beta2_help = gengetopt_args_info_help[28] ;
+  args_info->save_z_help = gengetopt_args_info_help[29] ;
+  args_info->gamma_s_help = gengetopt_args_info_help[30] ;
+  args_info->gamma_phi_help = gengetopt_args_info_help[31] ;
+  args_info->latentspace_help = gengetopt_args_info_help[32] ;
+  args_info->lsalpha_help = gengetopt_args_info_help[33] ;
+  args_info->algo_lspos_help = gengetopt_args_info_help[34] ;
+  args_info->algo_lsm3_help = gengetopt_args_info_help[35] ;
+  args_info->uniformK_help = gengetopt_args_info_help[36] ;
+  args_info->save_lsz_help = gengetopt_args_info_help[37] ;
+  args_info->labels_help = gengetopt_args_info_help[38] ;
   
 }
 
@@ -339,6 +344,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->algo_gibbs_orig));
   free_string_field (&(args_info->algo_m3_orig));
   free_string_field (&(args_info->algo_sm_orig));
+  free_string_field (&(args_info->algo_cf_orig));
   free_string_field (&(args_info->algo_ejectabsorb_orig));
   free_string_field (&(args_info->iterations_orig));
   free_string_field (&(args_info->printEveryNIters_orig));
@@ -423,6 +429,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.m3", args_info->algo_m3_orig, 0);
   if (args_info->algo_sm_given)
     write_into_file(outfile, "algo.sm", args_info->algo_sm_orig, 0);
+  if (args_info->algo_cf_given)
+    write_into_file(outfile, "algo.cf", args_info->algo_cf_orig, 0);
   if (args_info->algo_ejectabsorb_given)
     write_into_file(outfile, "algo.ejectabsorb", args_info->algo_ejectabsorb_orig, 0);
   if (args_info->iterations_given)
@@ -741,6 +749,7 @@ cmdline_parser_internal (
         { "algo.gibbs",	1, NULL, 0 },
         { "algo.m3",	1, NULL, 0 },
         { "algo.sm",	1, NULL, 0 },
+        { "algo.cf",	1, NULL, 0 },
         { "algo.ejectabsorb",	1, NULL, 0 },
         { "iterations",	1, NULL, 'i' },
         { "initGT",	0, NULL, 0 },
@@ -1000,6 +1009,20 @@ cmdline_parser_internal (
                 &(local_args_info.algo_sm_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "algo.sm", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Use SplitMerge, but based on the community-finding heuristic.  */
+          else if (strcmp (long_options[option_index].name, "algo.cf") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->algo_cf_arg), 
+                 &(args_info->algo_cf_orig), &(args_info->algo_cf_given),
+                &(local_args_info.algo_cf_given), optarg, 0, "1", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "algo.cf", '-',
                 additional_error))
               goto failure;
           

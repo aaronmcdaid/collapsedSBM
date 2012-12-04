@@ -1,2 +1,2 @@
-"SBM: getting --GT to work again"
+" First draft of CF heuristic. NON-static left."
 "\n"

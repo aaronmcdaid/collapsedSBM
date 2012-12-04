@@ -262,8 +262,10 @@ enum POSSIBLE_MOVES {
 		POS_MetroK
 		,POS_Gibbs
 		,POS_M3
-		,POS_SM_Merge
-		,POS_SM_Split
+		,POS_SM_Merge_M3
+		,POS_SM_Split_M3
+		,POS_SM_Merge_CF
+		,POS_SM_Split_CF
 		,POS_AE
 		,POS_MoneNode
 		,POS_update_ls_positions
@@ -273,12 +275,15 @@ enum POSSIBLE_MOVES {
 template<typename T>
 static inline void Ignore(const T&) { }
 
+enum Strategy { STRATEGY_M3, STRATEGY_CF };
+
 long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng * //r
 		, const vector<int> &all_nodes
 		, const int left
 		, const int right
 		, vector<int> &z
+		, enum Strategy strategy
 		) {
 	// given a set of nodes, all currently unassigned,
 	// assign them to one of two clusters randomly.
@@ -295,6 +300,8 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	}
 	long double this_prop_prob = 0.0L;
 	pair<int,int> justTheseClusters(left,right);
+	int size_of_left_so_far = 0;
+	int size_of_right_so_far = 0;
 	for(size_t ii = 0; ii < num; ++ii) {
 		const int n = all_nodes.at(ii);
 		assert(n>=0 && n<s._N);
@@ -302,6 +309,11 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 // #define Paranoid
 
 
+		long double left_score;
+		long double right_score;
+switch(strategy) {
+break; case STRATEGY_M3 :
+	{
 #ifdef Paranoid
 		const long double miss_scoreF= s.P_all_fastish(obj);
 #endif
@@ -311,7 +323,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 #ifdef Paranoid
 		long double left_scoreF= s.P_all_fastish(obj);
 #endif
-		long double left_score = s.P_all_fastish(obj, justTheseClusters);
+		left_score = s.P_all_fastish(obj, justTheseClusters);
 
 
 		s.removeNodeAndInformOfEdges(n);
@@ -323,7 +335,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 #ifdef Paranoid
 		long double right_scoreF= s.P_all_fastish(obj);
 #endif
-		long double right_score = s.P_all_fastish(obj, justTheseClusters);
+		right_score = s.P_all_fastish(obj, justTheseClusters);
 #ifdef Paranoid
 		assert(VERYCLOSE(left_scoreF  - left_score  , miss_scoreF - miss_score));
 		assert(VERYCLOSE(right_scoreF - right_score , miss_scoreF - miss_score));
@@ -342,16 +354,37 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		left_score = exp2l(left_score);
 		right_score = exp2l(right_score);
 		// PP2(left_score, right_score);
+	}
 		switch(ii) {
 			break; case 0: left_score = 1; right_score = 0.000000;
 			break; case 1:   left_score = 0.000000; right_score = 1;
 		}
+break; case STRATEGY_CF :
+		// This is the 'community-finding' strategy: be attracted
+		// to one of the two clusters simply depending on which one
+		// you have the most connections to.
+		const std :: vector<int32_t> & neighs_of_n = s.vsg->neighbouring_nodes_in_order(n);
+		int already_a_neighbour_on_the_left = 0;
+		int already_a_neighbour_on_the_right = 0;
+		For(neigh, neighs_of_n) {
+			const int neigh_z = s.labelling.cluster_id.at(*neigh);
+			if(neigh_z == left)
+				++already_a_neighbour_on_the_left;
+			if(neigh_z == right)
+				++already_a_neighbour_on_the_right;
+		}
+		left_score = (already_a_neighbour_on_the_left+0.5) / (size_of_left_so_far+1);
+		right_score = (already_a_neighbour_on_the_right+0.5) / (size_of_right_so_far+1);
+		// PP2(left_score, right_score);
+}
 		const long double total = left_score + right_score;
 		left_score /= total;
 		right_score /= total;
 		// PP2(left_score, right_score);
 		// assert(VERYCLOSE(left_score , 0.5L));
 		// assert(VERYCLOSE(right_score , 0.5L));
+		assert(isfinite(left_score));
+		assert(isfinite(right_score));
 
 		assert(VERYCLOSE(left_score + right_score , 1.0L));
 
@@ -365,11 +398,13 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		s.insertNodeAndInformOfEdges(n, z.at(ii));
 
 		if(z.at(ii) == left) {
+			++ size_of_left_so_far;
 			if(left_score == 0.0)
 				return -LDBL_MAX;
 			this_prop_prob += log2l(left_score);
 		}
 		else if(z.at(ii) == right) {
+			++ size_of_right_so_far;
 			if(right_score == 0.0)
 				return -LDBL_MAX;
 			this_prop_prob += log2l(right_score);
@@ -377,11 +412,14 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 			assert(1==2);
 		assert(isfinite(this_prop_prob));
 	}
+	assert(size_of_left_so_far == s.labelling.clusters.at(left)->order());
+	assert(size_of_right_so_far == s.labelling.clusters.at(right)->order());
 	return this_prop_prob;
 }
 
 long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng *r
+		, enum Strategy strategy
 		) {
 	/* Split
 	 * 1. select a cluster at random and shuffle its nodes
@@ -433,7 +471,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 
 	// all the nodes have now been removed, let's start using SM_worker
 	vector<int> z(num, -1);
-	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z, strategy);
 	assert(partial_prop_prob != -LDBL_MAX);
 	// Ignore(partial_prop_prob);
 	const long double new_fast = s.P_all_fastish(obj);
@@ -477,6 +515,7 @@ long double SM_Split(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 }
 long double SM_Merge(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, gsl_rng *r
+		, enum Strategy strategy
 		) {
 	// cout << endl << "Attempt a merge" << endl;
 	/* Merge
@@ -507,21 +546,23 @@ must_be_different_try_again:
 		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
 	const int num = all_nodes.size();
-	bool will_fail = false;
-	if(num>=2) {
-		const int node1 = all_nodes.at(0);
-		const int node2 = all_nodes.at(1);
-		unless(s.labelling.cluster_id.at(node1) == left && s.labelling.cluster_id.at(node2) == right) {
-			will_fail = true;
+	if(strategy == STRATEGY_M3) {
+		bool will_fail = false;
+		if(num>=2) {
+			const int node1 = all_nodes.at(0);
+			const int node2 = all_nodes.at(1);
+			unless(s.labelling.cluster_id.at(node1) == left && s.labelling.cluster_id.at(node2) == right) {
+				will_fail = true;
+			}
 		}
-	}
-	if(num==1) {
-		const int node1 = all_nodes.at(0);
-		unless(s.labelling.cluster_id.at(node1) == left) {
-			will_fail = true;
+		if(num==1) {
+			const int node1 = all_nodes.at(0);
+			unless(s.labelling.cluster_id.at(node1) == left) {
+				will_fail = true;
+			}
 		}
+		if(will_fail) return 0.0L;
 	}
-	if(will_fail) return 0.0L;
 	if(num==0) {
 		return 0.0L; // change of plan again!  We will not split an empty cluster in
 				// two, nor will we merge *two* *empty* clusters into one.
@@ -547,7 +588,7 @@ must_be_different_try_again:
 
 	// all the nodes have now been removed, let's start using SM_worker
 	const long double pre_worker = s.P_all_fastish(obj);
-	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z);
+	const long double partial_prop_prob = SM_worker(s, obj, r, all_nodes, left, right, z, strategy);
 
 	assert(partial_prop_prob != -LDBL_MAX);
 
@@ -2415,8 +2456,12 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					possible_moves.push_back(POS_M3);
 				}
 				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg          ) {
-					possible_moves.push_back(POS_SM_Merge);
-					possible_moves.push_back(POS_SM_Split);
+					possible_moves.push_back(POS_SM_Merge_M3);
+					possible_moves.push_back(POS_SM_Split_M3);
+				}
+				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_cf_arg          ) {
+					possible_moves.push_back(POS_SM_Merge_CF);
+					possible_moves.push_back(POS_SM_Split_CF);
 				}
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
 					possible_moves.push_back(POS_AE);
@@ -2450,14 +2495,24 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
 				} else
 					assert(1==2);
-			break; case POS_SM_Merge: // can NOT handle LSSBM
+			break; case POS_SM_Merge_M3 : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
-						pmf_track += SM_Merge(s, obj, r);
+						pmf_track += SM_Merge(s, obj, r, STRATEGY_M3);
 				} else
 					assert(1==2);
-			break; case POS_SM_Split: // can NOT handle LSSBM
+			break; case POS_SM_Split_M3 : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg) {
-						pmf_track += SM_Split(s, obj, r);
+						pmf_track += SM_Split(s, obj, r, STRATEGY_M3);
+				} else
+					assert(1==2);
+			break; case POS_SM_Merge_CF : // can NOT handle LSSBM
+				if(s.cluster_to_points_map.empty() && args_info.algo_cf_arg) {
+						pmf_track += SM_Merge(s, obj, r, STRATEGY_CF);
+				} else
+					assert(1==2);
+			break; case POS_SM_Split_CF : // can NOT handle LSSBM
+				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_cf_arg) {
+						pmf_track += SM_Split(s, obj, r, STRATEGY_CF);
 				} else
 					assert(1==2);
 			break; case POS_AE: // can NOT handle LSSBM
