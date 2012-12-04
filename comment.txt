@@ -1,2 +1,2 @@
-" First draft of CF heuristic. NON-static left."
+" algo.xx repetitions. First draft of CF heuristic. NON-static left."
 "\n"

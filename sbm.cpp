@@ -2481,64 +2481,70 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		switch( possible_moves.at(random_move) ) {
 			break; case POS_MetroK: // can NOT handle LSSBM
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
+					for(int rep = 0; rep<args_info.algo_metroK_arg; ++rep)
 						pmf_track += MetropolisOnK(s, obj, r, &AR_metroK);
 				} else {
 					assert(1==2);
 				}
 			break; case POS_Gibbs: // CAN handle LSSBM
 				if(args_info.algo_gibbs_arg) {
-
-					pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
+					for(int rep = 0; rep<args_info.algo_gibbs_arg; ++rep)
+						pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
 				}
 			break; case POS_M3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
+					for(int rep = 0; rep<args_info.algo_m3_arg; ++rep)
 						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
 				} else
 					assert(1==2);
 			break; case POS_SM_Merge_M3 : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_sm_arg) {
+					for(int rep = 0; rep<args_info.algo_sm_arg; ++rep)
 						pmf_track += SM_Merge(s, obj, r, STRATEGY_M3);
 				} else
 					assert(1==2);
 			break; case POS_SM_Split_M3 : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_sm_arg) {
+					for(int rep = 0; rep<args_info.algo_sm_arg; ++rep)
 						pmf_track += SM_Split(s, obj, r, STRATEGY_M3);
 				} else
 					assert(1==2);
 			break; case POS_SM_Merge_CF : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_cf_arg) {
+					for(int rep = 0; rep<args_info.algo_cf_arg; ++rep)
 						pmf_track += SM_Merge(s, obj, r, STRATEGY_CF);
 				} else
 					assert(1==2);
 			break; case POS_SM_Split_CF : // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1  && args_info.algo_cf_arg) {
+					for(int rep = 0; rep<args_info.algo_cf_arg; ++rep)
 						pmf_track += SM_Split(s, obj, r, STRATEGY_CF);
 				} else
 					assert(1==2);
 			break; case POS_AE: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && commandLineK == -1 && args_info.algo_ejectabsorb_arg) {
+					for(int rep = 0; rep<args_info.algo_ejectabsorb_arg; ++rep)
 						pmf_track += EjectAbsorb(s, obj, &AR_ea, r);
 				} else
 					assert(1==2);
 			break; case POS_MoneNode: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_1node_arg) {
-					pmf_track += MoneNode(s, obj, &AR_metro1Node);
+					for(int rep = 0; rep<args_info.algo_1node_arg; ++rep)
+						pmf_track += MoneNode(s, obj, &AR_metro1Node);
 				} else
 					assert(1==2);
 			break; case POS_update_ls_positions: // CAN handle LSSBM
-				if(args_info.algo_lspos_arg) {
+				for(int rep = 0; rep<args_info.algo_lspos_arg; ++rep) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += update_ls_positions(s, obj, &AR_lspos, r);
-				} else
-					assert(1==2);
+				}
 			break; case POS_M3_LS: // CAN handle LSSBM
-				if(args_info.algo_lsm3_arg) {
+				for(int rep = 0; rep<args_info.algo_lsm3_arg; ++rep) {
 					assert(!s.cluster_to_points_map.empty());
 					assert(commandLineK == s._k);
 					pmf_track += M3_LS(s, obj, &AR_M3lspos, r);
-				} else
-					assert(1==2);
+				}
 		}
 
 		// PP(i);
