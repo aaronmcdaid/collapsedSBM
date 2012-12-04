@@ -1675,9 +1675,13 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 				AR->notify(true);
 				return presumed_delta;
 			} else {
+				// actually, I think we'll never get here, except with weird priors on K and alpha maybe? !
 				s.appendEmptyCluster();
 				assert(s._k==preK);
 				AR->notify(false);
+				if(clusterToProposeDelete != s._k-1) {
+					s.swapClusters(clusterToProposeDelete , s._k-1);
+				}
 				return 0.0L;
 			}
 		}
