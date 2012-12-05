@@ -2289,10 +2289,7 @@ static void label_switch(
 		}
 	}
 	{ // print out the summary output from label-switching
-			cout << "Best single clustering:" << endl;
-
-		// the last few lines printed the column names. Next, we print the data
-
+		cout << "Best single clustering:" << endl;
 		for(size_t n=0; n<N; ++n) {
 			const vector<int> & relab_freq_n = relab_freq.at(n);
 			if(n>0)
@@ -2300,6 +2297,18 @@ static void label_switch(
 			cout << max_element(relab_freq_n.begin(), relab_freq_n.end()) - relab_freq_n.begin();
 		}
 		cout << endl;
+		cout << "Summary of cluster sizes across all label-switched states:" << endl;
+		for(size_t k=0; k<K; ++k) {
+			size_t sum_z_k = 0;
+			for(size_t i=0; i<N; ++i) {
+				sum_z_k += relab_freq.at(i).at(k);
+			}
+			cout << k << "\t"
+				<< stack.push << fixed << setw(7) << setprecision(3)
+				<< double(sum_z_k) / double(all_burned_in_z.size())
+				<< stack.pop
+				<< endl;
+		}
 	}
 }
 
