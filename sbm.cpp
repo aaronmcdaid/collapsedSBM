@@ -2205,23 +2205,18 @@ static void label_switch(
 	cout << " Done. (after " << ELAPSED() << " seconds)" << endl;
 
 	{ // print out the summary output from label-switching
-#define FIELD_WIDTH 8
+#define FIELD_WIDTH 9
+			cout << endl;
 			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< "nodeid"
 					<< stack.pop;
-			for(size_t k=0; k<K; ++k) {
-				ostringstream oss;
-				oss << "< " << k << " >";
-				cout
-					<< stack.push << fixed << setw(FIELD_WIDTH)
-					<< oss.str()
-					<< stack.pop;
-			}
 			cout
-					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH)
 					<< "nodename"
 					<< stack.pop;
+			cout
+					<< "  favourite clusters, i.e. P(z_ik > 0.01)";
 			cout << endl;
 
 		// the last few lines printed the column names. Next, we print the data
@@ -2239,21 +2234,28 @@ static void label_switch(
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< n
 					<< stack.pop;
-			for(size_t k=0; k<K; ++k) {
-				cout
-					<< stack.push << fixed << setw(FIELD_WIDTH)
-					<< relab_freq.at(n).at(k)
-					<< stack.pop;
-			}
 			cout
-					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH+2)
+					<< ' ' << stack.push << fixed << setw(FIELD_WIDTH)
 					<< node_name.str()
 					<< stack.pop;
+			cout << "  ";
+			bool first = true;
+			for(size_t k=0; k<K; ++k) {
+				const double zik = double(relab_freq.at(n).at(k)) / all_burned_in_z.size();
+				if(zik > 0.01) {
+					ostringstream oss;
+					oss << k << "(" << fixed << setprecision(1) << 100.0 * zik << "%)";
+					// cout << stack.push << setw(10) << left << oss.str() << stack.pop;
+					if(!first)
+						cout << ',';
+					first = false;
+					cout << oss.str();
+				}
+			}
 			cout << endl;
 		}
 	}
 	{ // print out the summary output from label-switching
-#define FIELD_WIDTH 8
 			cout
 				<< endl
 				<< "best single clustering:"
@@ -2823,18 +2825,22 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	{
 		PP2(highest_K_sampled, highest_KnonEmpty_sampled);
 		for(int k=1; k<=highest_K_sampled; ++k) {
-			cout << "P(K=" << k << ")=\t"
-				<< stack.push << fixed << setw(6) << setprecision(4)
-				<< double(K_freq.at(k)) / burned_in_iters
-				<< stack.pop
-				<< endl;
+			const double PKk = double(K_freq.at(k)) / burned_in_iters;
+			if(PKk > 0.001)
+				cout << "P(K=" << k << ")=\t"
+					<< stack.push << fixed << setw(6) << setprecision(4)
+					<< PKk
+					<< stack.pop
+					<< endl;
 		}
 		for(int k=1; k<=highest_K_sampled; ++k) {
-			cout << "P(KnonEmpty=" << k << ")=\t"
-				<< stack.push << fixed << setw(6) << setprecision(4)
-				<< double(KnonEmpty_freq.at(k)) / burned_in_iters
-				<< stack.pop
-				<< endl;
+			const double PKnonemptyk = double(K_freq.at(k)) / burned_in_iters;
+			if(PKnonemptyk > 0.001)
+				cout << "P(KnonEmpty=" << k << ")=\t"
+					<< stack.push << fixed << setw(6) << setprecision(4)
+					<< PKnonemptyk
+					<< stack.pop
+					<< endl;
 		}
 		cout << "modalK=\t"         << max_element(K_freq.begin()        , K_freq.end()        ) - K_freq.begin() << endl;
 		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
