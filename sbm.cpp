@@ -2529,7 +2529,8 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	long double lagging_time = ELAPSED();
-	for(int i=1; i<=iterations; i++) {
+	int iteration;
+	for(iteration = 0; iteration<iterations; iteration++) {
 		if(commandLineK != -1)
 			assert(commandLineK == s._k);
 		if(args_info.maxK_arg != -1) {
@@ -2691,9 +2692,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			// another minute has elapsed
 			has_a_minute_elapsed = true;
 		}
-		if(has_a_minute_elapsed || i%1000 == 0) {
+		if(has_a_minute_elapsed || iteration%1000 == 0) {
 			cout
-				<< " .. iteration: " << i
+				<< " .. iteration: " << iteration
 				<< "/" << iterations
 				<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
 				<< "\tK: " << s._k;
@@ -2712,7 +2713,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				<< "\t(after " << ELAPSED() << " seconds)"
 				<< endl;
 		}
-		if(i*2 >= iterations) {
+		if(iteration*2 >= iterations) {
 			K_freq.at( s._k                        ) ++;
 			KnonEmpty_freq.at( s.labelling.NonEmptyClusters) ++;
 			++ burned_in_iters;
@@ -2724,9 +2725,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				all_burned_in_z.push_back( make_pair( s.labelling.NonEmptyClusters, s.labelling.cluster_id ) );
 			}
 		}
-		if(args_info.verbose_flag && i % args_info.printEveryNIters_arg == 0) {
+		if(args_info.verbose_flag && iteration % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
-			PP(i);
+			PP(iteration);
 			s.shortSummary(obj, groundTruth);
 			// PP4(num_states_checked_for_pmp, best_pmp_so_far.second, 100.0*best_pmp_so_far.second/num_states_checked_for_pmp , best_pmp_so_far.first.first);
 			// s.summarizeEdgeCounts();
@@ -2740,12 +2741,12 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_M3little.dump();
 			AR_M3very.dump();
 			s.blockDetail(obj);
-			cout << " end of check at i==" << i << ". (" << double(clock()) / CLOCKS_PER_SEC << " seconds)" << endl;
+			cout << " end of check at iteration==" << iteration << ". (" << double(clock()) / CLOCKS_PER_SEC << " seconds)" << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 			s.internalCheck();
 		}
-		if(i*2 >= iterations && args_info.save_z_arg[0]) {
-			PP(i);
+		if(iteration*2 >= iterations && args_info.save_z_arg[0]) {
+			PP(iteration);
 			*save_z_fstream << s._k << ':';
 			for(int n=0; n<s._N; n++) {
 				*save_z_fstream << s.labelling.cluster_id.at(n);
@@ -2754,9 +2755,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			}
 			*save_z_fstream << endl;
 		}
-		if(i*2 >= iterations
+		if(iteration*2 >= iterations
 				&& save_lsz_fstream
-				&& i % args_info.printEveryNIters_arg == 0
+				&& iteration % args_info.printEveryNIters_arg == 0
 			) {
 			// print the iteration number and also, for each node,
 			//   its colour and its position.
@@ -2805,7 +2806,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
 	}
 	if(args_info.labels_arg) {
-		cout << endl << "number of iterations after burnin:\t" << all_burned_in_z.size() << endl;
+		cout << endl << "Completed " << iteration << " iterations.  Using the last half(" << all_burned_in_z.size() << ") for label switching." << endl << endl;
 		assert(!all_burned_in_z.empty());
 		cout << "label-switching ...";
 		//cout.flush(); cout << " sorted ..."
