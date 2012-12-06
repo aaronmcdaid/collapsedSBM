@@ -17,6 +17,7 @@ using namespace std;
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <climits>
+#include <signal.h>
 
 #include "Range.hpp"
 #include "format_flag_stack/format_flag_stack.hpp"
@@ -2419,6 +2420,14 @@ static void label_switch(
 	}
 }
 
+sighandler_t original_ctrl_C_handler = NULL;
+bool was_ctrl_C_caught_in_MCMC = false;
+void sig_ctrl_C_caught_in_MCMC(int) {
+	cerr << "Ctrl-C received. Exiting out of MCMC early." << endl;
+	was_ctrl_C_caught_in_MCMC = true;
+
+}
+
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
@@ -2526,7 +2535,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	long double lagging_time = ELAPSED();
 	int iteration;
+	original_ctrl_C_handler = signal(SIGINT, sig_ctrl_C_caught_in_MCMC);
 	for(iteration = 0; iteration<iterations; iteration++) {
+		if(was_ctrl_C_caught_in_MCMC)
+			break;
 		if(commandLineK != -1)
 			assert(commandLineK == s._k);
 		if(args_info.maxK_arg != -1) {
@@ -2765,6 +2777,12 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				*save_lsz_fstream
 					<< endl;
 			}
+		}
+	}
+	{ // no need for our custom Ctrl-C handler any more, because the MCMC is done.
+		if(original_ctrl_C_handler != SIG_ERR) {
+			// restore the original
+			signal(SIGINT, original_ctrl_C_handler);
 		}
 	}
 	cout << endl << " = MCMC complete =  (after " << ELAPSED() << " seconds)" << endl << endl;
