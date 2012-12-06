@@ -309,8 +309,8 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 // #define Paranoid
 
 
-		long double left_score;
-		long double right_score;
+		long double left_score = 0.0;
+		long double right_score = 0.0;
 switch(strategy) {
 break; case STRATEGY_M3 :
 	{
