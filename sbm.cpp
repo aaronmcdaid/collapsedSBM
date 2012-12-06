@@ -350,8 +350,10 @@ break; case STRATEGY_M3 :
 		// assert(VERYCLOSE(miss_scoreF, s.P_all_fastish(obj)));
 #endif
 
-		assert(miss_score > left_score);
-		assert(miss_score > right_score);
+		if(!args_info.weighted_flag) {
+			assert(miss_score > left_score);
+			assert(miss_score > right_score);
+		}
 
 		const long double max_score = (left_score > right_score) ? left_score : right_score;
 		left_score -= max_score;
@@ -599,7 +601,8 @@ must_be_different_try_again:
 
 	const long double post_worker = s.P_all_fastish(obj);
 	assert(VERYCLOSE(pre_score_still_split_up, post_worker));
-	assert(pre_worker >= post_worker);
+	if(!args_info.weighted_flag)
+		assert(pre_worker >= post_worker);
 
 	// Now, we need to force them to merge and calculate the score there
 	for(int ii = 0; ii < num; ++ii) {
@@ -2392,14 +2395,19 @@ static void label_switch(
 					<< stack.push << fixed << setw(5) << setprecision(1)
 					<< rate_of_edges_z.at(k).at(l) << " /" <<  setw(5) << num_pairs.at(k).at(l);
 				if(isfinite(100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l))) {
-					if(rate_of_edges_z.at(k).at(l) >  num_pairs.at(k).at(l)) {
+					if(!args_info.weighted_flag && rate_of_edges_z.at(k).at(l) >  num_pairs.at(k).at(l)) {
 						assert(VERYCLOSE(rate_of_edges_z.at(k).at(l) , num_pairs.at(k).at(l)));
 						rate_of_edges_z.at(k).at(l) = num_pairs.at(k).at(l);
 					}
-					cout << " =" << setw(5);
-					cout <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
-					cout << "%";
-					assert( rate_of_edges_z.at(k).at(l) <= num_pairs.at(k).at(l) );
+					cout << " =";
+					if(args_info.weighted_flag) {
+						cout << setw(6);
+						cout <<  rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
+					} else {
+						cout << setw(5);
+						cout <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
+						cout << "%";
+					}
 				} else
 					cout << "        ";
 				cout << stack.pop;
