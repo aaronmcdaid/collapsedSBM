@@ -2085,7 +2085,7 @@ static void label_switch(
 		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
 		, const sbm :: State & s
 		, const size_t N, const size_t K
-		, deque< pair<int, vector<int> > > & all_burned_in_z
+		, deque< pair< pair<int,int> , vector<int> > > & all_burned_in_z
 		, const vector<int> * const groundTruth
 		) {
 // TODO
@@ -2115,7 +2115,7 @@ static void label_switch(
 				assert(z_n < K);
 				non_empty_clusters.insert(z_n);
 			}
-			assert( (int) non_empty_clusters.size() == one_state -> first);
+			assert( (int) non_empty_clusters.size() == one_state -> first . second);
 		}
 		if(one_state == all_burned_in_z.begin()) {
 			// leave the first one as-is
@@ -2527,7 +2527,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int burned_in_iters = 0;
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
-	deque< pair<int, vector<int> > > all_burned_in_z; // store *half* of the states, for label-switching after
+	deque< pair< pair<int,int>, vector<int> > > all_burned_in_z; // store *half* of the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	long double lagging_time = ELAPSED();
 	int iteration;
@@ -2724,7 +2724,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
 		}
 		if(args_info.labels_arg) {
-			all_burned_in_z.push_back( make_pair( s.labelling.NonEmptyClusters, s.labelling.cluster_id ) );
+			all_burned_in_z.push_back( make_pair( make_pair(s._k, s.labelling.NonEmptyClusters), s.labelling.cluster_id ) );
 			// Every *second* iteration, we'll drop the first state.
 			// This is to ensure that, at the end of the algorithm we only have the last half of the iterations
 			// This might seem like a strange design, but it does enable us to drop out early if the user types Ctrl-C.
