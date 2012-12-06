@@ -1,3 +1,5 @@
+" Fixed mistakes in calculation of the number of edges, and maybe of pairs of nodes."
+"\n"
 " Nice output of block densities at the end."
 "\n"
 " algo.xx repetitions. First draft of CF heuristic. NON-static left."

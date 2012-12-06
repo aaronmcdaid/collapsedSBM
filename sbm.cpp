@@ -2078,7 +2078,7 @@ static void assert_valid_relabelling(const int K, const vector<int> &relabelling
 }
 
 static void label_switch(
-		const graph :: NetworkInterfaceConvertedToString *g
+		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
 		, const sbm :: State & s
 		, const size_t N, const size_t K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
@@ -2319,26 +2319,43 @@ static void label_switch(
 		}
 		// For each block, we want to know how many edges are in it
 		vector< vector<double> > rate_of_edges_z(K, vector<double>(K,0) );
-		for(size_t k=0; k<K; ++k) {
-		for(size_t l=0; l<K; ++l) {
-			for(int rel = 0; rel<g->numRels(); rel++) {
-				const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
-				const double total_weight_on_this_rel = s.sum_weights_BOTH_directions(eps.first,eps.second);
-				const int32_t left = eps.first;
-				const int32_t right = eps.second;
-				const double k_to_l = double(relab_freq.at(left).at(k))
+		for(int rel = 0; rel<g->numRels(); rel++) {
+			const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
+			const int32_t left = eps.first;
+			const int32_t right = eps.second;
+			assert(left<=right);
+			const double l2r = g->get_edge_weights()->getl2h(rel);
+			const double r2l = g->get_edge_weights()->geth2l(rel);
+			if(left==right)
+				assert(r2l==0);
+			assert(l2r + r2l > 0.0);
+			for(size_t k=0; k<K; ++k) {
+			for(size_t l=0; l<K; ++l) {
+				const double l2r_k_to_l = double(relab_freq.at(left).at(k))
 					* double(relab_freq.at(right).at(l))
 					/ double(all_burned_in_z.size())
 					/ double(all_burned_in_z.size());
+				double r2l_k_to_l = double(relab_freq.at(right).at(k))
+					* double(relab_freq.at(left).at(l))
+					/ double(all_burned_in_z.size())
+					/ double(all_burned_in_z.size());
 				if(args_info.directed_flag) {
-					rate_of_edges_z.at(k).at(l) += total_weight_on_this_rel * k_to_l;
+					rate_of_edges_z.at(k).at(l) += l2r * l2r_k_to_l;
+					rate_of_edges_z.at(k).at(l) += r2l * r2l_k_to_l;
 				} else {
-					rate_of_edges_z.at(k).at(l) += total_weight_on_this_rel * k_to_l;
-					if(k!=l)
-						rate_of_edges_z.at(l).at(k) += total_weight_on_this_rel * k_to_l;
+					if(k != l) {
+						rate_of_edges_z.at(k).at(l) += l2r * l2r_k_to_l;
+						rate_of_edges_z.at(k).at(l) += r2l * r2l_k_to_l;
+						rate_of_edges_z.at(l).at(k) += l2r * l2r_k_to_l;
+						rate_of_edges_z.at(l).at(k) += r2l * r2l_k_to_l;
+					}
+					if(k==l) {
+						rate_of_edges_z.at(k).at(l) += l2r * l2r_k_to_l;
+						rate_of_edges_z.at(k).at(l) += r2l * r2l_k_to_l;
+					}
 				}
 			}
-		}
+			}
 		}
 		cout << "Summary of block densities" << endl;
 		vector< vector<double> > num_pairs(K, vector<double>(K,0) );
@@ -2365,9 +2382,12 @@ static void label_switch(
 				num_pairs.at(k).at(k) = non_self_pairs + (args_info.selfloop_flag ? self_pairs_in_this_cluster : 0.0);
 			}
 		}
+		double verify_edges = 0;
 		for(size_t k=0; k<K; ++k) {
 			cout << k << "\t";
 			for(size_t l=0; l<K; ++l) {
+				if(args_info.directed_flag || l<=k)
+					verify_edges += rate_of_edges_z.at(k).at(l);
 				cout << " |"
 					<< stack.push << fixed << setw(5) << setprecision(1)
 					<< rate_of_edges_z.at(k).at(l) << " /" <<  setw(5) << num_pairs.at(k).at(l);
@@ -2375,12 +2395,14 @@ static void label_switch(
 					cout << " =" << setw(5);
 					cout <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
 					cout << "%";
+					assert( rate_of_edges_z.at(k).at(l) <= num_pairs.at(k).at(l) );
 				} else
 					cout << "        ";
 				cout << stack.pop;
 			}
 			cout << endl;
 		}
+		assert(VERYCLOSE(verify_edges, s.total_edge_weight));
 	}
 }
 
