@@ -38,3 +38,4 @@ option  "algo.lsm3"         - "Algo: LSSBM MS-like"                      int    
 option  "uniformK"           u "Use a Uniform prior for K"               flag       off
 option  "save.lsz"           - "save positions and colors"          string        default="" no
 option  "labels"             - "Do label-unswitching, and a nice summary"      int       default="1" no
+option  "save.current.state" - "Every 10 iterations, the current MCMC clustering is saved here" string  no

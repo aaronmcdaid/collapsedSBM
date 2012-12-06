@@ -138,6 +138,9 @@ struct gengetopt_args_info
   int labels_arg;	/**< @brief Do label-unswitching, and a nice summary (default='1').  */
   char * labels_orig;	/**< @brief Do label-unswitching, and a nice summary original value given at command line.  */
   const char *labels_help; /**< @brief Do label-unswitching, and a nice summary help description.  */
+  char * save_current_state_arg;	/**< @brief Every 10 iterations, the current MCMC clustering is saved here.  */
+  char * save_current_state_orig;	/**< @brief Every 10 iterations, the current MCMC clustering is saved here original value given at command line.  */
+  const char *save_current_state_help; /**< @brief Every 10 iterations, the current MCMC clustering is saved here help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -178,6 +181,7 @@ struct gengetopt_args_info
   unsigned int uniformK_given ;	/**< @brief Whether uniformK was given.  */
   unsigned int save_lsz_given ;	/**< @brief Whether save.lsz was given.  */
   unsigned int labels_given ;	/**< @brief Whether labels was given.  */
+  unsigned int save_current_state_given ;	/**< @brief Whether save.current.state was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

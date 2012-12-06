@@ -32,45 +32,46 @@ const char *gengetopt_args_info_usage = "Usage: Stochastic Block Models [OPTIONS
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
-  "  -h, --help                  Print help and exit",
-  "  -V, --version               Print version and exit",
-  "      --git-version           detailed version description  (default=off)",
-  "  -v, --verbose               detailed debugging  (default=off)",
-  "  -K, --K=INT                 Number of clusters, K  (default=`-1')",
-  "      --maxK=INT              Maximum number of clusters, K  (default=`-1')",
-  "  -d, --directed              directed  (default=off)",
-  "  -w, --weighted              weighted  (default=off)",
-  "  -s, --selfloop              selfloops allowed  (default=off)",
-  "      --seed=INT              seed to drand48() and gsl_rng_set  (default=`0')",
-  "      --GT.vector=STRING      The ground truth. a file with N lines. Starts \n                                from ZERO.",
-  "      --algo.metroK=INT       Use the simple Metropolis move on K  \n                                (default=`1')",
-  "      --algo.1node=INT        Use the simple Metropolis on one node  \n                                (default=`0')",
-  "      --algo.gibbs=INT        Use the simple Gibbs in the algorithm  \n                                (default=`50')",
-  "      --algo.m3=INT           Use M3 in the algorithm  (default=`1')",
-  "      --algo.sm=INT           Use SplitMerge (based on M3) in the algorithm  \n                                (default=`1')",
-  "      --algo.cf=INT           Use SplitMerge, but based on the \n                                community-finding heuristic  (default=`1')",
-  "      --algo.ejectabsorb=INT  Use N+F's eject-absorb move  (default=`1')",
-  "  -i, --iterations=INT        How many iterations  (default=`100000')",
-  "      --initGT                Initialize to the ground truth  (default=off)",
-  "      --model.scf             Stochastic community finding  (default=off)",
-  "      --scf                   Collapsed SCF  (default=off)",
-  "      --stringIDs             string IDs in the input  (default=off)",
-  "      --mega                  dumb down the algorithm for *big* networks  \n                                (default=off)",
-  "      --printEveryNIters=INT  How often to print an update  (default=`1000')",
-  "      --assume_N_nodes=INT    Pre-create N nodes (0 to N-1), which may be left \n                                with zero degree  (default=`0')",
-  "      --alpha=FLOAT           alpha. How uniform the cluster sizes  \n                                (default=`0.5')",
-  "      --beta1=FLOAT           beta_1. prior on block density  (default=`0.5')",
-  "      --beta2=FLOAT           beta_2. prior on block density  (default=`0.5')",
-  "  -z, --save.z=STRING         save burnt-in z to this file  (default=`')",
-  "      --gamma.s=FLOAT         (for weighted only). Shape of Gamma prior  \n                                (default=`1')",
-  "      --gamma.phi=FLOAT       (for weighted only). Scale of Gamma prior  \n                                (default=`1')",
-  "  -l, --latentspace           Latent space model inside clusters         \n                                (default=off)",
-  "      --lsalpha=FLOAT         Latestspace alpha ('density')  (default=`0')",
-  "      --algo.lspos=INT        Algo: LSSBM positions  (default=`0')",
-  "      --algo.lsm3=INT         Algo: LSSBM MS-like  (default=`0')",
-  "  -u, --uniformK              Use a Uniform prior for K  (default=off)",
-  "      --save.lsz=STRING       save positions and colors  (default=`')",
-  "      --labels=INT            Do label-unswitching, and a nice summary  \n                                (default=`1')",
+  "  -h, --help                    Print help and exit",
+  "  -V, --version                 Print version and exit",
+  "      --git-version             detailed version description  (default=off)",
+  "  -v, --verbose                 detailed debugging  (default=off)",
+  "  -K, --K=INT                   Number of clusters, K  (default=`-1')",
+  "      --maxK=INT                Maximum number of clusters, K  (default=`-1')",
+  "  -d, --directed                directed  (default=off)",
+  "  -w, --weighted                weighted  (default=off)",
+  "  -s, --selfloop                selfloops allowed  (default=off)",
+  "      --seed=INT                seed to drand48() and gsl_rng_set  \n                                  (default=`0')",
+  "      --GT.vector=STRING        The ground truth. a file with N lines. Starts \n                                  from ZERO.",
+  "      --algo.metroK=INT         Use the simple Metropolis move on K  \n                                  (default=`1')",
+  "      --algo.1node=INT          Use the simple Metropolis on one node  \n                                  (default=`0')",
+  "      --algo.gibbs=INT          Use the simple Gibbs in the algorithm  \n                                  (default=`50')",
+  "      --algo.m3=INT             Use M3 in the algorithm  (default=`1')",
+  "      --algo.sm=INT             Use SplitMerge (based on M3) in the algorithm  \n                                  (default=`1')",
+  "      --algo.cf=INT             Use SplitMerge, but based on the \n                                  community-finding heuristic  (default=`1')",
+  "      --algo.ejectabsorb=INT    Use N+F's eject-absorb move  (default=`1')",
+  "  -i, --iterations=INT          How many iterations  (default=`100000')",
+  "      --initGT                  Initialize to the ground truth  (default=off)",
+  "      --model.scf               Stochastic community finding  (default=off)",
+  "      --scf                     Collapsed SCF  (default=off)",
+  "      --stringIDs               string IDs in the input  (default=off)",
+  "      --mega                    dumb down the algorithm for *big* networks  \n                                  (default=off)",
+  "      --printEveryNIters=INT    How often to print an update  (default=`1000')",
+  "      --assume_N_nodes=INT      Pre-create N nodes (0 to N-1), which may be \n                                  left with zero degree  (default=`0')",
+  "      --alpha=FLOAT             alpha. How uniform the cluster sizes  \n                                  (default=`0.5')",
+  "      --beta1=FLOAT             beta_1. prior on block density  (default=`0.5')",
+  "      --beta2=FLOAT             beta_2. prior on block density  (default=`0.5')",
+  "  -z, --save.z=STRING           save burnt-in z to this file  (default=`')",
+  "      --gamma.s=FLOAT           (for weighted only). Shape of Gamma prior  \n                                  (default=`1')",
+  "      --gamma.phi=FLOAT         (for weighted only). Scale of Gamma prior  \n                                  (default=`1')",
+  "  -l, --latentspace             Latent space model inside clusters         \n                                  (default=off)",
+  "      --lsalpha=FLOAT           Latestspace alpha ('density')  (default=`0')",
+  "      --algo.lspos=INT          Algo: LSSBM positions  (default=`0')",
+  "      --algo.lsm3=INT           Algo: LSSBM MS-like  (default=`0')",
+  "  -u, --uniformK                Use a Uniform prior for K  (default=off)",
+  "      --save.lsz=STRING         save positions and colors  (default=`')",
+  "      --labels=INT              Do label-unswitching, and a nice summary  \n                                  (default=`1')",
+  "      --save.current.state=STRING\n                                Every 10 iterations, the current MCMC \n                                  clustering is saved here",
     0
 };
 
@@ -136,6 +137,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->uniformK_given = 0 ;
   args_info->save_lsz_given = 0 ;
   args_info->labels_given = 0 ;
+  args_info->save_current_state_given = 0 ;
 }
 
 static
@@ -204,6 +206,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->save_lsz_orig = NULL;
   args_info->labels_arg = 1;
   args_info->labels_orig = NULL;
+  args_info->save_current_state_arg = NULL;
+  args_info->save_current_state_orig = NULL;
   
 }
 
@@ -251,6 +255,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->uniformK_help = gengetopt_args_info_help[36] ;
   args_info->save_lsz_help = gengetopt_args_info_help[37] ;
   args_info->labels_help = gengetopt_args_info_help[38] ;
+  args_info->save_current_state_help = gengetopt_args_info_help[39] ;
   
 }
 
@@ -362,6 +367,8 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->save_lsz_arg));
   free_string_field (&(args_info->save_lsz_orig));
   free_string_field (&(args_info->labels_orig));
+  free_string_field (&(args_info->save_current_state_arg));
+  free_string_field (&(args_info->save_current_state_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -475,6 +482,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "save.lsz", args_info->save_lsz_orig, 0);
   if (args_info->labels_given)
     write_into_file(outfile, "labels", args_info->labels_orig, 0);
+  if (args_info->save_current_state_given)
+    write_into_file(outfile, "save.current.state", args_info->save_current_state_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -772,6 +781,7 @@ cmdline_parser_internal (
         { "uniformK",	0, NULL, 'u' },
         { "save.lsz",	1, NULL, 0 },
         { "labels",	1, NULL, 0 },
+        { "save.current.state",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -1265,6 +1275,20 @@ cmdline_parser_internal (
                 &(local_args_info.labels_given), optarg, 0, "1", ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "labels", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Every 10 iterations, the current MCMC clustering is saved here.  */
+          else if (strcmp (long_options[option_index].name, "save.current.state") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->save_current_state_arg), 
+                 &(args_info->save_current_state_orig), &(args_info->save_current_state_given),
+                &(local_args_info.save_current_state_given), optarg, 0, 0, ARG_STRING,
+                check_ambiguity, override, 0, 0,
+                "save.current.state", '-',
                 additional_error))
               goto failure;
           

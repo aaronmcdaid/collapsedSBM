@@ -2694,6 +2694,17 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 #endif
 
+		if(iteration % 10 == 0 && args_info.save_current_state_arg) {
+			ofstream file(args_info.save_current_state_arg);
+			for(int i=0; i<s._N; ++i) {
+				if(i>0)
+					file << ',';
+				file << s.labelling.cluster_id.at(i);
+			}
+			file << endl;
+			file.close();
+		}
+
 		bool has_a_minute_elapsed = false;
 		if( int(lagging_time / 60) < int(ELAPSED() / 60) ) {
 			lagging_time = ELAPSED();
