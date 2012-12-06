@@ -47,10 +47,15 @@ int main(int argc, char **argv) {
 	if (cmdline_parser (argc, argv, &args_info) != 0)
 		exit(1) ;
 	if(args_info.git_version_flag) {
-		PP(gitstatus);
+		cout << "== comment.txt and gitstatus.txt ==" << endl;
+		cout << gitstatus;
+		cout << "====" << endl;
+		cout << "args:";
 		for (int i=0; i<argc; i++) {
-			PP(argv[i]);
+			cout << ' ' << argv[i];
 		}
+		cout << endl;
+		cout << "=====" << endl << endl;
 	}
 	if(args_info.inputs_num != 1) {
 		cmdline_parser_print_help();
