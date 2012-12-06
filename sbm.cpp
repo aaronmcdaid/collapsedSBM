@@ -2476,11 +2476,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	} else {
 		if(commandLineK != -1)
 			randomize(s, commandLineK);
-		else {
-			randomize(s, 2);
-			// for(int n=0; n+1<s._N; n++) s.isolateNode(n);
-			// assert(s._k == s._N);
-		}
 	}
 	if(args_info.verbose_flag) {
 		s.shortSummary(obj, groundTruth); /*s.summarizeEdgeCounts();*/ s.blockDetail(obj);
