@@ -67,7 +67,7 @@ struct gengetopt_args_info
   int algo_1node_arg;	/**< @brief Use the simple Metropolis on one node (default='0').  */
   char * algo_1node_orig;	/**< @brief Use the simple Metropolis on one node original value given at command line.  */
   const char *algo_1node_help; /**< @brief Use the simple Metropolis on one node help description.  */
-  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='1').  */
+  int algo_gibbs_arg;	/**< @brief Use the simple Gibbs in the algorithm (default='50').  */
   char * algo_gibbs_orig;	/**< @brief Use the simple Gibbs in the algorithm original value given at command line.  */
   const char *algo_gibbs_help; /**< @brief Use the simple Gibbs in the algorithm help description.  */
   int algo_m3_arg;	/**< @brief Use M3 in the algorithm (default='1').  */
