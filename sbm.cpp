@@ -4,6 +4,7 @@ using namespace std;
 #include <algorithm>
 #include <iomanip>
 #include <vector>
+#include <deque>
 #include <fstream>
 #include <map>
 #include <ctime>
@@ -2084,7 +2085,7 @@ static void label_switch(
 		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
 		, const sbm :: State & s
 		, const size_t N, const size_t K
-		, vector< pair<int, vector<int> > > & all_burned_in_z
+		, deque< pair<int, vector<int> > > & all_burned_in_z
 		, const vector<int> * const groundTruth
 		) {
 // TODO
@@ -2526,7 +2527,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	int burned_in_iters = 0;
 	int highest_K_sampled = 0;
 	int highest_KnonEmpty_sampled = 0;
-	vector< pair<int, vector<int> > > all_burned_in_z; // store all the states, for label-switching after
+	deque< pair<int, vector<int> > > all_burned_in_z; // store *half* of the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	long double lagging_time = ELAPSED();
 	int iteration;
@@ -2721,9 +2722,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			   highest_K_sampled = s._k;
 			if(highest_KnonEmpty_sampled < s.labelling.NonEmptyClusters)
 			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
-			if(args_info.labels_arg) {
-				all_burned_in_z.push_back( make_pair( s.labelling.NonEmptyClusters, s.labelling.cluster_id ) );
-			}
+		}
+		if(args_info.labels_arg) {
+			all_burned_in_z.push_back( make_pair( s.labelling.NonEmptyClusters, s.labelling.cluster_id ) );
+			// Every *second* iteration, we'll drop the first state.
+			// This is to ensure that, at the end of the algorithm we only have the last half of the iterations
+			// This might seem like a strange design, but it does enable us to drop out early if the user types Ctrl-C.
+			if(iteration%2 == 0)
+				all_burned_in_z.pop_front();
 		}
 		if(args_info.verbose_flag && iteration % args_info.printEveryNIters_arg == 0) {
 			cout << endl;
