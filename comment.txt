@@ -1,2 +1,3 @@
+" Nice output of block densities at the end."
 " algo.xx repetitions. First draft of CF heuristic. NON-static left."
 "\n"

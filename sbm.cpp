@@ -2074,6 +2074,7 @@ static void assert_valid_relabelling(const int K, const vector<int> &relabelling
 
 static void label_switch(
 		const graph :: NetworkInterfaceConvertedToString *g
+		, const sbm :: State & s
 		, const size_t N, const size_t K
 		, vector< pair<int, vector<int> > > & all_burned_in_z
 		, const vector<int> * const groundTruth
@@ -2298,6 +2299,7 @@ static void label_switch(
 		}
 		cout << endl;
 		cout << "Summary of cluster sizes across all label-switched states:" << endl;
+		vector<double> cluster_sizes(K,0.0);
 		for(size_t k=0; k<K; ++k) {
 			size_t sum_z_k = 0;
 			for(size_t i=0; i<N; ++i) {
@@ -2308,6 +2310,66 @@ static void label_switch(
 				<< double(sum_z_k) / double(all_burned_in_z.size())
 				<< stack.pop
 				<< endl;
+			cluster_sizes.at(k) = double(sum_z_k) / double(all_burned_in_z.size());
+		}
+		// For each block, we want to know how many edges are in it
+		vector< vector<double> > rate_of_edges_z(K, vector<double>(K,0) );
+		for(size_t k=0; k<K; ++k) {
+		for(size_t l=0; l<K; ++l) {
+			for(int rel = 0; rel<g->numRels(); rel++) {
+				const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
+				const double total_weight_on_this_rel = s.sum_weights_BOTH_directions(eps.first,eps.second);
+				const int32_t left = eps.first;
+				const int32_t right = eps.second;
+				const double k_to_l = double(relab_freq.at(left).at(k))
+					* double(relab_freq.at(right).at(l))
+					/ double(all_burned_in_z.size())
+					/ double(all_burned_in_z.size());
+				if(args_info.directed_flag) {
+					rate_of_edges_z.at(k).at(l) += total_weight_on_this_rel * k_to_l;
+				} else {
+					rate_of_edges_z.at(k).at(l) += total_weight_on_this_rel * k_to_l;
+					if(k!=l)
+						rate_of_edges_z.at(l).at(k) += total_weight_on_this_rel * k_to_l;
+				}
+			}
+		}
+		}
+		cout << "Summary of block densities" << endl;
+		vector< vector<double> > num_pairs(K, vector<double>(K,0) );
+		{
+			// First, we'll do calculations where k!=l - these are easy.
+			for(size_t k=0; k<K; ++k) {
+				for(size_t l=0; l<K; ++l) {
+					if(k!=l)
+						num_pairs.at(k).at(l) = cluster_sizes.at(k) * cluster_sizes.at(l);
+				}
+			}
+			// Now, we'll do the diagonal blocks - where we need to be careful and self loops and direction.
+			for(size_t k=0; k<K; ++k) {
+				double self_pairs_in_this_cluster = 0.0;
+				for(size_t n=0; n<N; ++n) {
+					self_pairs_in_this_cluster +=
+						double(relab_freq.at(n).at(k))
+						/ double(all_burned_in_z.size())
+						* double(relab_freq.at(n).at(k))
+						/ double(all_burned_in_z.size())
+					;
+				}
+				const long double non_self_pairs = (cluster_sizes.at(k) * cluster_sizes.at(k) - self_pairs_in_this_cluster) / (args_info.directed_flag ? 1.0 : 2.0);
+				num_pairs.at(k).at(k) = non_self_pairs + (args_info.selfloop_flag ? self_pairs_in_this_cluster : 0.0);
+			}
+		}
+		for(size_t k=0; k<K; ++k) {
+			cout << k << "\t";
+			for(size_t l=0; l<K; ++l) {
+				cout << "\t"
+					<< stack.push << fixed << setw(7) << setprecision(3)
+					<< rate_of_edges_z.at(k).at(l) << "/" <<  setw(7) << num_pairs.at(k).at(l)
+					<< "=" << setw(7) <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l)
+					<< stack.pop;
+			}
+			cout << endl;
 		}
 	}
 }
@@ -2712,7 +2774,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				max_K_to_consider_in_label_switching = max_K_in_ground_truth;
 			}
 		}
-		label_switch(s._g, s._N, max_K_to_consider_in_label_switching, all_burned_in_z, groundTruth);
+		label_switch(s._g, s, s._N, max_K_to_consider_in_label_switching, all_burned_in_z, groundTruth);
 	}
 	cout << "SBM complete. (after " << ELAPSED() << " seconds)" << endl;
 }
