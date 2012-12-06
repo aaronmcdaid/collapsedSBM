@@ -2522,11 +2522,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		save_lsz_fstream = new ofstream(args_info.save_lsz_arg);
 		*save_lsz_fstream << "N:\t" << s._N << "\t\t" << endl;
 	}
-	vector<int> K_freq(10000); // we're not expecting more than 10000 clusters :-)
-	vector<int> KnonEmpty_freq(10000);
-	int burned_in_iters = 0;
-	int highest_K_sampled = 0;
-	int highest_KnonEmpty_sampled = 0;
 	deque< pair< pair<int,int>, vector<int> > > all_burned_in_z; // store *half* of the states, for label-switching after
 	cout << endl << " = Starting MCMC =  (after " << ELAPSED() << " seconds)" << endl << endl;
 	long double lagging_time = ELAPSED();
@@ -2714,15 +2709,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				<< "\t(after " << ELAPSED() << " seconds)"
 				<< endl;
 		}
-		if(iteration*2 >= iterations) {
-			K_freq.at( s._k                        ) ++;
-			KnonEmpty_freq.at( s.labelling.NonEmptyClusters) ++;
-			++ burned_in_iters;
-			if(highest_K_sampled < s._k)
-			   highest_K_sampled = s._k;
-			if(highest_KnonEmpty_sampled < s.labelling.NonEmptyClusters)
-			   highest_KnonEmpty_sampled = s.labelling.NonEmptyClusters;
-		}
 		if(args_info.labels_arg) {
 			all_burned_in_z.push_back( make_pair( make_pair(s._k, s.labelling.NonEmptyClusters), s.labelling.cluster_id ) );
 			// Every *second* iteration, we'll drop the first state.
@@ -2782,6 +2768,24 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		}
 	}
 	cout << endl << " = MCMC complete =  (after " << ELAPSED() << " seconds)" << endl << endl;
+
+	vector<int> K_freq(10000); // we're not expecting more than 10000 clusters :-)
+	vector<int> KnonEmpty_freq(10000);
+	int highest_K_sampled = 0;
+	int highest_KnonEmpty_sampled = 0;
+	{ // check the burned-in iterations, and calculate some summaries
+		For(burned_in, all_burned_in_z) {
+			const int k_then = burned_in->first.first;
+			const int non_empty_k_then = burned_in->first.second;
+			K_freq.at( k_then                        ) ++;
+			KnonEmpty_freq.at( non_empty_k_then) ++;
+			if(highest_K_sampled < k_then)
+			   highest_K_sampled = k_then;
+			if(highest_KnonEmpty_sampled < non_empty_k_then)
+			   highest_KnonEmpty_sampled = non_empty_k_then;
+		}
+	}
+	const size_t burned_in_iters = all_burned_in_z.size();
 	assert(highest_K_sampled > 0);
 	assert(highest_K_sampled >= highest_KnonEmpty_sampled);
 	if(save_z_fstream)
