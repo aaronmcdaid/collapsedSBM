@@ -2392,6 +2392,10 @@ static void label_switch(
 					<< stack.push << fixed << setw(5) << setprecision(1)
 					<< rate_of_edges_z.at(k).at(l) << " /" <<  setw(5) << num_pairs.at(k).at(l);
 				if(isfinite(100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l))) {
+					if(rate_of_edges_z.at(k).at(l) >  num_pairs.at(k).at(l)) {
+						assert(VERYCLOSE(rate_of_edges_z.at(k).at(l) , num_pairs.at(k).at(l)));
+						rate_of_edges_z.at(k).at(l) = num_pairs.at(k).at(l);
+					}
 					cout << " =" << setw(5);
 					cout <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
 					cout << "%";
