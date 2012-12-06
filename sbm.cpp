@@ -2368,11 +2368,16 @@ static void label_switch(
 		for(size_t k=0; k<K; ++k) {
 			cout << k << "\t";
 			for(size_t l=0; l<K; ++l) {
-				cout << "\t"
-					<< stack.push << fixed << setw(7) << setprecision(3)
-					<< rate_of_edges_z.at(k).at(l) << "/" <<  setw(7) << num_pairs.at(k).at(l)
-					<< "=" << setw(7) <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l)
-					<< stack.pop;
+				cout << " |"
+					<< stack.push << fixed << setw(5) << setprecision(1)
+					<< rate_of_edges_z.at(k).at(l) << " /" <<  setw(5) << num_pairs.at(k).at(l);
+				if(isfinite(100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l))) {
+					cout << " =" << setw(5);
+					cout <<  100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l);
+					cout << "%";
+				} else
+					cout << "        ";
+				cout << stack.pop;
 			}
 			cout << endl;
 		}
