@@ -348,7 +348,7 @@ break; case STRATEGY_M3 :
 		assert(miss_score > left_score);
 		assert(miss_score > right_score);
 
-		const long double max_score = left_score > right_score ? left_score : right_score;
+		const long double max_score = (left_score > right_score) ? left_score : right_score;
 		left_score -= max_score;
 		right_score -= max_score;
 		left_score = exp2l(left_score);
