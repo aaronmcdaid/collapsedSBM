@@ -2084,7 +2084,7 @@ static void assert_valid_relabelling(const int K, const vector<int> &relabelling
 
 static void label_switch(
 		const graph :: NetworkInterfaceConvertedToStringWithWeights *g
-		, const sbm :: State & s
+		, const sbm :: State &
 		, const size_t N, const size_t K
 		, deque< pair< pair<int,int> , vector<int> > > & all_burned_in_z
 		, const vector<int> * const groundTruth
@@ -2327,11 +2327,14 @@ static void label_switch(
 			}
 		}
 		cout << "Summary of block densities" << endl;
+#define MAX_CLUSTERS_FOR_BLOCK_SUMMARY 5
 		vector< vector<double> > num_pairs(K, vector<double>(K,0) );
 		{
 			// First, we'll do calculations where k!=l - these are easy.
 			for(size_t k=0; k<K; ++k) {
+				if(k >= MAX_CLUSTERS_FOR_BLOCK_SUMMARY) break;
 				for(size_t l=0; l<K; ++l) {
+					if(l >= MAX_CLUSTERS_FOR_BLOCK_SUMMARY) break;
 					if(k!=l)
 						num_pairs.at(k).at(l) = cluster_sizes.at(k) * cluster_sizes.at(l);
 				}
@@ -2353,11 +2356,20 @@ static void label_switch(
 		}
 		double verify_edges = 0;
 		for(size_t k=0; k<K; ++k) {
+			if(k>=MAX_CLUSTERS_FOR_BLOCK_SUMMARY) {
+					cout << " ... too many blocks to print ...";
+					break;
+			}
 			cout << k << "\t";
 			for(size_t l=0; l<K; ++l) {
+				if(l>=MAX_CLUSTERS_FOR_BLOCK_SUMMARY) {
+					cout << " ..." << endl;
+					break;
+				}
 				if(args_info.directed_flag || l<=k)
 					verify_edges += rate_of_edges_z.at(k).at(l);
-				cout << " |"
+				cout << " |";
+				cout
 					<< stack.push << fixed << setw(5) << setprecision(1)
 					<< rate_of_edges_z.at(k).at(l) << " /" <<  setw(5) << num_pairs.at(k).at(l);
 				if(isfinite(100.0 * rate_of_edges_z.at(k).at(l) /  num_pairs.at(k).at(l))) {
@@ -2380,7 +2392,6 @@ static void label_switch(
 			}
 			cout << endl;
 		}
-		assert(VERYCLOSE(verify_edges, s.total_edge_weight));
 	}
 }
 
