@@ -2513,7 +2513,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	long double lagging_time = ELAPSED();
 	int iteration;
 	original_ctrl_C_handler = signal(SIGINT, sig_ctrl_C_caught_in_MCMC);
-	for(iteration = 0; iteration<iterations; iteration++) {
+	for(iteration = 0; /*see the 'break's below */; iteration++) {
 		if(was_ctrl_C_caught_in_MCMC)
 			break;
 		if(commandLineK != -1)
@@ -2521,6 +2521,39 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		if(args_info.maxK_arg != -1) {
 			assert(args_info.maxK_arg > 0);
 			assert(s._k <= args_info.maxK_arg);
+		}
+		{ // should we print the really-short summary?
+			// It's every 1,000 iterations and every minute
+			bool has_a_minute_elapsed = false;
+			if( int(lagging_time / 60) < int(ELAPSED() / 60) ) {
+				lagging_time = ELAPSED();
+				// another minute has elapsed
+				has_a_minute_elapsed = true;
+			}
+			if(has_a_minute_elapsed || iteration%1000 == 0 || iteration == iterations) {
+				cout
+					<< " .. iteration: " << iteration
+					<< "/" << iterations
+					<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
+					<< "\tK: " << s._k;
+				if(groundTruth) {
+					vector<int> z_vector(s._N);
+					for (int n=0; n < s._N; n++) {
+						const int id_of_cluster = s.labelling.cluster_id.at(n);
+						z_vector.at(n) = id_of_cluster;
+					}
+					assert(z_vector.size() == groundTruth->size());
+					cout
+						<< "\tnmi: "
+						<< sbm :: State :: NMI(z_vector, *groundTruth) * 100;
+				}
+				cout
+					<< "\t(after " << ELAPSED() << " seconds)"
+					<< endl;
+			}
+		}
+		if(iteration>=iterations) {
+			break;
 		}
 		/*
 		cout
@@ -2535,16 +2568,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			;
 		s.KandClusterSizes();
 			*/
-		if(0) { /// more swapping
-			if(s._k > 1) // && drand48() < 0.01)
-			{
-				const int cl1 = static_cast<int>(s._k * drand48());
-				const int cl2 = static_cast<int>(s._k * drand48());
-				if(cl1 != cl2) {
-					s.swapClusters(cl1,cl2);
-				}
-			}
-		}
 
 		vector<POSSIBLE_MOVES> possible_moves;
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
@@ -2682,33 +2705,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			file.close();
 		}
 
-		bool has_a_minute_elapsed = false;
-		if( int(lagging_time / 60) < int(ELAPSED() / 60) ) {
-			lagging_time = ELAPSED();
-			// another minute has elapsed
-			has_a_minute_elapsed = true;
-		}
-		if(has_a_minute_elapsed || iteration%1000 == 0) {
-			cout
-				<< " .. iteration: " << iteration
-				<< "/" << iterations
-				<< "\tnonEmpty: " << s.labelling.NonEmptyClusters
-				<< "\tK: " << s._k;
-			if(groundTruth) {
-				vector<int> z_vector(s._N);
-				for (int n=0; n < s._N; n++) {
-					const int id_of_cluster = s.labelling.cluster_id.at(n);
-					z_vector.at(n) = id_of_cluster;
-				}
-				assert(z_vector.size() == groundTruth->size());
-				cout
-					<< "\tnmi: "
-					<< sbm :: State :: NMI(z_vector, *groundTruth) * 100;
-			}
-			cout
-				<< "\t(after " << ELAPSED() << " seconds)"
-				<< endl;
-		}
 		if(args_info.labels_arg) {
 			all_burned_in_z.push_back( make_pair( make_pair(s._k, s.labelling.NonEmptyClusters), s.labelling.cluster_id ) );
 			// Every *second* iteration, we'll drop the first state.
