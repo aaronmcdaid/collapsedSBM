@@ -2291,7 +2291,7 @@ static void label_switch(
 		}
 		// For each block, we want to know how many edges are in it
 		vector< vector<double> > rate_of_edges_z(K, vector<double>(K,0) );
-#define MAX_CLUSTERS_FOR_BLOCK_SUMMARY 8
+#define MAX_CLUSTERS_FOR_BLOCK_SUMMARY 15
 		for(int rel = 0; rel<g->numRels(); rel++) {
 			const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
 			const int32_t left = eps.first;
@@ -2364,7 +2364,7 @@ static void label_switch(
 		double verify_edges = 0;
 		for(size_t k=0; k<K; ++k) {
 			if(k>=MAX_CLUSTERS_FOR_BLOCK_SUMMARY) {
-					cout << " ... too many blocks to print ..." << endl;
+					cout << " ... too many blocks to print all of them. I won't print any more. ..." << endl;
 					break;
 			}
 			cout << k << "\t";
