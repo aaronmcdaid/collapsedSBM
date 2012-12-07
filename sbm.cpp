@@ -958,7 +958,7 @@ bool drawPiAndTest(const sbm :: State &s, const sbm :: ObjectiveFunction *obj, g
 }
 
 static
-long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r) {
+long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, AcceptanceRate *AR, gsl_rng *r, const int n) {
 	if(args_info.scf_flag) {
 		assert(!args_info.latentspace_flag);
 		assert(s.cluster_to_points_map.empty());
@@ -969,7 +969,6 @@ long double gibbsOneNode(sbm :: State &s, const sbm :: ObjectiveFunction *obj, A
 		return 0.0L;
 	}
 	const int pre_k = s._k;
-	const int n = static_cast<int>(drand48() * s._N);
 	const int origClusterID = s.labelling.cluster_id.at(n);
 	const int isolatedClusterId = s._k;
 	assert(pre_k == isolatedClusterId);
@@ -2513,6 +2512,15 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	long double lagging_time = ELAPSED();
 	int iteration;
 	original_ctrl_C_handler = signal(SIGINT, sig_ctrl_C_caught_in_MCMC);
+	vector<int> all_nodes_random_order;
+	int current_gibbs_position = 0;
+	{
+		for(int n=0; n<s._N; ++n) {
+			all_nodes_random_order.push_back(n);
+		}
+		assert(s._N == (int)all_nodes_random_order.size());
+		random_shuffle(all_nodes_random_order.begin(), all_nodes_random_order.end());
+	}
 	for(iteration = 0; /*see the 'break's below */; iteration++) {
 		if(was_ctrl_C_caught_in_MCMC)
 			break;
@@ -2612,8 +2620,13 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			break; case POS_Gibbs: // CAN handle LSSBM
 				if(args_info.algo_gibbs_arg) {
-					for(int rep = 0; rep<args_info.algo_gibbs_arg; ++rep)
-						pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r);
+					for(int rep = 0; rep<args_info.algo_gibbs_arg; ++rep) {
+						++ current_gibbs_position;
+						while(current_gibbs_position >= s._N)
+							current_gibbs_position -= s._N;
+						const int n = all_nodes_random_order.at(current_gibbs_position);
+						pmf_track += gibbsOneNode(s, obj, &AR_gibbs, r, n);
+					}
 				}
 			break; case POS_M3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {

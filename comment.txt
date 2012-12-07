@@ -1,3 +1,5 @@
+" Gibbs will cover all nodes in rotation (random order, though)"
+"\n"
 " More concise output if K is large"
 "\n"
 " Saving the current state if --save.current.state is specified."
