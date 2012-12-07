@@ -2288,6 +2288,7 @@ static void label_switch(
 		}
 		// For each block, we want to know how many edges are in it
 		vector< vector<double> > rate_of_edges_z(K, vector<double>(K,0) );
+#define MAX_CLUSTERS_FOR_BLOCK_SUMMARY 8
 		for(int rel = 0; rel<g->numRels(); rel++) {
 			const std :: pair <int32_t, int32_t> eps = g->get_plain_graph()->EndPoints(rel);
 			const int32_t left = eps.first;
@@ -2299,7 +2300,9 @@ static void label_switch(
 				assert(r2l==0);
 			assert(l2r + r2l > 0.0);
 			for(size_t k=0; k<K; ++k) {
+				if(relab_freq.at(left).at(k) == 0 && relab_freq.at(right).at(k) == 0) continue;
 			for(size_t l=0; l<K; ++l) {
+				if(relab_freq.at(left).at(l) == 0 && relab_freq.at(right).at(l) == 0) continue;
 				const double l2r_k_to_l = double(relab_freq.at(left).at(k))
 					* double(relab_freq.at(right).at(l))
 					/ double(all_burned_in_z.size())
@@ -2327,8 +2330,7 @@ static void label_switch(
 			}
 		}
 		cout << "Summary of block densities" << endl;
-#define MAX_CLUSTERS_FOR_BLOCK_SUMMARY 5
-		vector< vector<double> > num_pairs(K, vector<double>(K,0) );
+		vector< vector<double> > num_pairs(MAX_CLUSTERS_FOR_BLOCK_SUMMARY, vector<double>(MAX_CLUSTERS_FOR_BLOCK_SUMMARY,0) );
 		{
 			// First, we'll do calculations where k!=l - these are easy.
 			for(size_t k=0; k<K; ++k) {
@@ -2341,6 +2343,7 @@ static void label_switch(
 			}
 			// Now, we'll do the diagonal blocks - where we need to be careful and self loops and direction.
 			for(size_t k=0; k<K; ++k) {
+				if(k >= MAX_CLUSTERS_FOR_BLOCK_SUMMARY) break;
 				double self_pairs_in_this_cluster = 0.0;
 				for(size_t n=0; n<N; ++n) {
 					self_pairs_in_this_cluster +=
@@ -2357,7 +2360,7 @@ static void label_switch(
 		double verify_edges = 0;
 		for(size_t k=0; k<K; ++k) {
 			if(k>=MAX_CLUSTERS_FOR_BLOCK_SUMMARY) {
-					cout << " ... too many blocks to print ...";
+					cout << " ... too many blocks to print ..." << endl;
 					break;
 			}
 			cout << k << "\t";

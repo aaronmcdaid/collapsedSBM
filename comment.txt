@@ -1,3 +1,5 @@
+" More concise output if K is large"
+"\n"
 " Saving the current state if --save.current.state is specified."
 "\n"
 " 50xGibbs is the default now. The core algorithm has been stable for a couple of days now (Dec 6 9pm)."
