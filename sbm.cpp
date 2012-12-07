@@ -2202,11 +2202,12 @@ static void label_switch(
 		}
 	}
 
-	cout << " Done. (after " << ELAPSED() << " seconds)" << endl;
+	cout << " label-switching complete. (after " << ELAPSED() << " seconds)" << endl;
 
 	{ // print out the summary output from label-switching
 #define FIELD_WIDTH 9
 			cout << endl;
+			cout << "Each node, and its favourite cluster(s):" << endl;
 			cout
 					<< stack.push << fixed << setw(FIELD_WIDTH)
 					<< "nodeid"
@@ -2264,6 +2265,7 @@ static void label_switch(
 		}
 	}
 	{ // print out the summary output from label-switching
+		cout << endl;
 		cout << "Best single clustering:" << endl;
 		for(size_t n=0; n<N; ++n) {
 			const vector<int> & relab_freq_n = relab_freq.at(n);
@@ -2271,6 +2273,7 @@ static void label_switch(
 				cout << ',';
 			cout << max_element(relab_freq_n.begin(), relab_freq_n.end()) - relab_freq_n.begin();
 		}
+		cout << endl;
 		cout << endl;
 		cout << "Summary of cluster sizes across all label-switched states:" << endl;
 		vector<double> cluster_sizes(K,0.0);
@@ -2329,7 +2332,8 @@ static void label_switch(
 			}
 			}
 		}
-		cout << "Summary of block densities" << endl;
+		cout << endl;
+		cout << "Summary of block densities:" << endl;
 		vector< vector<double> > num_pairs(MAX_CLUSTERS_FOR_BLOCK_SUMMARY, vector<double>(MAX_CLUSTERS_FOR_BLOCK_SUMMARY,0) );
 		{
 			// First, we'll do calculations where k!=l - these are easy.
@@ -2822,9 +2826,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		cout << "modalNonEmptyK=\t" << max_element(KnonEmpty_freq.begin(), KnonEmpty_freq.end()) - KnonEmpty_freq.begin() << endl;
 	}
 	if(args_info.labels_arg) {
-		cout << endl << "Completed " << iteration << " iterations.  Using the last half(" << all_burned_in_z.size() << ") for label switching." << endl << endl;
+		cout << endl << "Completed " << iteration << " iterations.  Using the last half (" << all_burned_in_z.size() << " iterations) for label switching." << endl << endl;
 		assert(!all_burned_in_z.empty());
-		cout << "label-switching ...";
+		cout << " label-switching ...";
 		//cout.flush(); cout << " sorted ..."
 		cout << endl;
 		sort( all_burned_in_z.begin(), all_burned_in_z.end() );
