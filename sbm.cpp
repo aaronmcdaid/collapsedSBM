@@ -2718,7 +2718,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			file.close();
 		}
 
-		if(args_info.labels_arg) {
+		{ // store the states, even if we don't do label-switching, as it is needed to calculate highest_K_sampled and so on
 			all_burned_in_z.push_back( make_pair( make_pair(s._k, s.labelling.NonEmptyClusters), s.labelling.cluster_id ) );
 			// Every *second* iteration, we'll drop the first state.
 			// This is to ensure that, at the end of the algorithm we only have the last half of the iterations
