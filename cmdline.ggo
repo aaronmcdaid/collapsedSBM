@@ -39,3 +39,4 @@ option  "uniformK"           u "Use a Uniform prior for K"               flag   
 option  "save.lsz"           - "save positions and colors"          string        default="" no
 option  "labels"             - "Do label-unswitching, and a nice summary"      int       default="1" no
 option  "save.current.state" - "Every 10 iterations, the current MCMC clustering is saved here" string  no
+option  "keep"               - "How often to record a copy of the current state, for label switching later" int default="10" no

@@ -141,6 +141,9 @@ struct gengetopt_args_info
   char * save_current_state_arg;	/**< @brief Every 10 iterations, the current MCMC clustering is saved here.  */
   char * save_current_state_orig;	/**< @brief Every 10 iterations, the current MCMC clustering is saved here original value given at command line.  */
   const char *save_current_state_help; /**< @brief Every 10 iterations, the current MCMC clustering is saved here help description.  */
+  int keep_arg;	/**< @brief How often to record a copy of the current state, for label switching later (default='10').  */
+  char * keep_orig;	/**< @brief How often to record a copy of the current state, for label switching later original value given at command line.  */
+  const char *keep_help; /**< @brief How often to record a copy of the current state, for label switching later help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */
   unsigned int version_given ;	/**< @brief Whether version was given.  */
@@ -182,6 +185,7 @@ struct gengetopt_args_info
   unsigned int save_lsz_given ;	/**< @brief Whether save.lsz was given.  */
   unsigned int labels_given ;	/**< @brief Whether labels was given.  */
   unsigned int save_current_state_given ;	/**< @brief Whether save.current.state was given.  */
+  unsigned int keep_given ;	/**< @brief Whether keep was given.  */
 
   char **inputs ; /**< @brief unamed options (options without names) */
   unsigned inputs_num ; /**< @brief unamed options number */

@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
 	PP(args_info.uniformK_flag);
 	PP(args_info.save_lsz_arg);
 	PP(args_info.labels_arg);
+	PP(args_info.keep_arg);
 	}
 	//PP(args_info.gamma_s_arg);
 	//PP(args_info.gamma_phi_arg);
@@ -2521,6 +2522,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		assert(s._N == (int)all_nodes_random_order.size());
 		random_shuffle(all_nodes_random_order.begin(), all_nodes_random_order.end());
 	}
+	size_t pushed_back_z=0;
 	for(iteration = 0; /*see the 'break's below */; iteration++) {
 		if(was_ctrl_C_caught_in_MCMC)
 			break;
@@ -2695,7 +2697,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		// PP(s.pmf());
 		// cout << endl;
 #if 0
-		if(i%1 == 0 && i*2>=iterations) {
+		if(iteration%100 == 0 && iteration*2>=iterations) {
 			cout << "paranoid";
 			cout << "\t" << s._k;
 			cout << "\t" << s.labelling.NonEmptyClusters;
@@ -2718,12 +2720,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			file.close();
 		}
 
+		if(iteration%args_info.keep_arg == 0)
 		{ // store the states, even if we don't do label-switching, as it is needed to calculate highest_K_sampled and so on
 			all_burned_in_z.push_back( make_pair( make_pair(s._k, s.labelling.NonEmptyClusters), s.labelling.cluster_id ) );
+			++ pushed_back_z;
 			// Every *second* iteration, we'll drop the first state.
 			// This is to ensure that, at the end of the algorithm we only have the last half of the iterations
 			// This might seem like a strange design, but it does enable us to drop out early if the user types Ctrl-C.
-			if(iteration%2 == 0)
+			if(pushed_back_z % 2 == 0)
 				all_burned_in_z.pop_front();
 		}
 		if(args_info.verbose_flag && iteration % args_info.printEveryNIters_arg == 0) {

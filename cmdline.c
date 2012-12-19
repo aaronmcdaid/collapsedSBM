@@ -72,6 +72,7 @@ const char *gengetopt_args_info_help[] = {
   "      --save.lsz=STRING         save positions and colors  (default=`')",
   "      --labels=INT              Do label-unswitching, and a nice summary  \n                                  (default=`1')",
   "      --save.current.state=STRING\n                                Every 10 iterations, the current MCMC \n                                  clustering is saved here",
+  "      --keep=INT                How often to record a copy of the current \n                                  state, for label switching later  \n                                  (default=`10')",
     0
 };
 
@@ -138,6 +139,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->save_lsz_given = 0 ;
   args_info->labels_given = 0 ;
   args_info->save_current_state_given = 0 ;
+  args_info->keep_given = 0 ;
 }
 
 static
@@ -208,6 +210,8 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->labels_orig = NULL;
   args_info->save_current_state_arg = NULL;
   args_info->save_current_state_orig = NULL;
+  args_info->keep_arg = 10;
+  args_info->keep_orig = NULL;
   
 }
 
@@ -256,6 +260,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->save_lsz_help = gengetopt_args_info_help[37] ;
   args_info->labels_help = gengetopt_args_info_help[38] ;
   args_info->save_current_state_help = gengetopt_args_info_help[39] ;
+  args_info->keep_help = gengetopt_args_info_help[40] ;
   
 }
 
@@ -369,6 +374,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->labels_orig));
   free_string_field (&(args_info->save_current_state_arg));
   free_string_field (&(args_info->save_current_state_orig));
+  free_string_field (&(args_info->keep_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -484,6 +490,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "labels", args_info->labels_orig, 0);
   if (args_info->save_current_state_given)
     write_into_file(outfile, "save.current.state", args_info->save_current_state_orig, 0);
+  if (args_info->keep_given)
+    write_into_file(outfile, "keep", args_info->keep_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -782,6 +790,7 @@ cmdline_parser_internal (
         { "save.lsz",	1, NULL, 0 },
         { "labels",	1, NULL, 0 },
         { "save.current.state",	1, NULL, 0 },
+        { "keep",	1, NULL, 0 },
         { 0,  0, 0, 0 }
       };
 
@@ -1289,6 +1298,20 @@ cmdline_parser_internal (
                 &(local_args_info.save_current_state_given), optarg, 0, 0, ARG_STRING,
                 check_ambiguity, override, 0, 0,
                 "save.current.state", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* How often to record a copy of the current state, for label switching later.  */
+          else if (strcmp (long_options[option_index].name, "keep") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->keep_arg), 
+                 &(args_info->keep_orig), &(args_info->keep_given),
+                &(local_args_info.keep_given), optarg, 0, "10", ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "keep", '-',
                 additional_error))
               goto failure;
           
