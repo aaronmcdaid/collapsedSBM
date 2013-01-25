@@ -2249,8 +2249,16 @@ static void label_switch(
 					<< stack.pop;
 			cout << "  ";
 			bool first = true;
+			vector< pair<double, int> > ziks;
 			for(size_t k=0; k<K; ++k) {
 				const double zik = double(relab_freq.at(n).at(k)) / all_burned_in_z.size();
+				ziks.push_back( make_pair( zik, k) );
+			}
+			sort(ziks.begin(), ziks.end());
+			reverse(ziks.begin(), ziks.end());
+			For(zikk, ziks) {
+				const double zik = zikk->first; // double(relab_freq.at(n).at(k)) / all_burned_in_z.size();
+				const int k = zikk->second;
 				if(zik > 0.01) {
 					ostringstream oss;
 					oss << k << "(" << fixed << setprecision(1) << 100.0 * zik << "%)";
