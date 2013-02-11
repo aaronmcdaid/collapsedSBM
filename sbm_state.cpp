@@ -46,7 +46,12 @@ namespace sbm {
 			log2GammaAlphaPlus.at(i) = LOG2GAMMA(this->_alpha+i);
 		}
 	}
-	State :: State(const GraphType * const g, const bool mega /* = false */, const double alpha /*=1.0*/) : _g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()), _N(g->numNodes()), _alpha(alpha), _mega(mega), labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
+	State :: State(const GraphType * const g
+			, const bool mega /* = false */
+			, const double alpha /*=1.0*/
+			, const bool latent_space /* i.e. Do we need sum_weights_BOTH_directions__? */
+			) :
+		_g(g), vsg(g->get_plain_graph()), _edge_details(g->get_edge_weights()) , _N(g->numNodes()), _alpha(alpha), _mega(mega) , labelling(this->_N, this->_alpha), _edgeCounts(g->get_edge_weights()) {
 		// initialize it with every node in one giant cluster
 		this->_k = 1;
 
@@ -65,16 +70,22 @@ namespace sbm {
 		long double w_verify = 0.0L;
 		for(int r = 0; r<this->vsg->numRels(); ++r) {
 			pair<int32_t,int32_t> eps = this->vsg->EndPoints(r);
+			assert(eps.first<=eps.second);
 			const long double w = this->_edge_details->getl2h(r) + this->_edge_details->geth2l(r);
-			this->sum_weights_BOTH_directions__[ eps ] += w;
+			if(latent_space)
+				this->sum_weights_BOTH_directions__[ eps ] += w;
 			w_verify += w;
-			if(eps.first<eps.second) {
+			if(latent_space && eps.first<eps.second) {
 				swap(eps.first, eps.second);
 				this->sum_weights_BOTH_directions__[ eps ] += w;
 			}
 
 		}
 		assert(w_verify == this->total_edge_weight);
+		if(latent_space)
+			assert(!this->sum_weights_BOTH_directions__.empty());
+		else
+			assert(this->sum_weights_BOTH_directions__.empty());
 	}
 	Cluster :: Cluster() : _order(0) {
 	}

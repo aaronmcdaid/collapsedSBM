@@ -32,7 +32,7 @@ namespace std {
 			const hash<b> bh;
 		public:
 			hash() : ah(), bh() {}
-			size_t operator()(const std::pair<a, b> &p) const {
+			inline size_t operator()(const std::pair<a, b> &p) const {
 				return ah(-p.first) ^ bh(1+p.second);
 			}
 	};
@@ -142,9 +142,14 @@ struct State {
 	const bool _mega; // if this is true, the print less
 	mutable std :: unordered_map< std :: pair<int32_t, int32_t> , long double> sum_weights_BOTH_directions__; // for a given pair of node ids, what's the sum of the weights between them?
 	long double sum_weights_BOTH_directions(int32_t n, int32_t m) const {
+		assert(!this->sum_weights_BOTH_directions__.empty());
 		return this->sum_weights_BOTH_directions__[std :: make_pair(n,m)];
 	}
-	explicit State(const GraphType * const g, const bool mega = false, const double alpha = 1.0);
+	explicit State(const GraphType * const g
+			, const bool mega = false
+			, const double alpha = 1.0
+			, const bool latent_space = false/* i.e. Do we need sum_weights_BOTH_directions__? */
+			);
 
 	Labelling	labelling;
 	// the clustering

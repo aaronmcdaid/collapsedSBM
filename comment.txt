@@ -1,3 +1,4 @@
+" Fix the slow loading time.\n"
 " Keep only every 10th iteration for burn-in" "\n"
 " Gibbs will cover all nodes in rotation (random order, though)"
 "\n"
