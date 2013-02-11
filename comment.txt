@@ -1,3 +1,4 @@
+" For my thesis, print the really-short summary every 100 iterations, not just every 1,000\n"
 " Fix the slow loading time.\n"
 " Keep only every 10th iteration for burn-in" "\n"
 " Gibbs will cover all nodes in rotation (random order, though)"
