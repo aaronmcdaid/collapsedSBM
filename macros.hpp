@@ -1,3 +1,6 @@
+#ifndef MACROS_HPP__
+#define MACROS_HPP__
+
 #include <iostream>
 #define PP(x)                  std :: cout << #x << ":" << (x) << std :: endl
 #define PP2(x,y)               std :: cout << #x << ',' << #y                                           << ":\t" << (x) << " , " << (y) << std :: endl
@@ -9,3 +12,5 @@
 #define VERYCLOSE(a,b) (1e-07 > fabs((a)-(b)))
 #define For(it, container) for( typeof((container).begin()) it = (container).begin(); it != (container).end(); ++it)
 #define ELAPSED() (double(clock()) / CLOCKS_PER_SEC)
+
+#endif
