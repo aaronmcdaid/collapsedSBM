@@ -2541,14 +2541,14 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			assert(s._k <= args_info.maxK_arg);
 		}
 		{ // should we print the really-short summary?
-			// It's every 1,00 iterations and every minute
+			// It's every 10 iterations and every minute
 			bool has_a_minute_elapsed = false;
 			if( int(lagging_time / 60) < int(ELAPSED() / 60) ) {
 				lagging_time = ELAPSED();
 				// another minute has elapsed
 				has_a_minute_elapsed = true;
 			}
-			if(has_a_minute_elapsed || iteration%100 == 0 || iteration == iterations) {
+			if(has_a_minute_elapsed || iteration%10 == 0 || iteration == iterations) {
 				cout
 					<< " .. iteration: " << iteration
 					<< "/" << iterations
