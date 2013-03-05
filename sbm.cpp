@@ -2418,6 +2418,19 @@ void sig_ctrl_C_caught_in_MCMC(int) {
 
 }
 
+long double entropy_of_a_clustering(const sbm :: State &s) {
+	// summing over the non-empty clusters
+	long double entropy = 0.0L;
+	for(int k=0; k<s._k; ++k) {
+		const int o = s.labelling.clusters.at(k)->order();
+		if(o>0) {
+			const long double proportion = (long double)o / (long double)s._N;
+			entropy -= proportion * logl(proportion);
+		}
+	}
+	return entropy;
+}
+
 #define CHECK_PMF_TRACKER(track, actual) do { const long double _actual = (actual); long double & _track = (track); if(VERYCLOSE(_track,_actual)) { track = _actual; } else { PP(_actual - track); } assert(_track == _actual); } while(0)
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) {
@@ -2565,9 +2578,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 						<< "\tnmi: "
 						<< sbm :: State :: NMI(z_vector, *groundTruth) * 100;
 				}
-				cout
-					<< "\t(after " << ELAPSED() << " seconds)"
-					<< endl;
+				cout << "\tentropy: " << entropy_of_a_clustering(s);
+				cout << "\t(after " << ELAPSED() << " seconds)";
+				cout << endl;
 			}
 		}
 		if(iteration>=iterations) {
