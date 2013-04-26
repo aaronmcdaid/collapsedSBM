@@ -36,7 +36,7 @@ namespace std {
 				return ah(-p.first) ^ bh(1+p.second);
 			}
 	};
-	template struct std :: hash<int32_t>;
+	//template struct std :: hash<int32_t>;
 }
 
 namespace sbm {
