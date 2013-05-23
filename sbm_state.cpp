@@ -723,6 +723,7 @@ namespace sbm {
 		const long double K_prior  = this->P_z_K();
 		const long double P_z_fast = this->P_z_orders();
 		const long double P_x_given_z = this->P_edges_given_z_slow(obj, justTheseClusters);
+		//PP3( K_prior , P_z_fast , P_x_given_z);
 		return K_prior + P_z_fast + P_x_given_z;
 	}
 

@@ -300,6 +300,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 		, const int right
 		, vector<int> &z
 		, enum Strategy strategy
+		, bool reject_some_simple_proposals_immediately = true// e.g. if num_nodes == 0, or if first two nodes are assigned to the same cluster
 		) {
 	// given a set of nodes, all currently unassigned,
 	// assign them to one of two clusters randomly.
@@ -311,7 +312,7 @@ long double SM_worker(sbm :: State &s, const sbm :: ObjectiveFunction *obj
 	assert(left != right);
 	const size_t num = all_nodes.size();
 	assert(num == z.size());
-	if(num == 0) {
+	if(reject_some_simple_proposals_immediately && num == 0) {
 		return 0.0L;
 	}
 	long double this_prop_prob = 0.0L;
@@ -373,6 +374,7 @@ break; case STRATEGY_M3 :
 		right_score = exp2l(right_score);
 		// PP2(left_score, right_score);
 	}
+		if(reject_some_simple_proposals_immediately)
 		switch(ii) {
 			break; case 0: left_score = 1; right_score = 0.000000;
 			break; case 1:   left_score = 0.000000; right_score = 1;
@@ -678,240 +680,66 @@ must_be_different_try_again:
 }
 
 static long double M3(sbm :: State &s, const sbm :: ObjectiveFunction *obj
-		, AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
+		// , AcceptanceRate * const AR, AcceptanceRate * const AR_alittleConservative, AcceptanceRate * const AR_veryConservative
 		, gsl_rng *r
 		) {
 	if(s._k < 2) {
 		return 0.0L; // should this be recorded as a rejection for the purpose of the acceptance rate?
 	}
 
+	// Select two distinct clusters
+	// Record current state.
+	// Make random proposal, recording proposal probability along the way
+	// Calculate new cpmf
+	// Make forced proposal, recording proposal probability along the way
 
-// #define M3_debugPrinting
-// #define M3_Paranoid
-#ifdef M3_Paranoid
-	const long double preRandom_P_x_z = s.P_edges_given_z_slow(obj);
-	const long double preRandom_P_zK_x = s.pmf_slow(obj);
-#endif
-	// const long double preRandom_P_z_K = s.P_z_orders();
-	assert(AR);
+gotta_be_distinct:
+	const int left  = static_cast<int>(drand48() * s._k);
+	const int right = static_cast<int>(drand48() * s._k);
+	if(left==right)
+		goto gotta_be_distinct;
+	const pair<int,int> justTheseClusters = make_pair(left,right);
+#define dump_clustering() do {\
+for(int i=0; i<s._N; ++i) { cout << setw(3) << s.labelling.cluster_id.at(i); } cout << endl; \
+} while(0)
+	dump_clustering();
 
-	const int pre_k = s._k;
-	int left;
-	int right;
-	left = static_cast<int>(drand48() * s._k);
-	do { right = static_cast<int>(drand48() * s._k); } while (left==right);
-	assert(left != right);
-	assert(left >= 0); assert(left < s._k);
-	assert(right >= 0); assert(right < s._k);
-
-
-#ifdef M3_debugPrinting
-	PP3(s._k, left,right);
-#endif
-
-	vector<int> randomizedNodeIDs; // the nodes in both clusters. Will be considered in a random order
-	const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
-	const sbm :: Cluster * const rCluster = s.labelling.clusters.at(right);
-	forEach(int n, amd :: mk_range(lCluster->get_members())) { randomizedNodeIDs.push_back(n); }
-	forEach(int n, amd :: mk_range(rCluster->get_members())) { randomizedNodeIDs.push_back(n); }
-
-	const int M = (int)randomizedNodeIDs.size();
-	assert(M == lCluster->order() + rCluster->order());
-
-	random_shuffle(randomizedNodeIDs.begin(), randomizedNodeIDs.end());
-
-	vector<int> clusterIDs;
-	for(int m=0; m<M; m++) {
-		const int n = randomizedNodeIDs.at(m);
-		clusterIDs.push_back(s.labelling.cluster_id.at(n));
-	}
-	assert((int) clusterIDs.size() == M);
-
-	long double sumToOrig = 0.0L; // The total delta in P(x|z), but the clusters < pre_k
-	long double proposalProbOld_log2 = 0.0L;
-	for(int m = 0; m<M; m++) {
-		const int nToRemove = randomizedNodeIDs.at(m);
-		const int origClusterID = clusterIDs.at(m);
-		assert(origClusterID == left || origClusterID == right);
-		const int isolatedClusterId = s.appendEmptyCluster();
-		const int origClusterID_verify = s.moveNodeAndInformOfEdges(nToRemove, isolatedClusterId);
-		assert(origClusterID == origClusterID_verify);
-		const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
-
-			const long double pre_z_K = s.P_z_orders();
-			{ const int old_cl_id = s.moveNode(nToRemove, left); assert(old_cl_id == isolatedClusterId); }
-			const long double post_z_K_left = s.P_z_orders();
-			s.moveNode(nToRemove, isolatedClusterId);
-			assert(VERYCLOSE(pre_z_K, s.P_z_orders()));
-			const long double delta_z_K_left = post_z_K_left - pre_z_K;
-			assert(isfinite(delta_z_K_left));
-			s.moveNode(nToRemove, right);
-			const long double post_z_K_right = s.P_z_orders();
-			s.moveNode(nToRemove, isolatedClusterId);
-			assert(VERYCLOSE(pre_z_K, s.P_z_orders()));
-			const long double delta_z_K_right = post_z_K_right - pre_z_K;
-			assert(isfinite(delta_z_K_right));
-			// PP2(delta_z_K_left,delta_z_K_right);
-
-		const long double toTheLeft = delta_z_K_left  + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
-		const long double toTheRight= delta_z_K_right + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
-		const long double toOrig = origClusterID == left ? toTheLeft : toTheRight;
-		sumToOrig += toOrig;
-
-		// would would the proposal probability have been in reverse, so to speak?
-		const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
-		const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
-		assert(toTheLeft__ <= 0.0L);
-		assert(toTheRight__ <= 0.0L);
-		const long double toTheLeft____  = exp2l(toTheLeft__);
-		const long double toTheRight____ = exp2l(toTheRight__);
-#ifdef M3_debugPrinting
-		PP2(nToRemove, origClusterID);
-		PP2(toTheLeft, toTheRight);
-		PP2(toTheLeft__, toTheRight__);
-		PP2(toTheLeft____, toTheRight____);
-#endif
-		const long double totalProb____ = toTheLeft____ + toTheRight____;
-		proposalProbOld_log2 +=          toOrig - max(toTheLeft, toTheRight);
-		proposalProbOld_log2 -=          log2l(totalProb____);
-	}
-	assert(s._k == pre_k + M);
-
-	long double delta_P_z_x_forRandom = 0.0L;
-	long double proposalProbNew_log2 = 0.0L;
-	// randomly assign them to the two clusters
-		for(int m = M-1; m>=0; m--) {
-			const int n = randomizedNodeIDs.at(m);
-			// cout << "randomly assign " << n << endl;
-
-			const int isolatedClusterId = s.labelling.cluster_id.at(n);
-			assert(isolatedClusterId == s._k-1);
-			const long double isolatedNodesSelfLoop = obj->relevantWeight(isolatedClusterId, isolatedClusterId, &s._edgeCounts);
-
-			const long double pre_z_K = s.P_z_orders();
-			s.moveNode(n, left);
-			const long double post_z_K_left = s.P_z_orders();
-			s.moveNode(n, isolatedClusterId);
-			assert(VERYCLOSE(pre_z_K , s.P_z_orders()));
-			const long double delta_z_K_left = post_z_K_left - pre_z_K;
-			assert(isfinite(delta_z_K_left));
-			s.moveNode(n, right);
-			const long double post_z_K_right = s.P_z_orders();
-			s.moveNode(n, isolatedClusterId);
-			assert(VERYCLOSE(pre_z_K , s.P_z_orders()));
-			const long double delta_z_K_right = post_z_K_right - pre_z_K;
-			assert(isfinite(delta_z_K_right));
-			// PP2(delta_z_K_left,delta_z_K_right);
-
-			const long double toTheLeft = delta_z_K_left  + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, left, isolatedClusterId, isolatedNodesSelfLoop);
-			const long double toTheRight= delta_z_K_right + delta_P_z_x__1RowOfBlocks(s, obj, pre_k, right, isolatedClusterId, isolatedNodesSelfLoop);
-
-			// choose left or right randomly, weighted by toTheLeft and toTheRight
-			const long double toTheLeft__  = toTheLeft  - max(toTheLeft, toTheRight);
-			const long double toTheRight__ = toTheRight - max(toTheLeft, toTheRight);
-			assert(toTheLeft__ <= 0.0L);
-			assert(toTheRight__ <= 0.0L);
-			const long double toTheLeft____  = exp2l(toTheLeft__);
-			const long double toTheRight____ = exp2l(toTheRight__);
-			const long double totalProb____ = toTheLeft____ + toTheRight____;
-			const long double u = drand48() * totalProb____;
-			const int randomClusterId = (u < toTheLeft____) ? left : right;
-			proposalProbNew_log2 +=          (u < toTheLeft____) ? toTheLeft__ : toTheRight__;
-			proposalProbNew_log2 -=          log2l(totalProb____);
-#ifdef M3_debugPrinting
-			PP2(toTheLeft, toTheRight);
-			PP2(toTheLeft__, toTheRight__);
-			PP2(toTheLeft____, toTheRight____);
-			PP3(toTheLeft____ , u , toTheRight____);
-			PP3(left, randomClusterId, right);
-			PP(bool(randomClusterId == right));
-#endif
-			const int isolatedCluster_verify = s.moveNodeAndInformOfEdges(n, randomClusterId);
-			s.deleteClusterFromTheEnd();
-			assert(s._k == isolatedCluster_verify);
-
-			delta_P_z_x_forRandom += randomClusterId == left ? toTheLeft : toTheRight;
-		}
-		assert(s._k == pre_k);
-
-		// must assert that the delta_P_x_z is as was expected
-		// const long double postRandom_P_z_K = s.P_z_orders();
-#ifdef M3_Paranoid
-		const long double postRandom_P_zK_x = s.pmf_slow(obj);
-		const long double postRandom_P_x_z = s.P_edges_given_z_slow(obj) + s.P_z_orders();
-		PP2(preRandom_P_x_z, postRandom_P_x_z);
-		PP2(sumToOrig, delta_P_z_x_forRandom);
-		PP2(preRandom_P_x_z, postRandom_P_x_z + sumToOrig - delta_P_z_x_forRandom);
-		assert(VERYCLOSE(preRandom_P_zK_x + delta_P_z_x_forRandom - sumToOrig, postRandom_P_zK_x));
-		// PP2(preRandom_P_zK_x , postRandom_P_zK_x);
-		// PP(delta_P_z_x_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K);
-		// assert(VERYCLOSE( -preRandom_P_zK_x + postRandom_P_zK_x , delta_P_x_z_forRandom - sumToOrig + postRandom_P_z_K - preRandom_P_z_K));
-
-		cout << "Did it randomly find a good one?" << endl;
-		PP(delta_P_z_x_forRandom - sumToOrig);
-		PP2(proposalProbOld_log2, proposalProbNew_log2);
-#endif
-
-	const long double delta_P_zK = delta_P_z_x_forRandom - sumToOrig; // + postRandom_P_z_K - preRandom_P_z_K;
-#ifdef M3_Paranoid
-	assert(VERYCLOSE(delta_P_zK , postRandom_P_zK_x - preRandom_P_zK_x));
-#endif
-	const long double acceptanceProbability =
-		+ delta_P_zK
-		- proposalProbNew_log2 + proposalProbOld_log2
-		;
-
-	bool provisional_accept = acceptTest(acceptanceProbability);
-	if(provisional_accept && args_info.scf_flag) {
-		const bool SCF_posterior_test = drawPiAndTest(s, obj, r);
-		provisional_accept = SCF_posterior_test;
-	}
-	AR->notify(provisional_accept);
-	if(provisional_accept) {
-		// how many nodes haven't actually moved?
-		int changed = 0;
-		for(int m = 0; m<M; m++) {
-			const int n = randomizedNodeIDs.at(m);
-			const int origClusterID = clusterIDs.at(m);
-			const int currentClusterID = s.labelling.cluster_id.at(n);
-			assert(currentClusterID == left || currentClusterID == right);
-			assert(origClusterID == left || origClusterID == right);
-			if(currentClusterID != origClusterID) {
-				changed ++;
-			}
-		}
-		assert(changed >= 0 && changed <= M);
-		AR_alittleConservative->notify(changed>0);
-		AR_veryConservative->notify(changed>0 && changed < M);
-
-		assert(pre_k == s._k);
-		// cout << "Accepted" << endl;
-		return delta_P_zK;
-	}
-	else
+	vector<int> all_nodes;
 	{
-	for(int i = M-1; i>=0; i--) { // regardless of whether the nodes are still isolated, or have already been assigned randomly, this will put everything back the way it was.
-		const int nToPutBack = randomizedNodeIDs.at(i);
-		const int currentClusterID = s.labelling.cluster_id.at(nToPutBack);
-		const int origClusterID = clusterIDs.at(i);
-		const int theOtherCluster = origClusterID == left ? right : left;
-		if(currentClusterID == origClusterID) {
-			continue; // this is OK where it is
-		} else if(currentClusterID == theOtherCluster) {
-			s.moveNodeAndInformOfEdges(nToPutBack, origClusterID);
-		} else { // it's current isolated
-			assert(s.labelling.clusters.at(currentClusterID)->order()==1);
-			assert(currentClusterID >= pre_k);
-			s.moveNodeAndInformOfEdges(nToPutBack, origClusterID);
-			s.deleteClusterFromTheEnd();
-		}
+		const sbm :: Cluster * const lCluster = s.labelling.clusters.at(left);
+		For(node, lCluster->get_members()) { all_nodes.push_back(*node); }
+		const sbm :: Cluster * const rCluster = s.labelling.clusters.at(right);
+		For(node, rCluster->get_members()) { all_nodes.push_back(*node); }
+		random_shuffle(all_nodes.begin(), all_nodes.end());
 	}
-	assert(pre_k == s._k);
-	AR_alittleConservative->notify(false);
-	AR_veryConservative->notify(false);
-	// cout << "Rejected" << endl;
-	return 0.0L;
+	const int num = all_nodes.size();
+
+	// Record the original state, while removing all the nodes from both clusters
+	const long double pre_score = s.P_all_fastish(obj);
+	vector<int> z(num, -1);
+	for(int ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		const int oldcl = s.labelling.removeNode(n);
+		z.at(ii) = oldcl;
+		PP2(n, oldcl);
+		s.informNodeMove(n, oldcl, -1);
+		assert(oldcl == left || oldcl == right);
 	}
+	const long double unassigned_score = s.P_all_fastish(obj);
+	Ignore(unassigned_score);
+	dump_clustering();
+
+	// Make forced proposal
+	const long double partial_prop_prob_forced = SM_worker(s, obj, r, all_nodes, left, right, z, STRATEGY_M3, false);
+	Ignore(partial_prop_prob_forced);
+
+	const long double undone_score = s.P_all_fastish(obj);
+	dump_clustering();
+
+	PP3( pre_score, unassigned_score , undone_score) ;
+	assertVERYCLOSE( undone_score , pre_score) ;
+	assertEQ( undone_score , pre_score) ;
+	return undone_score - pre_score;
 }
 
 static long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
@@ -2514,9 +2342,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
-	AcceptanceRate AR_M3("M3");
-	AcceptanceRate AR_M3little("M3lConservative");
-	AcceptanceRate AR_M3very  ("M3vConservative");
+	//AcceptanceRate AR_M3("M3");
+	//AcceptanceRate AR_M3little("M3lConservative");
+	//AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
 	AcceptanceRate AR_lspos  ("LSSBM positions");
 	AcceptanceRate AR_M3lspos  ("LSSBM M3");
@@ -2661,8 +2489,10 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				}
 			break; case POS_M3: // can NOT handle LSSBM
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
-					for(int rep = 0; rep<args_info.algo_m3_arg; ++rep)
-						pmf_track += M3(s, obj, &AR_M3, &AR_M3little, &AR_M3very, r);
+					for(int rep = 0; rep<args_info.algo_m3_arg; ++rep) {
+						pmf_track += M3(s, obj, r);
+						CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
+					}
 				} else
 					assert(1==2);
 			break; case POS_SM_Merge_M3 : // can NOT handle LSSBM
@@ -2771,9 +2601,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 			AR_ea.dump();
 			AR_lspos.dump();
 			AR_M3lspos.dump();
-			AR_M3.dump();
-			AR_M3little.dump();
-			AR_M3very.dump();
 			s.blockDetail(obj);
 			cout << " end of check at iteration==" << iteration << ". (" << double(clock()) / CLOCKS_PER_SEC << " seconds)" << endl;
 			CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
