@@ -699,9 +699,12 @@ gotta_be_distinct:
 	if(left==right)
 		goto gotta_be_distinct;
 	const pair<int,int> justTheseClusters = make_pair(left,right);
-#define dump_clustering() do {\
-for(int i=0; i<s._N; ++i) { cout << setw(3) << s.labelling.cluster_id.at(i); } cout << endl; \
+#define dump_clustering2() do {\
+PP2(__LINE__, s.P_all_fastish(obj)); for(int i=0; i<s._N; ++i) { cout << setw(3) << s.labelling.cluster_id.at(i); } cout << endl; \
 } while(0)
+
+#define dump_clustering() do{}while(0)
+
 	dump_clustering();
 
 	vector<int> all_nodes;
@@ -714,14 +717,16 @@ for(int i=0; i<s._N; ++i) { cout << setw(3) << s.labelling.cluster_id.at(i); } c
 	}
 	const int num = all_nodes.size();
 
+	// The various states the nodes will be in
+	vector<int> z_original(num, -1);
+	vector<int> z_random(num, -1);
+
 	// Record the original state, while removing all the nodes from both clusters
 	const long double pre_score = s.P_all_fastish(obj);
-	vector<int> z(num, -1);
 	for(int ii = 0; ii < num; ++ii) {
 		const int n = all_nodes.at(ii);
 		const int oldcl = s.labelling.removeNode(n);
-		z.at(ii) = oldcl;
-		PP2(n, oldcl);
+		z_original.at(ii) = oldcl;
 		s.informNodeMove(n, oldcl, -1);
 		assert(oldcl == left || oldcl == right);
 	}
@@ -729,17 +734,49 @@ for(int i=0; i<s._N; ++i) { cout << setw(3) << s.labelling.cluster_id.at(i); } c
 	Ignore(unassigned_score);
 	dump_clustering();
 
+	// Make random proposal
+	const long double partial_prop_prob_random = SM_worker(s, obj, r, all_nodes, left, right, z_random, STRATEGY_M3, false);
+	Ignore(partial_prop_prob_random);
+	const long double randomized_score = s.P_all_fastish(obj);
+	Ignore(randomized_score);
+	dump_clustering();
+
+	// Empty the two clusters again
+	for(int ii = 0; ii < num; ++ii) {
+		const int n = all_nodes.at(ii);
+		const int oldcl = s.labelling.removeNode(n);
+		assert(z_random.at(ii) == oldcl);
+		s.informNodeMove(n, oldcl, -1);
+		assert(oldcl == left || oldcl == right);
+	}
+	dump_clustering();
+
 	// Make forced proposal
-	const long double partial_prop_prob_forced = SM_worker(s, obj, r, all_nodes, left, right, z, STRATEGY_M3, false);
+	const long double partial_prop_prob_forced = SM_worker(s, obj, r, all_nodes, left, right, z_original, STRATEGY_M3, false);
 	Ignore(partial_prop_prob_forced);
 
 	const long double undone_score = s.P_all_fastish(obj);
 	dump_clustering();
 
-	PP3( pre_score, unassigned_score , undone_score) ;
+	//PP3( pre_score, unassigned_score , undone_score) ;
 	assertVERYCLOSE( undone_score , pre_score) ;
 	assertEQ( undone_score , pre_score) ;
-	return undone_score - pre_score;
+
+	// Finally ready to decide
+	const long double acceptance_prob = randomized_score - pre_score - partial_prop_prob_random + partial_prop_prob_forced;
+	if( log2l(gsl_ran_flat(r,0,1)) < acceptance_prob) {
+		// Accept
+		for(int ii = 0; ii < num; ++ii) {
+			const int n = all_nodes.at(ii);
+			const int cl = z_random.at(ii);
+			assert(cl == left || cl == right);
+			s.removeNodeAndInformOfEdges(n);
+			s.insertNodeAndInformOfEdges(n,cl);
+		}
+		return randomized_score - pre_score;
+	} else {
+		return undone_score - pre_score;
+	}
 }
 
 static long double beta_draw(const int p_kl, const int y_kl, gsl_rng *r) {
@@ -2342,9 +2379,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 	AcceptanceRate AR_metroK("metroK");
 	AcceptanceRate AR_metro1Node("metro1Node");
 	AcceptanceRate AR_gibbs("gibbs");
-	//AcceptanceRate AR_M3("M3");
-	//AcceptanceRate AR_M3little("M3lConservative");
-	//AcceptanceRate AR_M3very  ("M3vConservative");
 	AcceptanceRate AR_ea  ("EjectAbsorb");
 	AcceptanceRate AR_lspos  ("LSSBM positions");
 	AcceptanceRate AR_M3lspos  ("LSSBM M3");
@@ -2491,7 +2525,6 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 				if(s.cluster_to_points_map.empty() && args_info.algo_m3_arg) {
 					for(int rep = 0; rep<args_info.algo_m3_arg; ++rep) {
 						pmf_track += M3(s, obj, r);
-						CHECK_PMF_TRACKER(pmf_track, s.pmf(obj));
 					}
 				} else
 					assert(1==2);

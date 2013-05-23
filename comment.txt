@@ -1,3 +1,4 @@
+" Reimplemented M3, hoping for speed.\n"
 " entropy_of_a_clustering.\n"
 " Actually, make that every 10th iteration, not just every 100th.\n"
 " Fix the slow loading time.\n"
