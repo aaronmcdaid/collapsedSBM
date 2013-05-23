@@ -686,7 +686,9 @@ namespace sbm {
 			k = this->_k;
 		assert(k>=0);
 		// const long double priorOnK = -this->_k; // Geometric(0.5) prior on K
-		const long double priorOnK = args_info.uniformK_flag ? 0 : -LOG2FACT(k); // Poisson(1) prior on K
+		const long double priorOnK = args_info.uniformK_flag   ? 0         : // Uniform prior
+		                             args_info.geometricK_flag ? -this->_k : // Geometric(0.5) prior
+					                                 -LOG2FACT(k); // Poisson(1) prior on K
 		return assertNonPositiveFinite(priorOnK);
 	}
 	long double State :: P_z_orders() const { // given our current this->_k, what's P(z | k)

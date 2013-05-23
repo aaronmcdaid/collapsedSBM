@@ -69,6 +69,7 @@ const char *gengetopt_args_info_help[] = {
   "      --algo.lspos=INT          Algo: LSSBM positions  (default=`0')",
   "      --algo.lsm3=INT           Algo: LSSBM MS-like  (default=`0')",
   "  -u, --uniformK                Use a Uniform prior for K  (default=off)",
+  "  -g, --geometricK              Use a Geometric(0.5) prior for K  (default=off)",
   "      --save.lsz=STRING         save positions and colors  (default=`')",
   "      --labels=INT              Do label-unswitching, and a nice summary  \n                                  (default=`1')",
   "      --save.current.state=STRING\n                                Every 10 iterations, the current MCMC \n                                  clustering is saved here",
@@ -136,6 +137,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->algo_lspos_given = 0 ;
   args_info->algo_lsm3_given = 0 ;
   args_info->uniformK_given = 0 ;
+  args_info->geometricK_given = 0 ;
   args_info->save_lsz_given = 0 ;
   args_info->labels_given = 0 ;
   args_info->save_current_state_given = 0 ;
@@ -204,6 +206,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->algo_lsm3_arg = 0;
   args_info->algo_lsm3_orig = NULL;
   args_info->uniformK_flag = 0;
+  args_info->geometricK_flag = 0;
   args_info->save_lsz_arg = gengetopt_strdup ("");
   args_info->save_lsz_orig = NULL;
   args_info->labels_arg = 1;
@@ -257,10 +260,11 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->algo_lspos_help = gengetopt_args_info_help[34] ;
   args_info->algo_lsm3_help = gengetopt_args_info_help[35] ;
   args_info->uniformK_help = gengetopt_args_info_help[36] ;
-  args_info->save_lsz_help = gengetopt_args_info_help[37] ;
-  args_info->labels_help = gengetopt_args_info_help[38] ;
-  args_info->save_current_state_help = gengetopt_args_info_help[39] ;
-  args_info->keep_help = gengetopt_args_info_help[40] ;
+  args_info->geometricK_help = gengetopt_args_info_help[37] ;
+  args_info->save_lsz_help = gengetopt_args_info_help[38] ;
+  args_info->labels_help = gengetopt_args_info_help[39] ;
+  args_info->save_current_state_help = gengetopt_args_info_help[40] ;
+  args_info->keep_help = gengetopt_args_info_help[41] ;
   
 }
 
@@ -484,6 +488,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "algo.lsm3", args_info->algo_lsm3_orig, 0);
   if (args_info->uniformK_given)
     write_into_file(outfile, "uniformK", 0, 0 );
+  if (args_info->geometricK_given)
+    write_into_file(outfile, "geometricK", 0, 0 );
   if (args_info->save_lsz_given)
     write_into_file(outfile, "save.lsz", args_info->save_lsz_orig, 0);
   if (args_info->labels_given)
@@ -787,6 +793,7 @@ cmdline_parser_internal (
         { "algo.lspos",	1, NULL, 0 },
         { "algo.lsm3",	1, NULL, 0 },
         { "uniformK",	0, NULL, 'u' },
+        { "geometricK",	0, NULL, 'g' },
         { "save.lsz",	1, NULL, 0 },
         { "labels",	1, NULL, 0 },
         { "save.current.state",	1, NULL, 0 },
@@ -794,7 +801,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvK:dwsi:z:lu", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvK:dwsi:z:lug", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -902,6 +909,16 @@ cmdline_parser_internal (
           if (update_arg((void *)&(args_info->uniformK_flag), 0, &(args_info->uniformK_given),
               &(local_args_info.uniformK_given), optarg, 0, 0, ARG_FLAG,
               check_ambiguity, override, 1, 0, "uniformK", 'u',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'g':	/* Use a Geometric(0.5) prior for K.  */
+        
+        
+          if (update_arg((void *)&(args_info->geometricK_flag), 0, &(args_info->geometricK_given),
+              &(local_args_info.geometricK_given), optarg, 0, 0, ARG_FLAG,
+              check_ambiguity, override, 1, 0, "geometricK", 'g',
               additional_error))
             goto failure;
         

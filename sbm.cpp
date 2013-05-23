@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
 	PP(args_info.algo_lspos_arg);
 	PP(args_info.algo_lsm3_arg);
 	PP(args_info.uniformK_flag);
+	PP(args_info.geometricK_flag);
 	PP(args_info.save_lsz_arg);
 	PP(args_info.labels_arg);
 	PP(args_info.keep_arg);
@@ -132,6 +133,10 @@ int main(int argc, char **argv) {
 	}
 	if(args_info.latentspace_flag && args_info.K_arg == -1) {
 		cerr << endl << "Usage error: Currently, the latent space model requires the number of clusters (-K) to be specified." << endl;
+		exit(1);
+	}
+	if(args_info.uniformK_flag && args_info.geometricK_flag) {
+		cerr << endl << "Usage error: You can't have a Geometric prior (-g) and a Uniform prior (-u). Just one, or the other, or neither." << endl;
 		exit(1);
 	}
 	if(args_info.verbose_flag) {
@@ -1532,7 +1537,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 		const int postK = preK + 1;
 		assert(s._k == postK);
 		const long double presumed_delta =
-			( args_info.uniformK_flag ? 0 : - log2(preK+1) )
+			( args_info.uniformK_flag ? 0 : args_info.geometricK_flag ? -1 : - log2(preK+1) )
 
 			// + LOG2GAMMA(s._alpha)  // the change to SumOfLog2Facts
 			// I belatedly noticed that this last line can be cancelled against some expressions in the next line.
@@ -1595,7 +1600,7 @@ static long double MetropolisOnK(sbm :: State &s, const sbm :: ObjectiveFunction
 		{
 			const int postK = preK-1;
 			const long double presumed_delta =
-				( args_info.uniformK_flag ? 0 : + log2(preK) )
+				( args_info.uniformK_flag ? 0 : args_info.geometricK_flag ?  1 : + log2(preK) )
 
 				- LOG2GAMMA(s._alpha) // the change to SumOfLog2Facts
 
@@ -2506,8 +2511,9 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 		switch( possible_moves.at(random_move) ) {
 			break; case POS_MetroK: // can NOT handle LSSBM
 				if(commandLineK == -1 && args_info.algo_metroK_arg) {
-					for(int rep = 0; rep<args_info.algo_metroK_arg; ++rep)
+					for(int rep = 0; rep<args_info.algo_metroK_arg; ++rep) {
 						pmf_track += MetropolisOnK(s, obj, r, &AR_metroK);
+					}
 				} else {
 					assert(1==2);
 				}
