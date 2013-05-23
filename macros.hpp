@@ -12,5 +12,7 @@
 #define VERYCLOSE(a,b) (1e-07 > fabs((a)-(b)))
 #define For(it, container) for( typeof((container).begin()) it = (container).begin(); it != (container).end(); ++it)
 #define ELAPSED() (double(clock()) / CLOCKS_PER_SEC)
+#define assertVERYCLOSE(a,b) assert(VERYCLOSE(a,b))
+#define assertEQ(a,b)        assert((a)==(b))
 
 #endif
