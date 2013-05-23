@@ -2722,7 +2722,7 @@ static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *
 					<< endl;
 		}
 		for(int k=1; k<=highest_K_sampled; ++k) {
-			const double PKnonemptyk = double(K_freq.at(k)) / burned_in_iters;
+			const double PKnonemptyk = double(KnonEmpty_freq.at(k)) / burned_in_iters;
 			if(PKnonemptyk > 0.001)
 				cout << "P(KnonEmpty=" << k << ")=\t"
 					<< stack.push << fixed << setw(6) << setprecision(4)
