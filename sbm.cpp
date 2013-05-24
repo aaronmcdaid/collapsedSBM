@@ -765,7 +765,6 @@ PP2(__LINE__, s.P_all_fastish(obj)); for(int i=0; i<s._N; ++i) { cout << setw(3)
 
 	//PP3( pre_score, unassigned_score , undone_score) ;
 	assertVERYCLOSE( undone_score , pre_score) ;
-	assertEQ( undone_score , pre_score) ;
 
 	// Finally ready to decide
 	const long double acceptance_prob = randomized_score - pre_score - partial_prop_prob_random + partial_prop_prob_forced;
