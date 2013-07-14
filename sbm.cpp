@@ -38,10 +38,12 @@ using namespace std;
 struct UsageMessage {
 };
 
+/*
 static void memory_usage() {
 	int ret = system("cat /proc/$PPID/status | egrep 'VmRSS|VmSize'");
 	ret  = ret;
 }
+*/
 
 
 static void runSBM(const graph :: NetworkInterfaceConvertedToStringWithWeights *g, const int commandLineK, const sbm :: ObjectiveFunction * const obj, const bool initializeToGT, const vector<int> * const groundTruth, const int iterations, const  gengetopt_args_info &args_info, gsl_rng *r) ;
