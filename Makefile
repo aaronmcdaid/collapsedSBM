@@ -19,7 +19,7 @@ CXXFLAGS=       \
           -Wunused-parameter    \
           -Wunused             \
           -Wnon-virtual-dtor            \
-          -Wall -Wformat -Werror -Wextra #-Wconversion # scf.cpp doesn't like -Wconversion
+          -Wall -Wformat -Wextra # -Werror -Wconversion # scf.cpp doesn't like -Wconversion
 
 CXX=g++
 CC=g++ ${PROFILE}
