@@ -37,7 +37,7 @@ ${MAIN}: gitstatus.o Range.o sbm_state.o cmdline.o scf.o graph/weights.o graph/s
 
 #lineGraph: lineGraph.o shmGraphRaw.o Range.o
 gitstatus.txt: 
-	{ git log | head -n 1 ; git status ; } | head -n 20 | sed -re 's/"/\\"/g ; s/^/"/g; s/$$/\\n"/g; ' > gitstatus.txt
+	{ git log | head -n 1 ; git status ; } | head -n 20 | sed -e 's/"/\\"/g ; s/^/"/g; s/$$/\\n"/g; ' > gitstatus.txt
 gitstatus.o: comment.txt  gitstatus.txt
 
 cmdline.c.FORCE:
